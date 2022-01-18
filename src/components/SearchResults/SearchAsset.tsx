@@ -167,7 +167,7 @@ const SearchAsset = ({
         <AssetInfo
           displayedPrice={
             asset.sell_orders?.length
-              ? asset.sell_orders[0].current_price
+              ? asset.sell_orders[0].base_price
               : undefined
           }
           address={address!}
