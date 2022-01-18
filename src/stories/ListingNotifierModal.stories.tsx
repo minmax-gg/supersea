@@ -26,6 +26,7 @@ Default.args = {
       minPrice: 0.5,
       maxPrice: 0.3,
       lowestRarity: 'Common',
+      lowestRankNumber: null,
       includeAuctions: false,
       traits: [],
       autoQuickBuy: false,
@@ -40,6 +41,8 @@ Default.args = {
   playSound: true,
   sendNotification: true,
   pollStatus: 'ACTIVE',
+  pollInterval: 2,
+  setPollInterval: () => {},
   onChangePlaySound: () => {},
   onChangeSendNotification: () => {},
 }

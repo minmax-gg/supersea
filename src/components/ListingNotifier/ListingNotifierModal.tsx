@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import _ from 'lodash'
 import { unstable_batchedUpdates } from 'react-dom'
 import {
@@ -38,7 +38,13 @@ import {
   TabList,
   TabPanel,
   TabPanels,
+  Popover,
+  PopoverArrow,
   Tabs,
+  PopoverBody,
+  PopoverContent,
+  PopoverTrigger,
+  useDisclosure,
 } from '@chakra-ui/react'
 import EthereumIcon from '../EthereumIcon'
 import { RarityName, RARITY_TYPES } from '../../utils/rarity'
@@ -76,6 +82,8 @@ const ListingNotifierModal = ({
   allTraits,
   playSound,
   pollStatus,
+  pollInterval,
+  setPollInterval,
   onChangePlaySound,
   sendNotification,
   onChangeSendNotification,
@@ -91,6 +99,8 @@ const ListingNotifierModal = ({
   isSubscriber: boolean
   matchedAssets: MatchedAsset[]
   playSound: boolean
+  pollInterval: number
+  setPollInterval: (interval: number) => void
   pollStatus: 'STARTING' | 'ACTIVE' | 'FAILED'
   onChangePlaySound: (playSound: boolean) => void
   sendNotification: boolean
@@ -106,8 +116,17 @@ const ListingNotifierModal = ({
   const [lowestRankNumber, setLowestRankNumber] = useState('')
   const [traits, setTraits] = useState<string[]>([])
   const [autoQuickBuy, setAutoQuickBuy] = useState(false)
+  const [pollIntervalInput, setPollIntervalInput] = useState(
+    String(pollInterval),
+  )
   const [creatingNotifier, setCreatingNotifier] = useState(false)
   const [rarityTab, setRarityTab] = useState<number>(0)
+
+  const {
+    onOpen: onOpenPollIntervalInput,
+    onClose: onClosePollIntervalInput,
+    isOpen: pollIntervalInputOpen,
+  } = useDisclosure()
 
   const { colorMode } = useColorMode()
 
@@ -117,6 +136,11 @@ const ListingNotifierModal = ({
     'blackAlpha.300',
   )
   const rarityInputsDisabled = isRanked === false || !isSubscriber
+  const inputBorder = useColorModeValue('blackAlpha.300', 'whiteAlpha.300')
+
+  useEffect(() => {
+    setPollIntervalInput(String(pollInterval))
+  }, [pollInterval])
 
   return (
     <ScopedCSSPortal>
@@ -151,10 +175,7 @@ const ListingNotifierModal = ({
                     <EthereumIcon /> Min Price
                   </FormLabel>
                   <Input
-                    borderColor={useColorModeValue(
-                      'blackAlpha.300',
-                      'whiteAlpha.300',
-                    )}
+                    borderColor={inputBorder}
                     value={minPrice}
                     onChange={(e) => setMinPrice(e.target.value)}
                   />
@@ -164,10 +185,7 @@ const ListingNotifierModal = ({
                     <EthereumIcon /> Max Price
                   </FormLabel>
                   <Input
-                    borderColor={useColorModeValue(
-                      'blackAlpha.300',
-                      'whiteAlpha.300',
-                    )}
+                    borderColor={inputBorder}
                     value={maxPrice}
                     onChange={(e) => setMaxPrice(e.target.value)}
                   />
@@ -253,10 +271,7 @@ const ListingNotifierModal = ({
                       <FormControl>
                         <Input
                           maxW="140px"
-                          borderColor={useColorModeValue(
-                            'blackAlpha.300',
-                            'whiteAlpha.300',
-                          )}
+                          borderColor={inputBorder}
                           value={lowestRankNumber}
                           onChange={(e) => setLowestRankNumber(e.target.value)}
                           placeholder="Rank #"
@@ -556,7 +571,48 @@ const ListingNotifierModal = ({
                       } else if (pollStatus === 'ACTIVE') {
                         return (
                           <>
-                            <Text fontSize="sm">Checking every 2 seconds</Text>
+                            <Text>
+                              Checking every{' '}
+                              <Popover
+                                placement="top"
+                                isOpen={pollIntervalInputOpen}
+                                onClose={onClosePollIntervalInput}
+                                onOpen={onOpenPollIntervalInput}
+                              >
+                                <PopoverTrigger>
+                                  <Button size="xs">{pollInterval}</Button>
+                                </PopoverTrigger>
+                                <PopoverContent maxW="200px">
+                                  <PopoverArrow />
+                                  <PopoverBody>
+                                    <FormControl>
+                                      <FormLabel>Poll Interval</FormLabel>
+                                      <HStack spacing="2">
+                                        <Input
+                                          maxW="100px"
+                                          borderColor={inputBorder}
+                                          value={pollIntervalInput}
+                                          onChange={(e) =>
+                                            setPollIntervalInput(e.target.value)
+                                          }
+                                        />
+                                        <Button
+                                          onClick={() => {
+                                            setPollInterval(
+                                              Number(pollIntervalInput),
+                                            )
+                                            onClosePollIntervalInput()
+                                          }}
+                                        >
+                                          Apply
+                                        </Button>
+                                      </HStack>
+                                    </FormControl>
+                                  </PopoverBody>
+                                </PopoverContent>
+                              </Popover>{' '}
+                              seconds
+                            </Text>
                             <Icon
                               as={BiRefresh}
                               width="18px"

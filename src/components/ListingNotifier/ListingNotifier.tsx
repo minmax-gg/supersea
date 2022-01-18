@@ -18,7 +18,6 @@ import { determineRarityType, RARITY_TYPES } from '../../utils/rarity'
 import { useUser } from '../../utils/user'
 import { triggerQuickBuy } from '../AssetInfo/BuyNowButton'
 
-const POLL_INTERVAL_MS = 2000
 const POLL_RETRIES = 15
 
 const createPollTime = (bufferSeconds = 0) =>
@@ -63,10 +62,10 @@ const listingMatchesNotifier = ({
   // Rarity
   if (rarities) {
     const rank = rarities.tokenRarity[asset.tokenId]
-    if (!rank) {
-      return false
-    }
     if (notifier.lowestRarity !== 'Common') {
+      if (!rank) {
+        return false
+      }
       const assetRarity = determineRarityType(rank, rarities.tokenCount)
       const notifierRarityIndex = RARITY_TYPES.findIndex(
         ({ name }) => name === notifier.lowestRarity,
@@ -78,6 +77,9 @@ const listingMatchesNotifier = ({
         return false
       }
     } else if (notifier.lowestRankNumber !== null) {
+      if (!rank) {
+        return false
+      }
       return rank <= notifier.lowestRankNumber
     }
   }
@@ -105,6 +107,7 @@ type CachedState = {
   assetsMatchingNotifier: Record<string, Record<string, boolean>>
   rarities: Rarities | null
   pollTime: string | null
+  pollInterval: number
   addedListings: Record<string, boolean>
   matchedAssets: MatchedAsset[]
   activeNotifiers: Notifier[]
@@ -119,6 +122,7 @@ let DEFAULT_STATE: CachedState = {
   matchedAssets: [],
   addedListings: {},
   pollTime: null,
+  pollInterval: 2,
   rarities: null,
   assetsMatchingNotifier: {},
   playSound: true,
@@ -138,6 +142,7 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
   const [activeNotifiers, setActiveNotifiers] = useState<Notifier[]>(
     stateToRestore.activeNotifiers,
   )
+  const [pollInterval, setPollInterval] = useState(stateToRestore.pollInterval)
   const [matchedAssets, setMatchedAssets] = useState<MatchedAsset[]>(
     stateToRestore.matchedAssets,
   )
@@ -182,6 +187,7 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
       matchedAssets,
       activeNotifiers,
       playSound,
+      pollInterval,
       sendNotification,
       seenListingsCount,
       notificationIds,
@@ -192,6 +198,7 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
     assetsMatchingNotifier,
     collectionSlug,
     matchedAssets,
+    pollInterval,
     rarities,
     playSound,
     sendNotification,
@@ -232,14 +239,14 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
 
   // Set up polling
   useEffect(() => {
-    let pollInterval: NodeJS.Timeout | null = null
+    let pollTimeout: NodeJS.Timeout | null = null
     if (activeNotifiers.length === 0 || pollStatus === 'FAILED') {
-      pollInterval !== null && clearInterval(pollInterval)
+      pollTimeout !== null && clearInterval(pollTimeout)
     } else {
       if (pollTimeRef.current === null) {
         pollTimeRef.current = createPollTime(5)
       }
-      pollInterval = setInterval(async () => {
+      pollTimeout = setInterval(async () => {
         chrome.storage.local.get(
           ['openSeaGraphQlRequests'],
           async ({ openSeaGraphQlRequests }) => {
@@ -257,7 +264,7 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
                   pollTimeRef.current,
               }
 
-              const nextPollTime = createPollTime(POLL_INTERVAL_MS / 1000 / 2)
+              const nextPollTime = createPollTime(pollInterval / 1000 / 2)
               let fetchedAssets = null
               try {
                 const res = await fetch(request.url, {
@@ -389,11 +396,11 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
             }
           },
         )
-      }, POLL_INTERVAL_MS)
+      }, pollInterval * 1000)
     }
 
     return () => {
-      pollInterval && clearInterval(pollInterval)
+      pollTimeout && clearInterval(pollTimeout)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -402,6 +409,7 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
     rarities,
     sendNotification,
     playSound,
+    pollInterval,
     pollStatus,
   ])
 
@@ -469,6 +477,8 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
           setModalOpen(false)
           setSeenListingsCount(matchedAssets.length)
         }}
+        pollInterval={pollInterval}
+        setPollInterval={setPollInterval}
         allTraits={rarities?.traits}
         isRanked={rarities ? rarities.isRanked : null}
         isSubscriber={isSubscriber}
