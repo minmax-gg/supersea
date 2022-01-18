@@ -189,6 +189,7 @@ const AssetInfo = ({
 
   const { floor, loading: floorLoading, loadedAt: floorLoadedAt } = useFloor(
     collectionSlug,
+    chain,
   )
 
   const replaceImage = useCallback(async () => {
@@ -288,11 +289,12 @@ const AssetInfo = ({
   useEffect(() => {
     if (collectionSlug) return
     if (!address || !tokenId) return
+    if (chain === 'polygon') return
     ;(async () => {
       const slug = await fetchCollectionSlug(address, tokenId)
       setCollectionSlug(slug)
     })()
-  }, [address, tokenId, collectionSlug])
+  }, [address, tokenId, collectionSlug, chain])
 
   useEffect(() => {
     if (!(address && tokenId)) return

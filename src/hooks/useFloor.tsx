@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { unstable_batchedUpdates } from 'react-dom'
-import { fetchFloorPrice, Floor, floorPriceLoader } from '../utils/api'
+import { Chain, fetchFloorPrice, Floor, floorPriceLoader } from '../utils/api'
 
 const FLOOR_REFRESH_INTERVAL = 1000 * 60 * 3
 
@@ -27,9 +27,11 @@ const loadFloor = (slug: string, onReload: () => void) => {
   })
 }
 
-const useFloor = (collectionSlug?: string) => {
-  const [loading, setLoading] = useState(true)
-  const [floor, setFloor] = useState<Floor | null | undefined>(undefined)
+const useFloor = (collectionSlug?: string, chain: Chain = 'ethereum') => {
+  const [loading, setLoading] = useState(chain === 'ethereum' ? true : false)
+  const [floor, setFloor] = useState<Floor | null | undefined>(
+    chain === 'ethereum' ? undefined : null,
+  )
   const [loadedAt, setLoadedAt] = useState(0)
   const [floorRefreshCount, setFloorRefreshCount] = useState(0)
 
