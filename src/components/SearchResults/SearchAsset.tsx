@@ -165,6 +165,11 @@ const SearchAsset = ({
       </LinkBox>
       {asset ? (
         <AssetInfo
+          displayedPrice={
+            asset.sell_orders?.length
+              ? asset.sell_orders[0].current_price
+              : undefined
+          }
           address={address!}
           tokenId={tokenId}
           type="grid"

@@ -27,12 +27,14 @@ export const triggerQuickBuy = async ({
   toast,
   address,
   tokenId,
+  displayedPrice,
   onComplete,
 }: {
   isFounder: boolean
   toast: ReturnType<typeof useToast>
   address: string
   tokenId: string
+  displayedPrice?: string
   onComplete: () => void
 }) => {
   const [asset, gasPreset] = await Promise.all([
@@ -80,7 +82,7 @@ export const triggerQuickBuy = async ({
   }
   window.postMessage({
     method: 'SuperSea__Buy',
-    params: { asset, gasPreset },
+    params: { asset, gasPreset, displayedPrice },
   })
   // Listen for errors, unsubscribe
   const messageListener = (event: any) => {
@@ -118,10 +120,12 @@ export const BuyNowButtonUI = ({
   address,
   tokenId,
   active,
+  displayedPrice,
 }: {
   address: string
   tokenId: string
   active: boolean
+  displayedPrice?: string
 }) => {
   const toast = useToast()
   const { isFounder } = useUser() || { isFounder: false }
@@ -176,6 +180,7 @@ export const BuyNowButtonUI = ({
               toast,
               tokenId,
               address,
+              displayedPrice,
               onComplete: () => setIsLoading(false),
             })
           } else {
