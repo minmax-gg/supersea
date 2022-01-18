@@ -278,10 +278,12 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
                 const paths = selectors.listingNotifier.api.resultPaths
                 fetchedAssets = _.get(json, paths.edges).map((edge: any) => {
                   if (!_.get(edge, paths.asset)) return null
+                  const chain = _.get(edge, paths.chain)
                   return {
                     listingId: _.get(edge, paths.listingId),
                     tokenId: _.get(edge, paths.tokenId),
                     contractAddress: _.get(edge, paths.contractAddress),
+                    chain: chain === 'MATIC' ? 'polygon' : 'ethereum',
                     name:
                       _.get(edge, paths.name) ||
                       _.get(edge, paths.collectionName),
