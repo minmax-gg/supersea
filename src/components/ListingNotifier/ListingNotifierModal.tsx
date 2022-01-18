@@ -34,6 +34,11 @@ import {
   Td,
   Switch,
   useColorMode,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
 } from '@chakra-ui/react'
 import EthereumIcon from '../EthereumIcon'
 import { RarityName, RARITY_TYPES } from '../../utils/rarity'
@@ -55,6 +60,7 @@ export type Notifier = {
   minPrice: number | null
   maxPrice: number | null
   lowestRarity: RarityName
+  lowestRankNumber: number | null
   includeAuctions: boolean
   traits: string[]
   autoQuickBuy: boolean
@@ -97,9 +103,11 @@ const ListingNotifierModal = ({
   const [maxPrice, setMaxPrice] = useState('')
   const [includeAuctions, setIncludeAuctions] = useState(false)
   const [lowestRarity, setLowestRarity] = useState<RarityName>('Common')
+  const [lowestRankNumber, setLowestRankNumber] = useState('')
   const [traits, setTraits] = useState<string[]>([])
   const [autoQuickBuy, setAutoQuickBuy] = useState(false)
   const [creatingNotifier, setCreatingNotifier] = useState(false)
+  const [rarityTab, setRarityTab] = useState<number>(0)
 
   const { colorMode } = useColorMode()
 
@@ -180,7 +188,7 @@ const ListingNotifierModal = ({
               <FormControl>
                 <FormLabel fontSize="sm">
                   <Text as="span" opacity={rarityInputsDisabled ? 0.75 : 1}>
-                    Lowest Rarity
+                    Rarity
                   </Text>
                   {(() => {
                     if (isRanked === false) {
@@ -195,23 +203,72 @@ const ListingNotifierModal = ({
                     return null
                   })()}
                 </FormLabel>
-                <Select
-                  isDisabled={rarityInputsDisabled}
-                  borderColor="transparent"
-                  bg={useColorModeValue('gray.100', 'whiteAlpha.200')}
-                  value={lowestRarity}
-                  onChange={(e) =>
-                    setLowestRarity(e.target.value as RarityName)
-                  }
-                >
-                  {RARITY_TYPES.map(({ name }) => {
-                    return (
-                      <option key={name} value={name}>
-                        {name === 'Common' ? 'Ignore rarity' : name}
-                      </option>
-                    )
-                  })}
-                </Select>
+                <Tabs variant="soft-rounded" size="sm" onChange={setRarityTab}>
+                  <TabList pt="1">
+                    <Tab
+                      isDisabled={rarityInputsDisabled}
+                      _selected={{
+                        bg: useColorModeValue('gray.100', 'whiteAlpha.200'),
+                        color: useColorModeValue('black', 'white'),
+                      }}
+                    >
+                      Rarity Tier
+                    </Tab>
+                    <Tab
+                      isDisabled={rarityInputsDisabled}
+                      _selected={{
+                        bg: useColorModeValue('gray.100', 'whiteAlpha.200'),
+                        color: useColorModeValue('black', 'white'),
+                      }}
+                    >
+                      Rank Number
+                    </Tab>
+                  </TabList>
+
+                  <TabPanels>
+                    <TabPanel px="0">
+                      <Select
+                        isDisabled={rarityInputsDisabled}
+                        borderColor="transparent"
+                        bg={useColorModeValue('gray.100', 'whiteAlpha.200')}
+                        value={lowestRarity}
+                        onChange={(e) =>
+                          setLowestRarity(e.target.value as RarityName)
+                        }
+                      >
+                        {RARITY_TYPES.map(({ name }) => {
+                          return (
+                            <option key={name} value={name}>
+                              {name === 'Common'
+                                ? 'Ignore rarity'
+                                : `${name}${
+                                    name === 'Legendary' ? '' : ' at least'
+                                  }`}
+                            </option>
+                          )
+                        })}
+                      </Select>
+                    </TabPanel>
+                    <TabPanel px="0">
+                      <FormControl>
+                        <Input
+                          maxW="140px"
+                          borderColor={useColorModeValue(
+                            'blackAlpha.300',
+                            'whiteAlpha.300',
+                          )}
+                          value={lowestRankNumber}
+                          onChange={(e) => setLowestRankNumber(e.target.value)}
+                          placeholder="Rank #"
+                        />
+                        <FormHelperText>
+                          Highest rank number to match
+                        </FormHelperText>
+                      </FormControl>
+                    </TabPanel>
+                    <TabPanel></TabPanel>
+                  </TabPanels>
+                </Tabs>
               </FormControl>
               <FormControl>
                 <FormLabel fontSize="sm">
@@ -289,7 +346,11 @@ const ListingNotifierModal = ({
                       }`,
                       minPrice: minPrice ? Number(minPrice) : null,
                       maxPrice: maxPrice ? Number(maxPrice) : null,
-                      lowestRarity,
+                      lowestRarity: rarityTab === 0 ? lowestRarity : 'Common',
+                      lowestRankNumber:
+                        rarityTab === 1 && Number(lowestRankNumber)
+                          ? Number(lowestRankNumber)
+                          : null,
                       includeAuctions,
                       traits,
                       autoQuickBuy,
@@ -299,6 +360,7 @@ const ListingNotifierModal = ({
                       setMinPrice('')
                       setMaxPrice('')
                       setLowestRarity('Common')
+                      setLowestRankNumber('')
                       setTraits([])
                       setAutoQuickBuy(false)
                       setCreatingNotifier(false)
@@ -329,7 +391,7 @@ const ListingNotifierModal = ({
                       <Tr>
                         <Th px="4">ID</Th>
                         <Th>Price Range</Th>
-                        <Th>Lowest Rarity</Th>
+                        <Th>Rarity</Th>
                         <Th>Traits</Th>
                         <Th>Quick Buy</Th>
                         <Th></Th>
@@ -342,6 +404,7 @@ const ListingNotifierModal = ({
                           minPrice,
                           maxPrice,
                           lowestRarity,
+                          lowestRankNumber,
                           traits,
                           autoQuickBuy,
                         }) => {
@@ -393,19 +456,26 @@ const ListingNotifierModal = ({
                                 })()}
                               </Td>
                               <Td>
-                                {lowestRarity === 'Common' ? (
-                                  'Any'
-                                ) : (
-                                  <Tag
-                                    bg={
-                                      RARITY_TYPES.find(
-                                        ({ name }) => name === lowestRarity,
-                                      )!.color[colorMode]
+                                {(() => {
+                                  if (lowestRarity === 'Common') {
+                                    if (lowestRankNumber === null) {
+                                      return 'Any'
+                                    } else {
+                                      return `Top #${lowestRankNumber}`
                                     }
-                                  >
-                                    {lowestRarity}
-                                  </Tag>
-                                )}
+                                  }
+                                  return (
+                                    <Tag
+                                      bg={
+                                        RARITY_TYPES.find(
+                                          ({ name }) => name === lowestRarity,
+                                        )!.color[colorMode]
+                                      }
+                                    >
+                                      {lowestRarity}
+                                    </Tag>
+                                  )
+                                })()}
                               </Td>
                               <Td>
                                 {traits.length ? (

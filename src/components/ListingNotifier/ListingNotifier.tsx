@@ -61,11 +61,12 @@ const listingMatchesNotifier = ({
     return false
   }
   // Rarity
-  if (notifier.lowestRarity !== 'Common' && rarities) {
+  if (rarities) {
     const rank = rarities.tokenRarity[asset.tokenId]
-    if (rank === undefined) {
+    if (!rank) {
       return false
-    } else {
+    }
+    if (notifier.lowestRarity !== 'Common') {
       const assetRarity = determineRarityType(rank, rarities.tokenCount)
       const notifierRarityIndex = RARITY_TYPES.findIndex(
         ({ name }) => name === notifier.lowestRarity,
@@ -76,6 +77,8 @@ const listingMatchesNotifier = ({
       if (assetRarityIndex > notifierRarityIndex) {
         return false
       }
+    } else if (notifier.lowestRankNumber !== null) {
+      return rank <= notifier.lowestRankNumber
     }
   }
   // Traits
