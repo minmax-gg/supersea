@@ -15,6 +15,13 @@ import {
 import { useUser } from '../../utils/user'
 import { fetchAsset, fetchOptimalGasPreset } from '../../utils/api'
 
+const readableError = (message: string) => {
+  if (/insufficient funds/.test(message)) {
+    return 'You do not have enough funds to buy this asset.'
+  }
+  return `Unable to buy item. Received error "${message}"`
+}
+
 export const triggerQuickBuy = async ({
   isFounder,
   toast,
@@ -60,7 +67,7 @@ export const triggerQuickBuy = async ({
       return null
     })(),
   ])
-  if (!asset.orders) {
+  if (!asset.orders || asset.orders.length === 0) {
     toast({
       duration: 7500,
       position: 'bottom-right',
@@ -87,9 +94,7 @@ export const triggerQuickBuy = async ({
           position: 'bottom-right',
           render: () => (
             <Toast
-              text={
-                "Unable to buy item. This is most likely because the item is no longer listed, or because there aren't enough funds in your wallet."
-              }
+              text={readableError(event.data.params.error.message)}
               type="error"
             />
           ),
