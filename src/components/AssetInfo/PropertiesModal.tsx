@@ -9,7 +9,7 @@ import {
   ModalHeader,
   ModalOverlay,
   Spinner,
-  HStack,
+  Tag,
   Link,
   Table,
   Tbody,
@@ -18,9 +18,11 @@ import {
   Thead,
   Tr,
   useColorModeValue,
+  useColorMode,
 } from '@chakra-ui/react'
 import ScopedCSSPortal from '../ScopedCSSPortal'
 import { fetchTokenProperties } from '../../utils/api'
+import { RARITY_TYPES } from '../../utils/rarity'
 
 type Properties = {
   name: string
@@ -51,6 +53,7 @@ const PropertiesModal = ({
   >(undefined)
 
   const tableStripeColor = useColorModeValue('blackAlpha.100', 'whiteAlpha.100')
+  const { colorMode } = useColorMode()
 
   useEffect(() => {
     ;(async () => {
@@ -177,6 +180,9 @@ const PropertiesModal = ({
                     <Tbody fontWeight="500">
                       {propertyBreakdown.properties.map(
                         ({ name, value, rarity, score }, index) => {
+                          const rarityType = rarity
+                            ? RARITY_TYPES.find(({ top }) => rarity <= top)
+                            : null
                           const renderedValue = (
                             <>
                               <Text>
@@ -185,6 +191,15 @@ const PropertiesModal = ({
                                 ) : (
                                   <Text opacity="0.75">Missing</Text>
                                 )}
+                                {rarityType ? (
+                                  <Tag
+                                    bg={rarityType.color[colorMode]}
+                                    size="sm"
+                                    mx="2"
+                                  >
+                                    {rarityType.name}
+                                  </Tag>
+                                ) : null}
                               </Text>
                               {rarity !== null ? (
                                 <Text fontWeight="400" opacity="0.5">
