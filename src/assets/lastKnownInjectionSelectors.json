@@ -99,6 +99,7 @@
         "listingId": "node.relayId",
         "tokenId": "node.assetQuantity.asset.tokenId",
         "contractAddress": "node.assetQuantity.asset.assetContract.address",
+        "chain": "node.assetQuantity.asset.assetContract.chain",
         "name": "node.assetQuantity.asset.name",
         "collectionName": "node.assetQuantity.asset.collection.name",
         "image": "node.assetQuantity.asset.displayImageUrl",

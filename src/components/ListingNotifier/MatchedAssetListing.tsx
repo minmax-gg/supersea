@@ -14,11 +14,13 @@ import AssetInfo, { LIST_HEIGHT, LIST_WIDTH } from '../AssetInfo/AssetInfo'
 import TimeAgo from 'react-timeago'
 import EthereumIcon from '../EthereumIcon'
 import { Notifier } from './ListingNotifierModal'
+import { Chain } from '../../utils/api'
 
 export type MatchedAsset = {
   listingId: string
   tokenId: string
   contractAddress: string
+  chain: Chain
   name: string
   image: string
   price: string
@@ -59,7 +61,7 @@ const MatchedAssetListing = ({ asset }: { asset: MatchedAsset }) => {
           address={asset.contractAddress!}
           tokenId={asset.tokenId}
           type="list"
-          chain="ethereum"
+          chain={asset.chain}
           container={containerRef.current!}
         />
       ) : (
@@ -69,7 +71,9 @@ const MatchedAssetListing = ({ asset }: { asset: MatchedAsset }) => {
         <Image src={asset.image} width="48px" height="48px" borderRadius="md" />
         <Box>
           <LinkOverlay
-            href={`/assets/${asset.contractAddress}/${asset.tokenId}`}
+            href={`/assets/${asset.chain === 'polygon' ? 'matic/' : ''}${
+              asset.contractAddress
+            }/${asset.tokenId}`}
             target="_blank"
           >
             <Text my="0" fontSize="sm" fontWeight="500">
