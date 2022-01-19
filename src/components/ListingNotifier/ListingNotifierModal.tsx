@@ -582,11 +582,16 @@ const ListingNotifierModal = ({
                                 <PopoverTrigger>
                                   <Button size="xs">{pollInterval}</Button>
                                 </PopoverTrigger>
-                                <PopoverContent maxW="200px">
+                                <PopoverContent
+                                  maxW="200px"
+                                  borderColor={borderColor}
+                                >
                                   <PopoverArrow />
                                   <PopoverBody>
                                     <FormControl>
-                                      <FormLabel>Poll Interval</FormLabel>
+                                      <FormLabel>
+                                        Poll Interval (Seconds)
+                                      </FormLabel>
                                       <HStack spacing="2">
                                         <Input
                                           maxW="100px"

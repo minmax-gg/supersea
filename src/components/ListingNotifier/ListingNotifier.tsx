@@ -250,7 +250,7 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
         chrome.storage.local.get(
           ['openSeaGraphQlRequests'],
           async ({ openSeaGraphQlRequests }) => {
-            const request = openSeaGraphQlRequests['EventHistoryPollQuery']
+            const request = openSeaGraphQlRequests?.EventHistoryPollQuery
             if (request) {
               const selectors = await fetchSelectors()
               const body = JSON.parse(request.body)
@@ -483,7 +483,10 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
         isRanked={rarities ? rarities.isRanked : null}
         isSubscriber={isSubscriber}
         addedNotifiers={activeNotifiers}
-        onRetry={() => setPollStatus('STARTING')}
+        onRetry={() => {
+          retriesRef.current = 0
+          setPollStatus('STARTING')
+        }}
         onAddNotifier={async (notifier) => {
           if (notifier.traits.length) {
             const address = await fetchCollectionAddress(collectionSlug)
