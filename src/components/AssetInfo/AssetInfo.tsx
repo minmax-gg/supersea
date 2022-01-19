@@ -197,6 +197,11 @@ const AssetInfo = ({
     const selectors = await fetchSelectors()
     try {
       const metadata = await fetchMetadata(address, +tokenId)
+
+      if (!(metadata?.image || metadata?.image_url)) {
+        throw new Error('Unable to load metadata')
+      }
+
       const imgElement = selectElement(
         container,
         selectors.assetInfo[type].image,
