@@ -163,6 +163,7 @@ const AssetInfo = ({
   container,
   collectionSlug: inputCollectionSlug,
   chain,
+  displayedPrice,
 }: {
   address: string
   tokenId: string
@@ -170,6 +171,7 @@ const AssetInfo = ({
   type: 'grid' | 'list' | 'item'
   chain: Chain
   container: HTMLElement
+  displayedPrice?: string
 }) => {
   const events = useContext(EventEmitterContext)
   const globalConfig = useContext(GlobalConfigContext)
@@ -686,7 +688,11 @@ const AssetInfo = ({
           opacity="0"
           transition="opacity 115ms ease"
         >
-          <BuyNowButton address={address} tokenId={tokenId} />
+          <BuyNowButton
+            address={address}
+            tokenId={tokenId}
+            displayedPrice={displayedPrice}
+          />
         </Box>
       </Flex>
       {propertiesModalOpen && (

@@ -52,6 +52,14 @@ import { OrderSide } from 'opensea-js/lib/types'
             )
           }
         }
+        if (
+          event.data.params.displayedPrice &&
+          order.base_price !== event.data.params.displayedPrice
+        ) {
+          window.alert(
+            '[SuperSea] Warning! The displayed price does not match the order price. Make sure the price shown in MetaMask is the price you want to pay.',
+          )
+        }
         await seaport.fulfillOrder({
           order: formattedOrder,
           accountAddress: (window as any).ethereum.selectedAddress,

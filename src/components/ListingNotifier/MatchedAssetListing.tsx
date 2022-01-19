@@ -58,6 +58,7 @@ const MatchedAssetListing = ({ asset }: { asset: MatchedAsset }) => {
       </Circle>
       {container ? (
         <AssetInfo
+          displayedPrice={asset.price}
           address={asset.contractAddress!}
           tokenId={asset.tokenId}
           type="list"

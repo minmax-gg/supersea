@@ -74,6 +74,7 @@ export type Asset = {
   }
   sell_orders: {
     current_price: string
+    base_price: string
     payment_token_contract: {
       symbol: 'ETH' | 'WETH'
     }
