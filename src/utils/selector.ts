@@ -55,6 +55,7 @@ export type Selectors = {
         contractAddress: string
         name: string
         collectionName: string
+        chain: string
         image: string
         price: string
         currency: string

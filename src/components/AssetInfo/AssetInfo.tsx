@@ -163,6 +163,7 @@ const AssetInfo = ({
   container,
   collectionSlug: inputCollectionSlug,
   chain,
+  displayedPrice,
 }: {
   address: string
   tokenId: string
@@ -170,6 +171,7 @@ const AssetInfo = ({
   type: 'grid' | 'list' | 'item'
   chain: Chain
   container: HTMLElement
+  displayedPrice?: string
 }) => {
   const events = useContext(EventEmitterContext)
   const globalConfig = useContext(GlobalConfigContext)
@@ -189,6 +191,7 @@ const AssetInfo = ({
 
   const { floor, loading: floorLoading, loadedAt: floorLoadedAt } = useFloor(
     collectionSlug,
+    chain,
   )
 
   const replaceImage = useCallback(async () => {
@@ -196,6 +199,11 @@ const AssetInfo = ({
     const selectors = await fetchSelectors()
     try {
       const metadata = await fetchMetadata(address, +tokenId)
+
+      if (!(metadata?.image || metadata?.image_url)) {
+        throw new Error('Unable to load metadata')
+      }
+
       const imgElement = selectElement(
         container,
         selectors.assetInfo[type].image,
@@ -288,11 +296,12 @@ const AssetInfo = ({
   useEffect(() => {
     if (collectionSlug) return
     if (!address || !tokenId) return
+    if (chain === 'polygon') return
     ;(async () => {
       const slug = await fetchCollectionSlug(address, tokenId)
       setCollectionSlug(slug)
     })()
-  }, [address, tokenId, collectionSlug])
+  }, [address, tokenId, collectionSlug, chain])
 
   useEffect(() => {
     if (!(address && tokenId)) return
@@ -679,7 +688,11 @@ const AssetInfo = ({
           opacity="0"
           transition="opacity 115ms ease"
         >
-          <BuyNowButton address={address} tokenId={tokenId} />
+          <BuyNowButton
+            address={address}
+            tokenId={tokenId}
+            displayedPrice={displayedPrice}
+          />
         </Box>
       </Flex>
       {propertiesModalOpen && (

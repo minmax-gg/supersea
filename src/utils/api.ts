@@ -74,6 +74,7 @@ export type Asset = {
   }
   sell_orders: {
     current_price: string
+    base_price: string
     payment_token_contract: {
       symbol: 'ETH' | 'WETH'
     }
@@ -414,30 +415,6 @@ export const fetchAllCollectionsForUser = async (
   }
 }
 
-const metadataQuery = gql`
-  query GetMetadata($tokenMetadataInput: TokenMetadataInput!) {
-    getTokenMetadata(input: $tokenMetadataInput) {
-      data
-      success
-    }
-  }
-`
-
-export const fetchMetadata = async (
-  contractAddress: string,
-  tokenId: number,
-) => {
-  const {
-    getTokenMetadata: { data },
-  } = await nonFungibleRequest(metadataQuery, {
-    tokenMetadataInput: {
-      contractAddress,
-      tokenId,
-    },
-  })
-  return data
-}
-
 export const fetchMetadataUriWithOpenSeaFallback = async (
   address: string,
   tokenId: number,
@@ -563,7 +540,15 @@ export const fetchTokenProperties = async (
   }
 }
 
-// TODO: Change to production endpoint
 export const fetchOptimalGasPreset = async () => {
   return fetch('https://nonfungible.tools/api/gas').then((res) => res.json())
+}
+
+export const fetchMetadata = async (
+  contractAddress: string,
+  tokenId: number,
+) => {
+  return fetch(
+    `https://nonfungible.tools/api/metadata-proxy?address=${contractAddress}&tokenId=${tokenId}`,
+  ).then((res) => res.json())
 }

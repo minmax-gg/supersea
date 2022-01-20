@@ -15,17 +15,26 @@ import {
 import { useUser } from '../../utils/user'
 import { fetchAsset, fetchOptimalGasPreset } from '../../utils/api'
 
+const readableError = (message: string) => {
+  if (/insufficient funds/.test(message)) {
+    return 'You do not have enough funds to buy this asset.'
+  }
+  return `Unable to buy item. Received error "${message}"`
+}
+
 export const triggerQuickBuy = async ({
   isFounder,
   toast,
   address,
   tokenId,
+  displayedPrice,
   onComplete,
 }: {
   isFounder: boolean
   toast: ReturnType<typeof useToast>
   address: string
   tokenId: string
+  displayedPrice?: string
   onComplete: () => void
 }) => {
   const [asset, gasPreset] = await Promise.all([
@@ -60,7 +69,7 @@ export const triggerQuickBuy = async ({
       return null
     })(),
   ])
-  if (!asset.orders) {
+  if (!asset.orders || asset.orders.length === 0) {
     toast({
       duration: 7500,
       position: 'bottom-right',
@@ -73,7 +82,7 @@ export const triggerQuickBuy = async ({
   }
   window.postMessage({
     method: 'SuperSea__Buy',
-    params: { asset, gasPreset },
+    params: { asset, gasPreset, displayedPrice },
   })
   // Listen for errors, unsubscribe
   const messageListener = (event: any) => {
@@ -87,9 +96,7 @@ export const triggerQuickBuy = async ({
           position: 'bottom-right',
           render: () => (
             <Toast
-              text={
-                "Unable to buy item. This is most likely because the item is no longer listed, or because there aren't enough funds in your wallet."
-              }
+              text={readableError(event.data.params.error.message)}
               type="error"
             />
           ),
@@ -113,10 +120,12 @@ export const BuyNowButtonUI = ({
   address,
   tokenId,
   active,
+  displayedPrice,
 }: {
   address: string
   tokenId: string
   active: boolean
+  displayedPrice?: string
 }) => {
   const toast = useToast()
   const { isFounder } = useUser() || { isFounder: false }
@@ -171,6 +180,7 @@ export const BuyNowButtonUI = ({
               toast,
               tokenId,
               address,
+              displayedPrice,
               onComplete: () => setIsLoading(false),
             })
           } else {

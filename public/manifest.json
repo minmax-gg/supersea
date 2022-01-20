@@ -1,7 +1,7 @@
 {
   "name": "SuperSea",
   "description": "The supercharged OpenSea experience",
-  "version": "1.7.2",
+  "version": "1.7.3",
   "manifest_version": 3,
   "action": {
     "icons": {

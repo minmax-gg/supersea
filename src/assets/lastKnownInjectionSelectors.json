@@ -66,7 +66,7 @@
     "shortenedAddressSelector": ".AccountHeader--address"
   },
   "searchResults": {
-    "menuSelector": "*[class*=\"collection__DivContainer\"] ul[class*=\"Menureact__MenuBase\"]",
+    "menuSelector": "*[class*=\"CollectionPagereact\"] ul[class*=\"Menureact__MenuBase\"]",
     "containerSelector": ".AssetSearchView--main, .collection--ActivityTabSection",
     "route": {
       "url": "/collection?collectionSlug=[COLLECTION_SLUG]&tab=supersea",
@@ -75,7 +75,7 @@
   },
   "listingNotifier": {
     "node": {
-      "selector": "*[class*=\"collection\"] *[class*=\"PriceHistoryreact__DivContainer\"]",
+      "selector": ".collection--ActivityTabSection *[class*=\"PriceHistoryreact__DivContainer\"], .collection--ActivityTabSection .fresnel-container > div > div > div > *[class*=\"VerticalAlignedreact\"][class*=\"CenterAlignedreact\"]",
       "injectionMethod": "insertAfter"
     },
     "api": {
@@ -99,6 +99,7 @@
         "listingId": "node.relayId",
         "tokenId": "node.assetQuantity.asset.tokenId",
         "contractAddress": "node.assetQuantity.asset.assetContract.address",
+        "chain": "node.assetQuantity.asset.assetContract.chain",
         "name": "node.assetQuantity.asset.name",
         "collectionName": "node.assetQuantity.asset.collection.name",
         "image": "node.assetQuantity.asset.displayImageUrl",
