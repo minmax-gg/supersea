@@ -80,7 +80,9 @@ const listingMatchesNotifier = ({
       if (!rank) {
         return false
       }
-      return rank <= notifier.lowestRankNumber
+      if (rank > notifier.lowestRankNumber) {
+        return false
+      }
     }
   }
   // Traits

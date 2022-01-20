@@ -583,7 +583,7 @@ const ListingNotifierModal = ({
                                   <Button size="xs">{pollInterval}</Button>
                                 </PopoverTrigger>
                                 <PopoverContent
-                                  maxW="200px"
+                                  maxW="210px"
                                   borderColor={borderColor}
                                 >
                                   <PopoverArrow />
@@ -604,7 +604,8 @@ const ListingNotifierModal = ({
                                         <Button
                                           onClick={() => {
                                             setPollInterval(
-                                              Number(pollIntervalInput),
+                                              Number(pollIntervalInput) ||
+                                                pollInterval,
                                             )
                                             onClosePollIntervalInput()
                                           }}
