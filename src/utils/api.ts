@@ -180,7 +180,7 @@ const nonFungibleRequest = async (
   refreshAccessToken = false,
 ): Promise<any> => {
   const user = await getUser(refreshAccessToken)
-  const accessToken = user?.accessToken
+  const accessToken = user?.role !== 'FREE' && user?.accessToken
   try {
     const res = await request(
       'https://cdn.nonfungible.tools/graphql',
