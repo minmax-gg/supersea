@@ -80,7 +80,9 @@ const listingMatchesNotifier = ({
       if (!rank) {
         return false
       }
-      return rank <= notifier.lowestRankNumber
+      if (rank > notifier.lowestRankNumber) {
+        return false
+      }
     }
   }
   // Traits
@@ -212,7 +214,21 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
   useEffect(() => {
     if (rarities) return
     ;(async () => {
-      const address = await fetchCollectionAddress(collectionSlug)
+      let address = null
+      try {
+        address = await fetchCollectionAddress(collectionSlug)
+      } catch (err) {
+        console.error('failed fetching collection slug', err)
+      }
+      if (!address) {
+        setRarities({
+          tokenRarity: {},
+          tokenCount: 0,
+          isRanked: false,
+          traits: [],
+        })
+        return
+      }
       if (isSubscriber) {
         const rarities = await fetchRaritiesWithTraits(address, [])
         setRarities({
