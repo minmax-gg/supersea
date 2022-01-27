@@ -229,23 +229,32 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
         })
         return
       }
-      if (isSubscriber) {
-        const rarities = await fetchRaritiesWithTraits(address, [])
-        setRarities({
-          tokenRarity: _.mapValues(
-            _.keyBy(rarities.tokens, 'iteratorID'),
-            'rank',
-          ),
-          tokenCount: rarities.tokenCount,
-          isRanked: rarities.tokenCount > 0,
-          traits: rarities.traits,
-        })
-      } else {
-        const isRanked = await fetchIsRanked(address)
+      try {
+        if (isSubscriber) {
+          const rarities = await fetchRaritiesWithTraits(address, [])
+          setRarities({
+            tokenRarity: _.mapValues(
+              _.keyBy(rarities.tokens, 'iteratorID'),
+              'rank',
+            ),
+            tokenCount: rarities.tokenCount,
+            isRanked: rarities.tokenCount > 0,
+            traits: rarities.traits,
+          })
+        } else {
+          const isRanked = await fetchIsRanked(address)
+          setRarities({
+            tokenRarity: {},
+            tokenCount: 0,
+            isRanked: Boolean(isRanked),
+            traits: [],
+          })
+        }
+      } catch {
         setRarities({
           tokenRarity: {},
           tokenCount: 0,
-          isRanked: Boolean(isRanked),
+          isRanked: false,
           traits: [],
         })
       }
