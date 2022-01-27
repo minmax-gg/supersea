@@ -2,6 +2,10 @@
 import { gql } from 'graphql-request'
 import queryString from 'query-string'
 
+const GRAPHQL_AUTH_URL =
+  window.localStorage.GRAPHQL_AUTH_URL ||
+  'https://api.nonfungible.tools/graphql'
+
 const pendingOpenSeaRequestBodies: Record<string, string> = {}
 chrome.webRequest.onBeforeSendHeaders.addListener(
   ({ requestId, requestHeaders, url }) => {
@@ -94,7 +98,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.method === 'getUser') {
     // Can't use graphl-request because it depends on XMLHttpRequest,
     // which isn't available in background scripts
-    fetch('https://api.nonfungible.tools/graphql', {
+    fetch(GRAPHQL_AUTH_URL, {
       headers: {
         'content-type': 'application/json',
       },

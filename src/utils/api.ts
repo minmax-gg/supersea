@@ -84,6 +84,11 @@ export type Asset = {
 export type Chain = 'ethereum' | 'polygon'
 
 const REMOTE_ASSET_BASE = 'https://nonfungible.tools/supersea'
+const GRAPHQL_AUTH_URL =
+  window.localStorage.GRAPHQL_AUTH_URL ||
+  'https://api.nonfungible.tools/graphql'
+const GRAPHQL_CDN_URL =
+  window.localStorage.GRAPHQL_CDN_URL || 'https://api.nonfungible.tools/graphql'
 
 const openSeaPublicRateLimit = RateLimit(2)
 
@@ -138,7 +143,7 @@ const refreshTokenQuery = gql`
   }
 `
 
-const tokenClient = new GraphQLClient('https://api.nonfungible.tools/graphql', {
+const tokenClient = new GraphQLClient(GRAPHQL_AUTH_URL, {
   credentials: 'include',
   mode: 'cors',
 })
@@ -183,7 +188,7 @@ const nonFungibleRequest = async (
   const accessToken = user?.role !== 'FREE' && user?.accessToken
   try {
     const res = await request(
-      'https://cdn.nonfungible.tools/graphql',
+      GRAPHQL_CDN_URL,
       query,
       variables,
       accessToken
