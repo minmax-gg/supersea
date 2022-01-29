@@ -23,6 +23,10 @@ const OPENSEA_SHARED_CONTRACT_ADDRESSES = [
 // Not exactly right but good enough to split tokenIds into their unique collections
 const OPENSEA_SHARED_CONTRACT_COLLECTION_ID_LENGTH = 60
 
+const COLLECTION_SLUG_ADDRESS_OVERRIDES: Record<string, string> = {
+  bossbeauties: '0xb5c747561a185a146f83cfff25bdfd2455b31ff4',
+}
+
 export type Rarities = {
   tokenCount: number
   tokens: {
@@ -448,6 +452,9 @@ const collectionAddressLoader = new DataLoader(
   async (slugs: readonly string[]) => {
     // Max batch size is 1, we only use this for client side caching
     const slug = slugs[0]
+    if (COLLECTION_SLUG_ADDRESS_OVERRIDES[slug]) {
+      return [COLLECTION_SLUG_ADDRESS_OVERRIDES[slug]]
+    }
     try {
       const data = await fetch(
         `https://api.opensea.io/api/v1/assets?limit=1&collection=${slug}`,
