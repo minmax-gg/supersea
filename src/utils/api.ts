@@ -92,7 +92,8 @@ const GRAPHQL_AUTH_URL =
   window.localStorage.GRAPHQL_AUTH_URL ||
   'https://api.nonfungible.tools/graphql'
 const GRAPHQL_CDN_URL =
-  window.localStorage.GRAPHQL_CDN_URL || 'https://api.nonfungible.tools/graphql'
+  window.localStorage.GRAPHQL_CDN_URL ||
+  'https://supersea-worker.supersea.workers.dev/graphql'
 
 const openSeaPublicRateLimit = RateLimit(2)
 
