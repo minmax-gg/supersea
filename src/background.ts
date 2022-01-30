@@ -3,8 +3,8 @@ import { gql } from 'graphql-request'
 import queryString from 'query-string'
 
 const GRAPHQL_AUTH_URL =
-  window.localStorage.GRAPHQL_AUTH_URL ||
-  'https://api.nonfungible.tools/graphql'
+  // @ts-ignore
+  chrome.runtime.GRAPHQL_AUTH_URL || 'https://api.nonfungible.tools/graphql'
 
 const pendingOpenSeaRequestBodies: Record<string, string> = {}
 chrome.webRequest.onBeforeSendHeaders.addListener(

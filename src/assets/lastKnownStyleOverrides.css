@@ -73,6 +73,10 @@ div[role='list']
   opacity: 1;
 }
 
+.SuperSea__ListingNotifier {
+  padding: 10px 30px;
+}
+
 @keyframes SuperSea__FadeIn {
   from {
     opacity: 0;
