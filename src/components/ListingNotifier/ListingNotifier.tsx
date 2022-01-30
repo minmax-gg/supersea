@@ -176,6 +176,10 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
     stateToRestore.notificationIds,
   )
 
+  const [error, setError] = useState<
+    React.ComponentProps<typeof ListingNotifierModal>['error']
+  >(null)
+
   const { isSubscriber } = useUser() || { isSubscriber: false }
 
   // Cache state
@@ -308,6 +312,11 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
                     {},
                   ),
                 })
+                if (res.status !== 200) {
+                  const text = await res.text()
+                  // eslint-disable-next-line no-throw-literal
+                  throw { message: text, status: res.status }
+                }
                 const json = await res.json()
                 pollTimeRef.current = nextPollTime
                 const paths = selectors.listingNotifier.api.resultPaths
@@ -328,10 +337,15 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
                     timestamp: _.get(edge, paths.timestamp),
                   }
                 })
-              } catch (e) {
+              } catch (e: any) {
                 console.error('failed poll request', e)
-                chrome.storage.local.remove(['openSeaGraphQlRequests'])
-                retriesRef.current += 1
+                if (e.status === 429) {
+                  setError({ type: 'RATE_LIMIT', message: e.message })
+                  setPollStatus('FAILED')
+                } else {
+                  chrome.storage.local.remove(['openSeaGraphQlRequests'])
+                  retriesRef.current += 1
+                }
               }
               if (fetchedAssets) {
                 // Prioritize notifiers with quick buy, if multiple notifiers match
@@ -508,8 +522,10 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
         isRanked={rarities ? rarities.isRanked : null}
         isSubscriber={isSubscriber}
         addedNotifiers={activeNotifiers}
+        error={error}
         onRetry={() => {
           retriesRef.current = 0
+          setError(null)
           setPollStatus('STARTING')
         }}
         onAddNotifier={async (notifier) => {

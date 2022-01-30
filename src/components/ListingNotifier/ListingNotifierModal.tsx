@@ -25,6 +25,7 @@ import {
   VStack,
   Tag,
   Select,
+  Alert,
   Button,
   Table,
   Thead,
@@ -45,6 +46,11 @@ import {
   PopoverContent,
   PopoverTrigger,
   useDisclosure,
+  AlertDescription,
+  AlertIcon,
+  AlertTitle,
+  Box,
+  CloseButton,
 } from '@chakra-ui/react'
 import EthereumIcon from '../EthereumIcon'
 import { RarityName, RARITY_TYPES } from '../../utils/rarity'
@@ -89,6 +95,7 @@ const ListingNotifierModal = ({
   onChangeSendNotification,
   onClearMatches,
   onRetry,
+  error,
   ...modalProps
 }: {
   addedNotifiers: Notifier[]
@@ -107,6 +114,7 @@ const ListingNotifierModal = ({
   onClearMatches: () => void
   onChangeSendNotification: (sendNotification: boolean) => void
   onRetry: () => void
+  error: { type: 'RATE_LIMIT'; message: string } | null
 } & Omit<React.ComponentProps<typeof Modal>, 'children'>) => {
   const [extensionConfig] = useExtensionConfig()
   const [minPrice, setMinPrice] = useState('')
@@ -655,6 +663,25 @@ const ListingNotifierModal = ({
                     </Flex>
                   ) : null}
                 </Flex>
+                {error && error.type === 'RATE_LIMIT' ? (
+                  <Alert status="error" fontSize="sm" mt="2" borderRadius="md">
+                    <AlertIcon />
+                    <Box flex="1" px="2">
+                      <AlertTitle>You're sending too many requests!</AlertTitle>
+                      <AlertDescription display="block" maxW="450px">
+                        <Text>
+                          This can happen if you've set a poll interval number
+                          that's too low, or if you have too many tabs open with
+                          active listing notifiers.
+                        </Text>
+                        <Text mt="2">
+                          This can be solved by increasing the poll interval to
+                          a higher number in each active tab.
+                        </Text>
+                      </AlertDescription>
+                    </Box>
+                  </Alert>
+                ) : null}
                 {matchedAssets.length ? (
                   <VStack spacing="2" alignItems="flex-start" width="100%">
                     {matchedAssets.slice(0, 30).map((asset) => {
