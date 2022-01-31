@@ -75,8 +75,8 @@
   },
   "listingNotifier": {
     "node": {
-      "selector": ".collection--ActivityTabSection *[class*=\"PriceHistoryreact__DivContainer\"], .collection--ActivityTabSection .fresnel-container > div > div > div > *[class*=\"VerticalAlignedreact\"][class*=\"CenterAlignedreact\"]",
-      "injectionMethod": "insertAfter"
+      "selector": ".collection--ActivityTabSection .fresnel-container ~ .fresnel-container ~ *[class*=\"FlexColumnreact\"]",
+      "injectionMethod": "prepend"
     },
     "api": {
       "staticVariables": {

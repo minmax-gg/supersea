@@ -306,11 +306,11 @@ const AssetInfo = ({
   useEffect(() => {
     if (!(address && tokenId)) return
     ;(async () => {
+      if (chain === 'polygon') {
+        setRarity(null)
+        return
+      }
       if (isSubscriber) {
-        if (chain === 'polygon') {
-          setRarity(null)
-          return
-        }
         const rarities = await fetchRarities(address)
         if (rarities) {
           const { tokenCount, tokens } = rarities
