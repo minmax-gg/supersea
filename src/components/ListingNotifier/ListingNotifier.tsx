@@ -415,6 +415,7 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
                         isFounder,
                         address: asset.contractAddress,
                         tokenId: asset.tokenId,
+                        displayedPrice: asset.price,
                         toast,
                         onComplete: () => {},
                       })
