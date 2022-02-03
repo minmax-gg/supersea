@@ -1,5 +1,6 @@
 import { OpenSeaPort, Network } from 'opensea-js'
 import { OrderSide } from 'opensea-js/lib/types'
+import { readableEthValue } from './utils/ethereum'
 ;((window: any) => {
   // Restore console for debugging
   // const i = document.createElement('iframe')
@@ -56,8 +57,10 @@ import { OrderSide } from 'opensea-js/lib/types'
           event.data.params.displayedPrice &&
           Number(order.base_price) > Number(event.data.params.displayedPrice)
         ) {
-          window.alert(
-            '[SuperSea] Warning! The displayed price does not match the order price. Make sure the price shown in MetaMask is the price you want to pay.',
+          throw new Error(
+            `Transaction cancelled due to price change, the actual price was ${readableEthValue(
+              order.base_price,
+            )} ETH`,
           )
         }
         await seaport.fulfillOrder({
