@@ -280,7 +280,6 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
         massBidProcessRef.current.status === 'stopped' ||
         massBidProcessRef.current.processNumber !== processNumber
       ) {
-        console.log('stop', massBidProcessRef.current, processNumber)
         initializeNext = false
       }
       if (initializeNext) {
