@@ -203,6 +203,7 @@ const nonFungibleRequest = async (
               user.role,
               user.membershipType,
             ),
+            'X-SuperSea-Path': window.location.pathname,
           }
         : {},
     )
