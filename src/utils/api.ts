@@ -70,7 +70,7 @@ export type Asset = {
     name: string
   }
   image_url: string
-  last_sale: {
+  last_sale?: {
     total_price: string
     payment_token: {
       symbol: 'ETH' | 'WETH'
@@ -203,6 +203,7 @@ const nonFungibleRequest = async (
               user.role,
               user.membershipType,
             ),
+            'X-SuperSea-Path': window.location.pathname,
           }
         : {},
     )

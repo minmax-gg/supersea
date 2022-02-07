@@ -18,6 +18,8 @@ import { fetchAsset, fetchOptimalGasPreset } from '../../utils/api'
 const readableError = (message: string) => {
   if (/insufficient funds/.test(message)) {
     return 'You do not have enough funds to buy this asset.'
+  } else if (/cancelled due to price change/.test(message)) {
+    return message
   }
   return `Unable to buy item. Received error "${message}"`
 }

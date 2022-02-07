@@ -1,11 +1,29 @@
-import { OpenSeaPort, Network } from 'opensea-js'
+import { OpenSeaPort, Network, orderFromJSON, assetFromJSON } from 'opensea-js'
 import { OrderSide } from 'opensea-js/lib/types'
+import { RateLimit } from 'async-sema'
+import { readableEthValue } from './utils/ethereum'
 ;((window: any) => {
   // Restore console for debugging
   // const i = document.createElement('iframe')
   // i.style.display = 'none'
   // document.body.appendChild(i)
   // window.console = (i.contentWindow as any).console
+
+  const getEthAccount = async () => {
+    const eth = (window as any).ethereum
+    if (!eth) return null
+    if (eth.selectedAddress) return eth.selectedAddress
+    let accounts = await eth.request({ method: 'eth_accounts' })
+    if (!accounts?.length) {
+      accounts = await eth.request({
+        method: 'eth_requestAccounts',
+      })
+    }
+    if (accounts?.length) return accounts[0]
+    return null
+  }
+
+  const bidRateLimit = RateLimit(1 / 3, { uniformDistribution: true })
 
   window.addEventListener('message', async (event: any) => {
     if (event.origin !== 'https://opensea.io') return
@@ -14,16 +32,6 @@ import { OrderSide } from 'opensea-js/lib/types'
         const order = event.data.params.asset.orders.filter(
           (order: any) => order.side === OrderSide.Sell,
         )[0]
-        const formattedOrder = Object.keys(order).reduce((acc: any, key) => {
-          const camelCasedKey = key.replace(/_([a-z])/g, (g) =>
-            g[1].toUpperCase(),
-          )
-          acc[camelCasedKey] = order[key]
-          return acc
-        }, {})
-        formattedOrder.maker = formattedOrder.maker.address
-        formattedOrder.taker = formattedOrder.taker.address
-        formattedOrder.feeRecipient = formattedOrder.feeRecipient.address
         const seaport = new OpenSeaPort((window as any).ethereum, {
           networkName: Network.Main,
         })
@@ -56,13 +64,15 @@ import { OrderSide } from 'opensea-js/lib/types'
           event.data.params.displayedPrice &&
           Number(order.base_price) > Number(event.data.params.displayedPrice)
         ) {
-          window.alert(
-            '[SuperSea] Warning! The displayed price does not match the order price. Make sure the price shown in MetaMask is the price you want to pay.',
+          throw new Error(
+            `Transaction cancelled due to price change, the actual price was ${readableEthValue(
+              order.base_price,
+            )} ETH`,
           )
         }
         await seaport.fulfillOrder({
-          order: formattedOrder,
-          accountAddress: (window as any).ethereum.selectedAddress,
+          order: orderFromJSON(order),
+          accountAddress: await getEthAccount(),
         })
         window.postMessage({
           method: 'SuperSea__Buy__Success',
@@ -75,6 +85,51 @@ import { OrderSide } from 'opensea-js/lib/types'
           params: { ...event.data.params, error },
         })
       }
+    } else if (event.data.method === 'SuperSea__Bid') {
+      try {
+        await bidRateLimit()
+        const seaport = new OpenSeaPort((window as any).ethereum, {
+          networkName: Network.Main,
+          apiKey: '2f6f419a083c46de9d83ce3dbe7db601',
+        })
+
+        const validateAndPostOrder = seaport.validateAndPostOrder.bind(seaport)
+        seaport.validateAndPostOrder = async (orderWithSignature) => {
+          window.postMessage({
+            method: 'SuperSea__Bid__Signed',
+            params: { ...event.data.params },
+          })
+          return validateAndPostOrder(orderWithSignature)
+        }
+
+        const getAsset = seaport.api.getAsset.bind(seaport)
+        seaport.api.getAsset = async (asset) => {
+          if (asset.tokenId === event.data.params.tokenId) {
+            return assetFromJSON(event.data.params.asset)
+          }
+          return getAsset(asset)
+        }
+
+        await seaport.createBuyOrder({
+          asset: {
+            tokenId: event.data.params.tokenId,
+            tokenAddress: event.data.params.address,
+          },
+          accountAddress: await getEthAccount(),
+          startAmount: event.data.params.price,
+          expirationTime: event.data.params.expirationTime,
+        })
+        window.postMessage({
+          method: 'SuperSea__Bid__Success',
+          params: { ...event.data.params },
+        })
+      } catch (error: any) {
+        console.error(error)
+        window.postMessage({
+          method: 'SuperSea__Bid__Error',
+          params: { ...event.data.params, error },
+        })
+      }
     } else if (event.data.method === 'SuperSea__Navigate') {
       window.next.router.push(
         event.data.params.url,
@@ -82,13 +137,10 @@ import { OrderSide } from 'opensea-js/lib/types'
         event.data.params.options,
       )
     } else if (event.data.method === 'SuperSea__GetEthAddress') {
-      const address =
-        (window as any).ethereum?.selectedAddress ||
-        (await (window as any).ethereum?.request({ method: 'eth_accounts' }))[0]
       window.postMessage({
         method: 'SuperSea__GetEthAddress__Success',
         params: {
-          ethAddress: address,
+          ethAddress: await getEthAccount(),
         },
       })
     }

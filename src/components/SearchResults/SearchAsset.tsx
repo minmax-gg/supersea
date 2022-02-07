@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import {
   Box,
   Image,
@@ -13,18 +13,33 @@ import { Asset } from '../../utils/api'
 import AssetInfo, { HEIGHT as ASSET_INFO_HEIGHT } from '../AssetInfo/AssetInfo'
 import EthereumIcon from '../EthereumIcon'
 import { readableEthValue } from '../../utils/ethereum'
+import MassBidStatus, { MassBidState } from './MassBidStatus'
 
 const SearchAsset = ({
   address,
   tokenId,
   asset,
+  massBidState,
 }: {
   address: string | null
   tokenId: string
   asset: Asset | null
+  massBidState?: MassBidState
 }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const [imageLoaded, setImageLoaded] = useState(false)
+
+  useEffect(() => {
+    if (massBidState === 'PROCESSING' && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect()
+      window.scrollTo({
+        top:
+          rect.top + rect.height / 2 + window.scrollY - window.innerHeight / 2,
+        behavior: 'smooth',
+      })
+    }
+  }, [massBidState])
+
   return (
     <Box
       background={useColorModeValue('white', '#303339')}
@@ -36,6 +51,12 @@ const SearchAsset = ({
       paddingBottom={ASSET_INFO_HEIGHT}
       ref={containerRef}
       animation="SuperSea__FadeIn 350ms ease"
+      transition={
+        massBidState === 'PROCESSING'
+          ? 'transform 350ms ease'
+          : 'transform 350ms 75ms ease'
+      }
+      transform={massBidState === 'PROCESSING' ? 'scale(1.05)' : 'scale(1)'}
     >
       <LinkBox>
         <Box
@@ -177,6 +198,11 @@ const SearchAsset = ({
           container={containerRef.current!}
         />
       ) : null}
+      {massBidState && (
+        <Box position="absolute" top="2" right="2">
+          <MassBidStatus state={massBidState} />
+        </Box>
+      )}
     </Box>
   )
 }

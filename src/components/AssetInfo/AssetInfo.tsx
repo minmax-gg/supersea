@@ -539,44 +539,46 @@ const AssetInfo = ({
                     )}
                   </Text>
                 </MenuItem>
-                <MenuItem
-                  isDisabled={chain === 'polygon'}
-                  onClick={async () => {
-                    let metadataUri = null
-                    try {
-                      metadataUri = await fetchMetadataUriWithOpenSeaFallback(
-                        address,
-                        +tokenId,
-                      )
-                    } catch (err) {}
-                    if (!metadataUri) {
-                      toast({
-                        duration: 3000,
-                        position: 'bottom-right',
-                        render: () => (
-                          <Toast text="Unable to load metadata." type="error" />
-                        ),
-                      })
-                      return
-                    }
-                    if (/^data:/.test(metadataUri)) {
-                      const blob = await fetch(metadataUri).then((res) =>
-                        res.blob(),
-                      )
-                      window.open(URL.createObjectURL(blob), '_blank')
-                    } else {
-                      window.open(metadataUri, '_blank')
-                    }
-                  }}
-                >
-                  View Raw Data{' '}
-                  <Icon as={FiExternalLink} ml="0.3em" mt="-2px" />
-                </MenuItem>
               </MenuGroup>
               <MenuDivider />
-              <MenuGroup
-                title={chain === 'ethereum' ? 'Etherscan' : 'Polygonscan'}
-              >
+              <MenuGroup title="Links">
+                {chain === 'ethereum' && (
+                  <MenuItem
+                    onClick={async () => {
+                      let metadataUri = null
+                      try {
+                        metadataUri = await fetchMetadataUriWithOpenSeaFallback(
+                          address,
+                          +tokenId,
+                        )
+                      } catch (err) {}
+                      if (!metadataUri) {
+                        toast({
+                          duration: 3000,
+                          position: 'bottom-right',
+                          render: () => (
+                            <Toast
+                              text="Unable to load metadata."
+                              type="error"
+                            />
+                          ),
+                        })
+                        return
+                      }
+                      if (/^data:/.test(metadataUri)) {
+                        const blob = await fetch(metadataUri).then((res) =>
+                          res.blob(),
+                        )
+                        window.open(URL.createObjectURL(blob), '_blank')
+                      } else {
+                        window.open(metadataUri, '_blank')
+                      }
+                    }}
+                  >
+                    Raw Metadata{' '}
+                    <Icon as={FiExternalLink} ml="0.3em" mt="-2px" />
+                  </MenuItem>
+                )}
                 <MenuItem
                   onClick={() => {
                     window.open(
@@ -589,9 +591,20 @@ const AssetInfo = ({
                     )
                   }}
                 >
-                  View contract{' '}
-                  <Icon as={FiExternalLink} ml="0.3em" mt="-2px" />
-                </MenuItem>
+                  Contract <Icon as={FiExternalLink} ml="0.3em" mt="-2px" />
+                </MenuItem>{' '}
+                {chain === 'ethereum' && (
+                  <MenuItem
+                    onClick={() => {
+                      window.open(
+                        `https://looksrare.org/collections/${address}/${tokenId}`,
+                        '_blank',
+                      )
+                    }}
+                  >
+                    LooksRare <Icon as={FiExternalLink} ml="0.3em" mt="-2px" />
+                  </MenuItem>
+                )}
               </MenuGroup>
             </MenuList>
           </ScopedCSSPortal>

@@ -5,6 +5,7 @@ import {
   Flex,
   Text,
   useColorModeValue,
+  useToast,
 } from '@chakra-ui/react'
 import _ from 'lodash'
 import { useState, useEffect, useRef, useCallback } from 'react'
@@ -23,6 +24,9 @@ import { useInView } from 'react-intersection-observer'
 import Filters, { FiltersType } from './Filters'
 import { weiToEth } from '../../utils/ethereum'
 import { determineRarityType, RARITY_TYPES } from '../../utils/rarity'
+import { MassBidState } from './MassBidStatus'
+import Toast from '../Toast'
+import MassBidOverlay from './MassBidOverlay'
 
 const PLACEHOLDER_TOKENS = _.times(40, (num) => ({
   iteratorID: num,
@@ -48,11 +52,25 @@ const GridItem = ({
 
 const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
   const gridRef = useRef<HTMLDivElement | null>(null)
+  const toast = useToast()
   const [tokenCount, setTokenCount] = useState(0)
   const [tokens, setTokens] = useState<Rarities['tokens'] | null | undefined>()
   const [address, setAddress] = useState<string | null>(null)
   const [loadedItems, setLoadedItems] = useState(40)
   const [assetMap, setAssetMap] = useState<Record<string, Asset>>({})
+  const massBidProcessRef = useRef<{
+    processNumber: number
+    processingIndex: number
+    status: 'idle' | 'processing' | 'stopped'
+  }>({ processingIndex: -1, processNumber: 0, status: 'idle' })
+  const [massBid, setMassBid] = useState<{
+    price: number
+    expirationTime: number
+    currentIndex: number
+  } | null>(null)
+  const [massBidStates, setMassBidStates] = useState<
+    Record<string, MassBidState>
+  >({})
 
   const loadingAssetMapRef = useRef<Record<string, boolean>>({})
   const [allTraits, setAllTraits] = useState<Trait[]>([])
@@ -193,6 +211,114 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
     })
 
   useEffect(() => {
+    if (
+      !massBid ||
+      massBidProcessRef.current.processingIndex === massBid.currentIndex ||
+      massBidProcessRef.current.status !== 'idle'
+    ) {
+      return
+    }
+    massBidProcessRef.current = {
+      processNumber: massBidProcessRef.current.processNumber,
+      processingIndex: massBid.currentIndex,
+      status: 'processing',
+    }
+
+    const asset = postFilteredTokens[massBid.currentIndex].asset
+    const processNumber = massBidProcessRef.current.processNumber
+
+    // Listen for errors, unsubscribe
+    const messageListener = (event: any) => {
+      let state: MassBidState | null = null
+      let initializeNext = false
+      if (event.data.params?.tokenId !== asset!.token_id) {
+        return
+      }
+
+      if (event.data.method === 'SuperSea__Bid__Error') {
+        if (/declined to authorize/i.test(event.data.params.error.message)) {
+          state = 'SKIPPED'
+          initializeNext = true
+        } else if (
+          /insufficient balance/i.test(event.data.params.error.message)
+        ) {
+          toast({
+            duration: 7500,
+            position: 'bottom-right',
+            render: () => (
+              <Toast
+                text={`You don't have enough WETH to place this bid. Make sure to wrap some first.`}
+                type="error"
+              />
+            ),
+          })
+          state = 'FAILED'
+          massBidProcessRef.current.status = 'stopped'
+        } else {
+          toast({
+            duration: 7500,
+            position: 'bottom-right',
+            render: () => (
+              <Toast
+                text={`Unable to place bid on item. Received error "${event.data.params.error.message}"`}
+                type="error"
+              />
+            ),
+          })
+          state = 'FAILED'
+          initializeNext = true
+        }
+      } else if (event.data.method === 'SuperSea__Bid__Signed') {
+        state = 'SIGNED'
+      } else if (event.data.method === 'SuperSea__Bid__Success') {
+        state = 'COMPLETED'
+        initializeNext = true
+      }
+      if (!state) return
+      if (
+        massBid.currentIndex === postFilteredTokens.length - 1 ||
+        massBidProcessRef.current.status === 'stopped' ||
+        massBidProcessRef.current.processNumber !== processNumber
+      ) {
+        initializeNext = false
+      }
+      if (initializeNext) {
+        setMassBidStates((states) => ({
+          ...states,
+          [event.data.params.tokenId]: state,
+          [postFilteredTokens[massBid.currentIndex + 1].tokenId]: 'PROCESSING',
+        }))
+        massBidProcessRef.current.status = 'idle'
+        setMassBid({
+          ...massBid,
+          currentIndex: massBid.currentIndex + 1,
+        })
+      } else {
+        setMassBidStates((states) => ({
+          ...states,
+          [event.data.params.tokenId]: state,
+        }))
+      }
+      if (state !== 'SIGNED') {
+        window.removeEventListener('message', messageListener)
+      }
+    }
+    window.addEventListener('message', messageListener)
+
+    window.postMessage({
+      method: 'SuperSea__Bid',
+      params: {
+        asset,
+        tokenId: asset?.token_id,
+        address: asset?.asset_contract.address,
+        price: massBid.price,
+        expirationTime: massBid.expirationTime,
+      },
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [massBid, postFilteredTokens])
+
+  useEffect(() => {
     if (tokens && tokens.length <= loadedItems) return
     window.addEventListener('scroll', throttledLoadMore)
     window.addEventListener('resize', throttledLoadMore)
@@ -223,6 +349,8 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
         allTraits={allTraits}
         onApplyFilters={(appliedFilters) => {
           unstable_batchedUpdates(() => {
+            setMassBid(null)
+            setMassBidStates({})
             setFilters(appliedFilters)
             setLoadedItems(40)
             if (appliedFilters.traits !== filters.traits) {
@@ -236,6 +364,21 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
           filters.priceRange[1] !== undefined
         }
         searchNumber={loadedItems}
+        onStartMassBid={({ price, expirationTime }) => {
+          massBidProcessRef.current = {
+            processingIndex: -1,
+            processNumber: massBidProcessRef.current.processNumber + 1,
+            status: 'idle',
+          }
+          setMassBidStates({
+            [postFilteredTokens[0].tokenId]: 'PROCESSING',
+          })
+          setMassBid({
+            price,
+            expirationTime,
+            currentIndex: 0,
+          })
+        }}
       />
       {tokens === null || tokens?.length === 0 ? (
         <Flex width="100%" justifyContent="center" py="16" height="800px">
@@ -254,7 +397,7 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
           width="100%"
           ref={gridRef}
         >
-          {postFilteredTokens.map(({ tokenId, asset, placeholder }) => {
+          {postFilteredTokens.map(({ tokenId, asset, placeholder }, index) => {
             return (
               <GridItem
                 key={`${tokenId}${placeholder ? '_placeholder' : ''}`}
@@ -263,6 +406,7 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
                     address={address}
                     tokenId={tokenId}
                     asset={asset}
+                    massBidState={massBidStates[tokenId]}
                   />
                 )}
                 renderPlaceholder={() => (
@@ -290,6 +434,14 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
               })
             : null}
         </SimpleGrid>
+      )}
+      {massBid && (
+        <MassBidOverlay
+          onStop={() => {
+            massBidProcessRef.current.status = 'stopped'
+            setMassBid(null)
+          }}
+        />
       )}
     </HStack>
   )
