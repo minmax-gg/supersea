@@ -36,14 +36,13 @@ import { readableEthValue } from './utils/ethereum'
           networkName: Network.Main,
         })
         seaport.gasIncreaseFactor = 1.3
+        // @ts-ignore
+        const wyvernProtocol = seaport._getWyvernProtocolForOrder(order)
         const _sendTransactionAsync =
-          // @ts-ignore
-          seaport._wyvernProtocol.wyvernExchange.atomicMatch_
-            .sendTransactionAsync
+          wyvernProtocol.wyvernExchange.atomicMatch_.sendTransactionAsync
 
         if (event.data.params.gasPreset) {
-          // @ts-ignore
-          seaport._wyvernProtocol.wyvernExchange.atomicMatch_.sendTransactionAsync = (
+          wyvernProtocol.wyvernExchange.atomicMatch_.sendTransactionAsync = (
             ...args: any
           ) => {
             args[args.length - 1].maxPriorityFeePerGas = (
@@ -55,7 +54,7 @@ import { readableEthValue } from './utils/ethereum'
               10 ** 9
             ).toString(16)
             return _sendTransactionAsync.apply(
-              (seaport as any)._wyvernProtocol.wyvernExchange.atomicMatch_,
+              (wyvernProtocol as any).wyvernExchange.atomicMatch_,
               args,
             )
           }
