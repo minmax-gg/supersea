@@ -19,7 +19,7 @@ div[role='list'] div[role='listitem'] {
 }
 
 div[role='listitem'] .AssetCell--container {
-  padding-left: 165px;
+  padding-left: 190px;
   position: relative;
 }
 
@@ -28,7 +28,7 @@ div[role='list']
   .AssetCell--container
   .SuperSea__AssetInfo {
   z-index: 1;
-  min-width: 165px;
+  min-width: 190px;
   position: absolute;
   left: 0;
   top: 50%;

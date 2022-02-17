@@ -23,7 +23,11 @@ import { HEIGHT as ASSET_INFO_HEIGHT } from '../AssetInfo/AssetInfo'
 import { useInView } from 'react-intersection-observer'
 import Filters, { FiltersType } from './Filters'
 import { weiToEth } from '../../utils/ethereum'
-import { determineRarityType, RARITY_TYPES } from '../../utils/rarity'
+import {
+  determineRarityType,
+  RARITY_TYPES,
+  useTraitCountExcluded,
+} from '../../utils/rarity'
 import { MassBidState } from './MassBidStatus'
 import Toast from '../Toast'
 import MassBidOverlay from './MassBidOverlay'
@@ -31,6 +35,7 @@ import MassBidOverlay from './MassBidOverlay'
 const PLACEHOLDER_TOKENS = _.times(40, (num) => ({
   iteratorID: num,
   rank: num,
+  noTraitCountrank: num,
   placeholder: true,
 }))
 const LOAD_MORE_SCROLL_THRESHOLD = 600
@@ -58,6 +63,9 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
   const [address, setAddress] = useState<string | null>(null)
   const [loadedItems, setLoadedItems] = useState(40)
   const [assetMap, setAssetMap] = useState<Record<string, Asset>>({})
+  const [traitCountExcluded, setTraitCountExcluded] = useTraitCountExcluded(
+    address,
+  )
   const massBidProcessRef = useRef<{
     processNumber: number
     processingIndex: number
@@ -134,9 +142,18 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
   }, [collectionSlug, filters.traits])
 
   // Tokens filtered with data that we have _before_ fetching the asset
-  const preFilteredTokens = (tokens && address ? tokens : PLACEHOLDER_TOKENS)
-    ?.filter(({ rank }) => {
-      const rarityType = determineRarityType(rank, tokenCount)
+  const preFilteredTokens = ((tokens && address
+    ? [...tokens].sort((a, b) =>
+        traitCountExcluded
+          ? a.noTraitCountRank - b.noTraitCountRank
+          : a.rank - b.rank,
+      )
+    : PLACEHOLDER_TOKENS) as any[])
+    ?.filter(({ rank, noTraitCountRank }) => {
+      const rarityType = determineRarityType(
+        traitCountExcluded ? noTraitCountRank : rank,
+        tokenCount,
+      )
       if (!rarityType) return true
       const rarityIndex = RARITY_TYPES.findIndex(
         ({ name }) => rarityType.name === name,
@@ -345,6 +362,7 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
   return (
     <HStack width="100%" alignItems="flex-start" position="relative">
       <Filters
+        address={address}
         filters={filters}
         allTraits={allTraits}
         onApplyFilters={(appliedFilters) => {

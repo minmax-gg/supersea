@@ -19,6 +19,7 @@ import {
   useToast,
   Tag,
   useColorModeValue,
+  useColorMode,
   Tooltip,
 } from '@chakra-ui/react'
 import { FiMoreHorizontal, FiExternalLink } from 'react-icons/fi'
@@ -44,7 +45,13 @@ import { RateLimit } from 'async-sema'
 import BuyNowButton from './BuyNowButton'
 import LockedFeature from '../LockedFeature'
 import { selectElement } from '../../utils/selector'
-import { determineRarityType, RARITY_TYPES } from '../../utils/rarity'
+import {
+  determineRarityType,
+  getActiveRarity,
+  RarityTier,
+  RARITY_TYPES,
+  useTraitCountExcluded,
+} from '../../utils/rarity'
 import useFloor from '../../hooks/useFloor'
 import PropertiesModal from './PropertiesModal'
 
@@ -65,88 +72,169 @@ type Rarity = {
   isRanked: boolean
   tokenCount: number
   rank: number
-  type: typeof RARITY_TYPES[number]
+  type: RarityTier
+  noTraitCountRank: number
+  noTraitCountType: RarityTier
 }
+
 const RarityBadge = ({
+  type,
   rarity,
+  traitCountExcluded,
   isInaccurate,
   isSubscriber,
   isMembershipNFT,
   onOpenProperties,
 }: {
+  type: React.ComponentProps<typeof AssetInfo>['type']
   rarity: Rarity | null
+  traitCountExcluded: boolean
   isInaccurate: boolean
   isSubscriber: boolean
   isMembershipNFT: boolean
   onOpenProperties: () => void
 }) => {
+  const rankTierDisparity = rarity
+    ? Math.abs(rarity.type.tier - rarity.noTraitCountType.tier)
+    : 0
+  const hoverBg = useColorModeValue('blackAlpha.300', 'whiteAlpha.300')
+  const { colorMode } = useColorMode()
+
+  const tooltipColor = useColorModeValue('black', 'white')
+  const tooltipBg = useColorModeValue('gray.50', 'gray.700')
+  const warningTextBg = useColorModeValue('orange.200', 'orange.600')
+  const warningTextColor = useColorModeValue('black', 'white')
+
   if (isSubscriber || isMembershipNFT) {
     const tooltipLabel = (() => {
       if (isMembershipNFT) {
         return <Text my="0">You're all legendary to us &lt;3</Text>
       }
       if (rarity) {
-        return (
-          <Box lineHeight="1.6em">
-            <Text my="0">
-              {rarity.type.name}
+        const withTraitCount = (
+          <Box>
+            <Text opacity="0.65" mt="0" mb="1">
+              Rank with Trait Count Score
+            </Text>{' '}
+            <Text my="0" fontWeight="semibold">
+              #{rarity.rank}{' '}
+              <Tag bg={rarity.type.color[colorMode]} size="sm" mx="1">
+                {rarity.type.name}
+              </Tag>
               {rarity.type.top !== Infinity
                 ? ` (top ${rarity.type.top * 100}%)`
                 : ' (bottom 50%)'}
             </Text>
-            <Text opacity="0.65" my="0">
-              #{rarity.rank} / {rarity.tokenCount}
+          </Box>
+        )
+        const withoutTraitCount = (
+          <Box>
+            <Text opacity="0.65" mt="0" mb="1">
+              Rank without Trait Count Score
             </Text>{' '}
-            <Text opacity="0.5" my="0" fontSize="xs">
-              Click to view properties
+            <Text mb="2" my="0">
+              #{rarity.noTraitCountRank}
+              <Tag
+                bg={rarity.noTraitCountType.color[colorMode]}
+                size="sm"
+                mx="2"
+              >
+                {rarity.noTraitCountType.name}
+              </Tag>
+              {rarity.noTraitCountType.top !== Infinity
+                ? ` (top ${rarity.noTraitCountType.top * 100}%)`
+                : ' (bottom 50%)'}
             </Text>
+          </Box>
+        )
+        return (
+          <Box lineHeight="1.6em">
+            <VStack spacing="2" alignItems="flex-start">
+              {traitCountExcluded ? withoutTraitCount : withTraitCount}
+              {traitCountExcluded ? withTraitCount : withoutTraitCount}
+            </VStack>
+            {(() => {
+              let text = ''
+              if (isInaccurate) {
+                text =
+                  "This collection's rank is reported to be inaccurate compared to its official rarity guide."
+              } else if (rankTierDisparity > 0) {
+                text =
+                  "There's a rarity tier difference with trait count score enabled/disabled. Click for more details."
+              }
+              return text ? (
+                <Text
+                  bg={warningTextBg}
+                  color={warningTextColor}
+                  fontSize="xs"
+                  py="1"
+                  px="2"
+                  mb="0"
+                  borderRadius="sm"
+                >
+                  {text}
+                </Text>
+              ) : null
+            })()}
           </Box>
         )
       }
 
       return ''
     })()
+
+    const activeRarity = getActiveRarity(rarity, traitCountExcluded)
+
     return (
       <HStack spacing="1">
         <Tooltip
-          isDisabled={!(rarity || isMembershipNFT)}
+          isDisabled={!(activeRarity || isMembershipNFT)}
           label={tooltipLabel}
           size="lg"
           hasArrow
-          bg="gray.700"
+          maxW="260px"
+          borderRadius="md"
           placement="top"
-          color="white"
+          bg={tooltipBg}
+          color={tooltipColor}
           px={3}
-          py={2}
+          py={3}
         >
           <Text
             fontWeight="500"
-            cursor={rarity ? 'pointer' : undefined}
-            onClick={rarity === null ? undefined : onOpenProperties}
+            cursor={activeRarity ? 'pointer' : undefined}
+            onClick={activeRarity === null ? undefined : onOpenProperties}
+            borderRadius="md"
+            px="1"
+            mx="-1"
+            transition="background-color 150ms ease"
+            _hover={{
+              bg: activeRarity === null ? undefined : hoverBg,
+            }}
           >
-            {rarity === null ? 'Unranked' : `#${rarity.rank}`}
+            {activeRarity === null ? (
+              'Unranked'
+            ) : (
+              <Text as="span">
+                {isInaccurate || rankTierDisparity ? (
+                  <WarningTwoIcon
+                    opacity="0.75"
+                    width={type === 'list' ? '12px' : '16px'}
+                    height={type === 'list' ? '12px' : '16px'}
+                    position="relative"
+                    mr="1"
+                    top="-1px"
+                  />
+                ) : null}
+                #{activeRarity.rank}
+                <Text as="span" fontSize="xs" opacity="0.75">
+                  {' '}
+                  / {activeRarity.tokenCount}
+                </Text>
+              </Text>
+            )}
           </Text>
         </Tooltip>
-        {isInaccurate ? (
-          <Tooltip
-            label="This collection's ranking has been reported to be inaccurate compared to the project's official rarity guide."
-            size="lg"
-            hasArrow
-            bg="gray.700"
-            placement="top"
-            color="white"
-            px={3}
-            py={2}
-          >
-            <WarningTwoIcon
-              opacity="0.75"
-              width="16x"
-              height="16px"
-              position="relative"
-              top="-1px"
-            />
-          </Tooltip>
-        ) : null}
       </HStack>
     )
   }
@@ -185,9 +273,17 @@ const AssetInfo = ({
   const [floorTooltipOpen, setFloorTooltipOpen] = useState(false)
   const [collectionSlug, setCollectionSlug] = useState(inputCollectionSlug)
   const [propertiesModalOpen, setPropertiesModalOpen] = useState(false)
+  const [traitCountExcluded] = useTraitCountExcluded(address)
 
   const toast = useToast()
   const isMembershipNFT = MEMBERSHIP_ADDRESS === address
+
+  const activeRarity = rarity && {
+    isRanked: rarity.isRanked,
+    tokenCount: rarity.tokenCount,
+    rank: traitCountExcluded ? rarity.noTraitCountRank : rarity.rank,
+    type: traitCountExcluded ? rarity.noTraitCountType : rarity.type,
+  }
 
   const { floor, loading: floorLoading, loadedAt: floorLoadedAt } = useFloor(
     collectionSlug,
@@ -318,13 +414,18 @@ const AssetInfo = ({
             ({ iteratorID }) => String(iteratorID) === tokenId,
           )
           if (token) {
-            const { rank } = token
+            const { rank, noTraitCountRank } = token
             if (rank !== null) {
               setRarity({
                 isRanked: true,
                 tokenCount,
                 rank,
                 type: determineRarityType(rank, tokenCount),
+                noTraitCountRank: noTraitCountRank,
+                noTraitCountType: determineRarityType(
+                  noTraitCountRank,
+                  tokenCount,
+                ),
               })
               return
             }
@@ -339,6 +440,8 @@ const AssetInfo = ({
             tokenCount: 100,
             rank: 1,
             type: RARITY_TYPES[0],
+            noTraitCountRank: 1,
+            noTraitCountType: RARITY_TYPES[0],
           })
         } else {
           setRarity({
@@ -346,6 +449,8 @@ const AssetInfo = ({
             tokenCount: 0,
             rank: 0,
             type: RARITY_TYPES[RARITY_TYPES.length - 1],
+            noTraitCountRank: 0,
+            noTraitCountType: RARITY_TYPES[RARITY_TYPES.length - 1],
           })
         }
       }
@@ -356,7 +461,7 @@ const AssetInfo = ({
   return (
     <Box
       pr={type === 'list' ? 3 : 0}
-      width={type === 'list' ? '165px' : undefined}
+      width={type === 'list' ? '190px' : undefined}
     >
       <Flex
         height={type === 'list' ? `${LIST_HEIGHT}px` : `${HEIGHT}px`}
@@ -382,11 +487,11 @@ const AssetInfo = ({
           },
         }}
         bg={useColorModeValue(
-          rarity && (isSubscriber || isMembershipNFT)
-            ? rarity.type.color.light
+          activeRarity && (isSubscriber || isMembershipNFT)
+            ? activeRarity.type.color.light
             : 'gray.50',
-          rarity && (isSubscriber || isMembershipNFT)
-            ? rarity.type.color.dark
+          activeRarity && (isSubscriber || isMembershipNFT)
+            ? activeRarity.type.color.dark
             : 'gray.600',
         )}
         onClick={(e) => {
@@ -621,11 +726,13 @@ const AssetInfo = ({
             </Text>
             {rarity !== undefined ? (
               <RarityBadge
+                type={type}
                 isSubscriber={isSubscriber}
                 isInaccurate={FLAGGED_INACCURATE_RANKING_ADDRESSES.includes(
                   address,
                 )}
                 rarity={rarity}
+                traitCountExcluded={Boolean(traitCountExcluded)}
                 isMembershipNFT={isMembershipNFT}
                 onOpenProperties={() => setPropertiesModalOpen(true)}
               />
