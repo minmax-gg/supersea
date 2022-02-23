@@ -32,6 +32,7 @@ export type Rarities = {
   tokens: {
     iteratorID: number
     rank: number
+    noTraitCountRank: number
   }[]
 }
 
@@ -258,6 +259,7 @@ const rarityQuery = gql`
       tokens {
         iteratorID
         rank
+        noTraitCountRank
       }
     }
   }
@@ -298,6 +300,7 @@ const rarityTraitQuery = gql`
       tokens(input: $input) {
         iteratorID
         rank
+        noTraitCountRank
       }
     }
   }
@@ -518,6 +521,8 @@ const tokenPropertiesQuery = gql`
       tokens(input: { in: [$id] }) {
         score
         rank
+        noTraitCountRank
+        noTraitCountScore
         attributes {
           trait_type
           value
@@ -533,12 +538,15 @@ export const fetchTokenProperties = async (
   token: {
     score: number
     rank: number
+    noTraitCountRank: number
+    noTraitCountScore: number
     attributes: { trait_type: string; value: string }[]
   }
   tokenCount: number
   rarityTable: {
     scoreMap: Record<string, Record<string, number>>
     missingTraitScores: Record<string, { score: number }>
+    implicitExcludes?: string[]
   }
   traits: { count: number; trait_type: string; value: string }[]
 }> => {

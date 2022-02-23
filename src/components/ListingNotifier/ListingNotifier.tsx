@@ -14,7 +14,11 @@ import {
   fetchSelectors,
   Trait,
 } from '../../utils/api'
-import { determineRarityType, RARITY_TYPES } from '../../utils/rarity'
+import {
+  determineRarityType,
+  RARITY_TYPES,
+  useTraitCountExcluded,
+} from '../../utils/rarity'
 import { useUser } from '../../utils/user'
 import { triggerQuickBuy } from '../AssetInfo/BuyNowButton'
 
@@ -24,7 +28,8 @@ const createPollTime = (bufferSeconds = 0) =>
   new Date(Date.now() - bufferSeconds * 1000).toISOString().replace(/Z$/, '')
 
 type Rarities = {
-  tokenRarity: Record<string, number>
+  tokenRank: Record<string, number>
+  noTraitCountTokenRank: Record<string, number>
   tokenCount: number
   isRanked: boolean
   traits: Trait[]
@@ -33,11 +38,13 @@ type Rarities = {
 const listingMatchesNotifier = ({
   asset,
   notifier,
+  traitCountExcluded,
   rarities,
   assetsMatchingNotifier,
 }: {
   asset: MatchedAsset
   notifier: Notifier
+  traitCountExcluded: boolean | null
   rarities: Rarities | null
   assetsMatchingNotifier: Record<string, Record<string, boolean>>
 }) => {
@@ -61,7 +68,9 @@ const listingMatchesNotifier = ({
   }
   // Rarity
   if (rarities) {
-    const rank = rarities.tokenRarity[asset.tokenId]
+    const rank = traitCountExcluded
+      ? rarities.noTraitCountTokenRank[asset.tokenId]
+      : rarities.tokenRank[asset.tokenId]
     if (notifier.lowestRarity !== 'Common') {
       if (!rank) {
         return false
@@ -138,6 +147,7 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
   const toast = useToast()
   const { isFounder } = useUser() || { isFounder: false }
   const [modalOpen, setModalOpen] = useState(false)
+  const [address, setAddress] = useState<string | null>(null)
 
   const stateToRestore =
     cachedState.collectionSlug === collectionSlug ? cachedState : DEFAULT_STATE
@@ -180,6 +190,8 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
     React.ComponentProps<typeof ListingNotifierModal>['error']
   >(null)
 
+  const [traitCountExcluded] = useTraitCountExcluded(address)
+
   const { isSubscriber } = useUser() || { isSubscriber: false }
 
   // Cache state
@@ -221,12 +233,14 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
       let address = null
       try {
         address = await fetchCollectionAddress(collectionSlug)
+        setAddress(address || null)
       } catch (err) {
         console.error('failed fetching collection slug', err)
       }
       if (!address) {
         setRarities({
-          tokenRarity: {},
+          tokenRank: {},
+          noTraitCountTokenRank: {},
           tokenCount: 0,
           isRanked: false,
           traits: [],
@@ -237,9 +251,13 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
         if (isSubscriber) {
           const rarities = await fetchRaritiesWithTraits(address, [])
           setRarities({
-            tokenRarity: _.mapValues(
+            tokenRank: _.mapValues(
               _.keyBy(rarities.tokens, 'iteratorID'),
               'rank',
+            ),
+            noTraitCountTokenRank: _.mapValues(
+              _.keyBy(rarities.tokens, 'iteratorID'),
+              'noTraitCountRank',
             ),
             tokenCount: rarities.tokenCount,
             isRanked: rarities.tokenCount > 0,
@@ -248,7 +266,8 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
         } else {
           const isRanked = await fetchIsRanked(address)
           setRarities({
-            tokenRarity: {},
+            tokenRank: {},
+            noTraitCountTokenRank: {},
             tokenCount: 0,
             isRanked: Boolean(isRanked),
             traits: [],
@@ -256,7 +275,8 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
         }
       } catch {
         setRarities({
-          tokenRarity: {},
+          tokenRank: {},
+          noTraitCountTokenRank: {},
           tokenCount: 0,
           isRanked: false,
           traits: [],
@@ -363,6 +383,7 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
                       listingMatchesNotifier({
                         asset,
                         notifier,
+                        traitCountExcluded,
                         rarities,
                         assetsMatchingNotifier,
                       }),
@@ -376,7 +397,7 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
                     ...asset
                   }: MatchedAsset & { notifier: Notifier }) => {
                     addedListings[asset.listingId] = true
-                    const rank = rarities?.tokenRarity[asset.tokenId] || null
+                    const rank = rarities?.tokenRank[asset.tokenId] || null
                     if (sendNotification) {
                       chrome.runtime.sendMessage(
                         {
@@ -447,6 +468,7 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
     activeNotifiers,
     collectionSlug,
     rarities,
+    traitCountExcluded,
     sendNotification,
     playSound,
     pollInterval,

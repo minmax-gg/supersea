@@ -13,14 +13,20 @@ import {
   Input,
   Button,
   Text,
+  Flex,
 } from '@chakra-ui/react'
 import ButtonOptions from '../ButtonOptions'
 import EthereumIcon from '../EthereumIcon'
 import { motion } from 'framer-motion'
 import { Trait } from '../../utils/api'
 import TraitSelect from './TraitSelect'
-import { RarityName, RARITY_TYPES } from '../../utils/rarity'
+import {
+  RarityName,
+  RARITY_TYPES,
+  useTraitCountExcluded,
+} from '../../utils/rarity'
 import MassBidInput from './MassBidInput'
+import { TraitCountToggle } from '../TraitCountToggle'
 
 export type FiltersType = {
   status: 'buyNow'[]
@@ -30,6 +36,7 @@ export type FiltersType = {
 }
 
 const Filters = ({
+  address,
   filters,
   allTraits,
   onApplyFilters,
@@ -37,6 +44,7 @@ const Filters = ({
   searchNumber,
   onStartMassBid,
 }: {
+  address: string | null
   filters: FiltersType
   allTraits: Trait[]
   onApplyFilters: (filters: FiltersType) => void
@@ -52,6 +60,14 @@ const Filters = ({
   )
   const [maxPrice, setMaxPrice] = useState<string>(
     maxPriceProp !== undefined ? String(maxPriceProp) : '',
+  )
+
+  const [
+    storedExcludeTraitCount,
+    setStoredExcludeTraitCount,
+  ] = useTraitCountExcluded(address)
+  const [excludeTraitCount, setExcludeTraitCount] = useState(
+    storedExcludeTraitCount || false,
   )
 
   const [searchProgressVisible, setSearchProgressVisible] = useState(false)
@@ -74,9 +90,14 @@ const Filters = ({
   useEffect(() => {
     setMinPrice(minPriceProp !== undefined ? String(minPriceProp) : '')
   }, [minPriceProp])
+
   useEffect(() => {
     setMaxPrice(maxPriceProp !== undefined ? String(maxPriceProp) : '')
   }, [maxPriceProp])
+
+  useEffect(() => {
+    setExcludeTraitCount(storedExcludeTraitCount || false)
+  }, [storedExcludeTraitCount])
 
   return (
     <VStack
@@ -273,6 +294,53 @@ const Filters = ({
             </Text>
           </Box>
         </motion.div>
+      </VStack>
+      <VStack
+        width="100%"
+        p="4"
+        spacing="8"
+        alignItems="flex-start"
+        background={useColorModeValue('#fbfdff', '#262b2f')}
+        borderColor={useColorModeValue('#e5e8eb', '#151b22')}
+        borderLeftColor="transparent"
+        borderWidth="1px"
+        borderBottomRightRadius="lg"
+        borderTopRightRadius="lg"
+      >
+        <VStack
+          spacing="3"
+          alignItems="flex-start"
+          divider={
+            <Divider
+              borderColor={useColorModeValue('gray.300', 'whiteAlpha.200')}
+            />
+          }
+          width="100%"
+        >
+          <Text fontWeight="500">Scoring</Text>
+          <Box width="100%">
+            <TraitCountToggle
+              onToggle={setExcludeTraitCount}
+              excludeTraitCount={excludeTraitCount}
+              fontSize="14px"
+            />
+            <Flex width="100%" mt="3">
+              <Button
+                color="white"
+                isDisabled={excludeTraitCount === storedExcludeTraitCount}
+                iconSpacing="3"
+                bg="blue.500"
+                _hover={{ bg: 'blue.400' }}
+                _active={{ bg: 'blue.300' }}
+                onClick={() => {
+                  setStoredExcludeTraitCount(excludeTraitCount)
+                }}
+              >
+                Apply to Collection
+              </Button>
+            </Flex>
+          </Box>
+        </VStack>
       </VStack>
       <VStack
         width="100%"
