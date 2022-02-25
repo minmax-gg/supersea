@@ -29,6 +29,7 @@ const COLLECTION_SLUG_ADDRESS_OVERRIDES: Record<string, string> = {
 
 export type Rarities = {
   tokenCount: number
+  totalSupply: number | null
   tokens: {
     iteratorID: number
     rank: number
@@ -256,6 +257,7 @@ const rarityQuery = gql`
     contract(address: $address) {
       contractAddress
       tokenCount
+      totalSupply
       tokens {
         iteratorID
         rank
