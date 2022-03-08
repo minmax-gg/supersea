@@ -554,7 +554,7 @@ export const fetchTokenProperties = async (
 }> => {
   const res = await nonFungibleRequest(tokenPropertiesQuery, {
     address,
-    id: Number(id),
+    id: id,
   })
   return {
     tokenCount: res.contract.tokenCount,
