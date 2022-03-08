@@ -61,18 +61,13 @@ export const LIST_WIDTH = 140
 const MEMBERSHIP_ADDRESS = '0x24e047001f0ac15f72689d3f5cd0b0f52b1abdf9'
 const PARTIALLY_RANKED_RATIO_THRESHOLD = 0.9
 
-// Temporary until we do this flagging on the backend
-const FLAGGED_INACCURATE_RANKING_ADDRESSES = [
-  '0x2acab3dea77832c09420663b0e1cb386031ba17b',
-  '0xf1268733c6fb05ef6be9cf23d24436dcd6e0b35e',
-]
-
 const replaceImageRateLimit = RateLimit(3)
 
 type Rarity = {
   isRanked: boolean
   tokenCount: number
   totalSupply: number | null
+  rankWarning: string | null
   rank: number
   type: RarityTier
   noTraitCountRank: number
@@ -83,7 +78,6 @@ const RarityBadge = ({
   type,
   rarity,
   traitCountExcluded,
-  isInaccurate,
   isSubscriber,
   isMembershipNFT,
   onOpenProperties,
@@ -91,7 +85,6 @@ const RarityBadge = ({
   type: React.ComponentProps<typeof AssetInfo>['type']
   rarity: Rarity | null
   traitCountExcluded: boolean
-  isInaccurate: boolean
   isSubscriber: boolean
   isMembershipNFT: boolean
   onOpenProperties: () => void
@@ -162,9 +155,8 @@ const RarityBadge = ({
             </VStack>
             {(() => {
               let text = ''
-              if (isInaccurate) {
-                text =
-                  "This collection's rank is reported to be inaccurate compared to its official rarity guide."
+              if (rarity?.rankWarning) {
+                text = rarity.rankWarning
               } else if (isPartiallyRanked) {
                 text = `Only ${Math.floor(
                   ratioRanked * 100,
@@ -227,7 +219,9 @@ const RarityBadge = ({
               'Unranked'
             ) : (
               <Text as="span">
-                {isInaccurate || rankTierDisparity || isPartiallyRanked ? (
+                {rarity?.rankWarning ||
+                rankTierDisparity ||
+                isPartiallyRanked ? (
                   <WarningTwoIcon
                     opacity="0.75"
                     width={type === 'list' ? '12px' : '16px'}
@@ -420,7 +414,7 @@ const AssetInfo = ({
       if (isSubscriber) {
         const rarities = await fetchRarities(address)
         if (rarities) {
-          const { tokenCount, tokens, totalSupply } = rarities
+          const { tokenCount, tokens, totalSupply, rankWarning } = rarities
           const token = tokens.find(
             ({ iteratorID }) => String(iteratorID) === tokenId,
           )
@@ -431,6 +425,7 @@ const AssetInfo = ({
                 isRanked: true,
                 tokenCount,
                 totalSupply,
+                rankWarning,
                 rank,
                 type: determineRarityType(rank, tokenCount),
                 noTraitCountRank: noTraitCountRank,
@@ -451,6 +446,7 @@ const AssetInfo = ({
             isRanked: true,
             tokenCount: 100,
             totalSupply: null,
+            rankWarning: null,
             rank: 1,
             type: RARITY_TYPES[0],
             noTraitCountRank: 1,
@@ -461,6 +457,7 @@ const AssetInfo = ({
             isRanked: Boolean(isRanked),
             tokenCount: 0,
             totalSupply: null,
+            rankWarning: null,
             rank: 0,
             type: RARITY_TYPES[RARITY_TYPES.length - 1],
             noTraitCountRank: 0,
@@ -742,9 +739,6 @@ const AssetInfo = ({
               <RarityBadge
                 type={type}
                 isSubscriber={isSubscriber}
-                isInaccurate={FLAGGED_INACCURATE_RANKING_ADDRESSES.includes(
-                  address,
-                )}
                 rarity={rarity}
                 traitCountExcluded={Boolean(traitCountExcluded)}
                 isMembershipNFT={isMembershipNFT}
