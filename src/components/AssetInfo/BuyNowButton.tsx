@@ -13,7 +13,7 @@ import {
   useExtensionConfig,
 } from '../../utils/extensionConfig'
 import { useUser } from '../../utils/user'
-import { fetchAsset, fetchOptimalGasPreset } from '../../utils/api'
+import { fetchListings, fetchOptimalGasPreset } from '../../utils/api'
 
 const readableError = (message: string) => {
   if (/insufficient funds/.test(message)) {
@@ -39,8 +39,8 @@ export const triggerQuickBuy = async ({
   displayedPrice?: string
   onComplete: () => void
 }) => {
-  const [asset, gasPreset] = await Promise.all([
-    fetchAsset(address, tokenId).catch((e) => {
+  const [{ listings }, gasPreset] = await Promise.all([
+    fetchListings(address, tokenId).catch((e) => {
       return {}
     }),
     (async () => {
@@ -71,7 +71,7 @@ export const triggerQuickBuy = async ({
       return null
     })(),
   ])
-  if (!asset.orders || asset.orders.length === 0) {
+  if (!listings || listings.length === 0) {
     toast({
       duration: 7500,
       position: 'bottom-right',
@@ -84,13 +84,20 @@ export const triggerQuickBuy = async ({
   }
   window.postMessage({
     method: 'SuperSea__Buy',
-    params: { asset, gasPreset, displayedPrice },
+    params: {
+      listings,
+      tokenId,
+      address,
+      gasPreset,
+      displayedPrice,
+    },
   })
   // Listen for errors, unsubscribe
   const messageListener = (event: any) => {
     if (
       event.data.method === 'SuperSea__Buy__Error' &&
-      event.data.params.asset.id === asset.id
+      event.data.params.tokenId === tokenId &&
+      event.data.params.address === address
     ) {
       if (!/user denied/i.test(event.data.params.error.message)) {
         toast({
@@ -108,7 +115,8 @@ export const triggerQuickBuy = async ({
       onComplete()
     } else if (
       event.data.method === 'SuperSea__Buy__Success' &&
-      event.data.params.asset.id === asset.id
+      event.data.params.tokenId === tokenId &&
+      event.data.params.address === address
     ) {
       window.removeEventListener('message', messageListener)
       onComplete()

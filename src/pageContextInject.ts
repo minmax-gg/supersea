@@ -1,5 +1,4 @@
 import { OpenSeaPort, Network, orderFromJSON, assetFromJSON } from 'opensea-js'
-import { OrderSide } from 'opensea-js/lib/types'
 import { RateLimit } from 'async-sema'
 import { readableEthValue } from './utils/ethereum'
 ;((window: any) => {
@@ -29,9 +28,7 @@ import { readableEthValue } from './utils/ethereum'
     if (event.origin !== 'https://opensea.io') return
     if (event.data.method === 'SuperSea__Buy') {
       try {
-        const order = event.data.params.asset.orders.filter(
-          (order: any) => order.side === OrderSide.Sell,
-        )[0]
+        const order = event.data.params.listings[0]
         const seaport = new OpenSeaPort((window as any).ethereum, {
           networkName: Network.Main,
         })

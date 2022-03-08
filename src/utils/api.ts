@@ -30,6 +30,7 @@ const COLLECTION_SLUG_ADDRESS_OVERRIDES: Record<string, string> = {
 export type Rarities = {
   tokenCount: number
   totalSupply: number | null
+  rankWarning: string | null
   tokens: {
     iteratorID: number
     rank: number
@@ -258,6 +259,7 @@ const rarityQuery = gql`
       contractAddress
       tokenCount
       totalSupply
+      rankWarning
       tokens {
         iteratorID
         rank
@@ -366,7 +368,7 @@ const assetLoader = new DataLoader(
     const tokenIds = addressIdPairs.map((pair) => pair.split('_')[1])
     await openSeaPublicRateLimit()
     const res = await fetch(
-      `https://api.opensea.io/api/v1/assets?asset_contract_address=${address}&token_ids=${tokenIds.join(
+      `https://api.opensea.io/api/v1/assets?asset_contract_address=${address}&include_orders=true&token_ids=${tokenIds.join(
         '&token_ids=',
       )}`,
     ).then((res) => res.json())
@@ -390,9 +392,9 @@ export const fetchAssetBatched = (address: string, tokenId: number) => {
   return assetLoader.load(`${address}_${tokenId}`) as Promise<Asset>
 }
 
-export const fetchAsset = async (address: string, tokenId: string) => {
+export const fetchListings = async (address: string, tokenId: string) => {
   return fetch(
-    `https://api.opensea.io/api/v1/asset/${address}/${tokenId}`,
+    `https://api.opensea.io/api/v1/asset/${address}/${tokenId}/listings`,
   ).then((res) => res.json())
 }
 
