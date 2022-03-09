@@ -220,7 +220,7 @@ const ListingNotifierModal = ({
                     if (isRanked === false) {
                       return (
                         <Tag verticalAlign="bottom" ml="0.5em" size="sm">
-                          Unranked
+                          Unavailable
                         </Tag>
                       )
                     } else if (!isSubscriber) {

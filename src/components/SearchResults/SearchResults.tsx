@@ -5,7 +5,6 @@ import {
   Flex,
   Text,
   useColorModeValue,
-  useToast,
 } from '@chakra-ui/react'
 import _ from 'lodash'
 import { useState, useEffect, useRef, useCallback } from 'react'
@@ -13,8 +12,10 @@ import { unstable_batchedUpdates } from 'react-dom'
 import {
   Asset,
   fetchAssetBatched,
+  fetchAssets,
   fetchCollectionAddress,
   fetchRaritiesWithTraits,
+  OPENSEA_ASSETS_BATCH_SIZE,
   Rarities,
   Trait,
 } from '../../utils/api'
@@ -28,17 +29,19 @@ import {
   RARITY_TYPES,
   useTraitCountExcluded,
 } from '../../utils/rarity'
-import { MassBidState } from './MassBidStatus'
-import Toast from '../Toast'
 import MassBidOverlay from './MassBidOverlay'
+import useMassBid from '../../hooks/useMassBid'
 
-const PLACEHOLDER_TOKENS = _.times(40, (num) => ({
-  iteratorID: num,
-  rank: num,
-  noTraitCountrank: num,
-  placeholder: true,
-}))
 const LOAD_MORE_SCROLL_THRESHOLD = 600
+
+const createPlaceholderTokens = (num: number, offset = 0) => {
+  return _.times(num, (num) => ({
+    iteratorID: num + offset,
+    rank: num + offset,
+    noTraitCountRank: num + offset,
+    placeholder: true,
+  }))
+}
 
 const GridItem = ({
   renderPlaceholder,
@@ -57,28 +60,16 @@ const GridItem = ({
 
 const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
   const gridRef = useRef<HTMLDivElement | null>(null)
-  const toast = useToast()
   const [tokenCount, setTokenCount] = useState(0)
   const [tokens, setTokens] = useState<Rarities['tokens'] | null | undefined>()
+
+  const [cursor, setCursor] = useState<string | null>(null)
+  const fetchingUnrankedRef = useRef(false)
+
   const [address, setAddress] = useState<string | null>(null)
-  const [loadedItems, setLoadedItems] = useState(40)
+  const [loadedItems, setLoadedItems] = useState(OPENSEA_ASSETS_BATCH_SIZE)
   const [assetMap, setAssetMap] = useState<Record<string, Asset>>({})
-  const [traitCountExcluded, setTraitCountExcluded] = useTraitCountExcluded(
-    address,
-  )
-  const massBidProcessRef = useRef<{
-    processNumber: number
-    processingIndex: number
-    status: 'idle' | 'processing' | 'stopped'
-  }>({ processingIndex: -1, processNumber: 0, status: 'idle' })
-  const [massBid, setMassBid] = useState<{
-    price: number
-    expirationTime: number
-    currentIndex: number
-  } | null>(null)
-  const [massBidStates, setMassBidStates] = useState<
-    Record<string, MassBidState>
-  >({})
+  const [traitCountExcluded] = useTraitCountExcluded(address)
 
   const loadingAssetMapRef = useRef<Record<string, boolean>>({})
   const [allTraits, setAllTraits] = useState<Trait[]>([])
@@ -89,6 +80,8 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
     traits: [],
   })
 
+  const isUnranked = Boolean(tokens && tokenCount === 0)
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const throttledLoadMore = useCallback(
     _.throttle(() => {
@@ -98,7 +91,7 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
         bottom > 0 &&
         bottom - window.innerHeight <= LOAD_MORE_SCROLL_THRESHOLD
       ) {
-        setLoadedItems((items) => items + 20)
+        setLoadedItems((items) => items + OPENSEA_ASSETS_BATCH_SIZE)
       }
     }, 250),
     [],
@@ -121,8 +114,8 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
         if (fetchedAddress) {
           setAddress(fetchedAddress)
         }
-        setTokens(rarities ? rarities.tokens : null)
-        setTokenCount(rarities.tokenCount)
+        setTokens(rarities?.tokens || [])
+        setTokenCount(rarities?.tokenCount || 0)
         if (rarities) {
           const groupVariants = _.groupBy(rarities.traits, 'trait_type')
           setAllTraits(
@@ -142,13 +135,13 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
   }, [collectionSlug, filters.traits])
 
   // Tokens filtered with data that we have _before_ fetching the asset
-  const preFilteredTokens = ((tokens && address
+  let preFilteredTokens = ((tokens && address
     ? [...tokens].sort((a, b) =>
         traitCountExcluded
           ? a.noTraitCountRank - b.noTraitCountRank
           : a.rank - b.rank,
       )
-    : PLACEHOLDER_TOKENS) as any[])
+    : []) as any[])
     ?.filter(({ rank, noTraitCountRank }) => {
       const rarityType = determineRarityType(
         traitCountExcluded ? noTraitCountRank : rank,
@@ -167,9 +160,18 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
     placeholder: boolean
   })[]
 
+  if (preFilteredTokens.length < loadedItems) {
+    preFilteredTokens = preFilteredTokens.concat(
+      createPlaceholderTokens(
+        loadedItems - preFilteredTokens.length,
+        preFilteredTokens.length,
+      ),
+    )
+  }
+
+  // Load assets (ranked)
   useEffect(() => {
-    // Load assets
-    if (!address) return
+    if (isUnranked) return
     const updateBatch: typeof assetMap = {}
     const batchUpdate = _.throttle(
       () => {
@@ -187,12 +189,55 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
         return
       }
       loadingAssetMapRef.current[iteratorID] = true
-      const asset = await fetchAssetBatched(address, iteratorID)
+      const asset = await fetchAssetBatched(collectionSlug, String(iteratorID))
       updateBatch[iteratorID] = asset
       batchUpdate()
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [address, filters.highestRarity, loadedItems, tokenCount, tokens])
+  }, [isUnranked, filters.highestRarity, loadedItems, tokenCount, tokens])
+
+  // Load assets (unranked)
+  const fetchedTokenCount = tokens ? tokens.length : 0
+  useEffect(() => {
+    if (
+      !isUnranked ||
+      fetchedTokenCount >= loadedItems ||
+      (fetchedTokenCount && !cursor) ||
+      fetchingUnrankedRef.current
+    )
+      return
+    ;(async () => {
+      fetchingUnrankedRef.current = true
+      const { assets, next } = await fetchAssets(collectionSlug, cursor)
+
+      const assetMapUpdate = assets.reduce<Record<string, Asset>>(
+        (acc, asset) => {
+          acc[asset.token_id] = asset
+          return acc
+        },
+        {},
+      )
+      unstable_batchedUpdates(() => {
+        setCursor(next)
+        if (next === null) {
+          setLoadedItems(fetchedTokenCount + assets.length)
+        }
+        setAssetMap((assetMap) => ({ ...assetMap, ...assetMapUpdate }))
+        setTokens((tokens) => {
+          return (tokens || []).concat(
+            assets.map((asset) => ({
+              iteratorID: Number(asset.token_id),
+              rank: 1,
+              noTraitCountRank: 1,
+              placeholder: false,
+            })),
+          )
+        })
+      })
+      fetchingUnrankedRef.current = false
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isUnranked, fetchedTokenCount, loadedItems])
 
   // Tokens filtered with data that we have _after_ fetching the asset
   const postFilteredTokens = preFilteredTokens
@@ -228,122 +273,18 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
     })
 
   useEffect(() => {
-    if (
-      !massBid ||
-      massBidProcessRef.current.processingIndex === massBid.currentIndex ||
-      massBidProcessRef.current.status !== 'idle'
-    ) {
-      return
+    if (isUnranked) {
+      if (!cursor) return
+    } else {
+      if (tokens && tokens.length <= loadedItems) return
     }
-    massBidProcessRef.current = {
-      processNumber: massBidProcessRef.current.processNumber,
-      processingIndex: massBid.currentIndex,
-      status: 'processing',
-    }
-
-    const asset = postFilteredTokens[massBid.currentIndex].asset
-    const processNumber = massBidProcessRef.current.processNumber
-
-    // Listen for errors, unsubscribe
-    const messageListener = (event: any) => {
-      let state: MassBidState | null = null
-      let initializeNext = false
-      if (event.data.params?.tokenId !== asset!.token_id) {
-        return
-      }
-
-      if (event.data.method === 'SuperSea__Bid__Error') {
-        if (/declined to authorize/i.test(event.data.params.error.message)) {
-          state = 'SKIPPED'
-          initializeNext = true
-        } else if (
-          /insufficient balance/i.test(event.data.params.error.message)
-        ) {
-          toast({
-            duration: 7500,
-            position: 'bottom-right',
-            render: () => (
-              <Toast
-                text={`You don't have enough WETH to place this bid. Make sure to wrap some first.`}
-                type="error"
-              />
-            ),
-          })
-          state = 'FAILED'
-          massBidProcessRef.current.status = 'stopped'
-        } else {
-          toast({
-            duration: 7500,
-            position: 'bottom-right',
-            render: () => (
-              <Toast
-                text={`Unable to place bid on item. Received error "${event.data.params.error.message}"`}
-                type="error"
-              />
-            ),
-          })
-          state = 'FAILED'
-          initializeNext = true
-        }
-      } else if (event.data.method === 'SuperSea__Bid__Signed') {
-        state = 'SIGNED'
-      } else if (event.data.method === 'SuperSea__Bid__Success') {
-        state = 'COMPLETED'
-        initializeNext = true
-      }
-      if (!state) return
-      if (
-        massBid.currentIndex === postFilteredTokens.length - 1 ||
-        massBidProcessRef.current.status === 'stopped' ||
-        massBidProcessRef.current.processNumber !== processNumber
-      ) {
-        initializeNext = false
-      }
-      if (initializeNext) {
-        setMassBidStates((states) => ({
-          ...states,
-          [event.data.params.tokenId]: state,
-          [postFilteredTokens[massBid.currentIndex + 1].tokenId]: 'PROCESSING',
-        }))
-        massBidProcessRef.current.status = 'idle'
-        setMassBid({
-          ...massBid,
-          currentIndex: massBid.currentIndex + 1,
-        })
-      } else {
-        setMassBidStates((states) => ({
-          ...states,
-          [event.data.params.tokenId]: state,
-        }))
-      }
-      if (state !== 'SIGNED') {
-        window.removeEventListener('message', messageListener)
-      }
-    }
-    window.addEventListener('message', messageListener)
-
-    window.postMessage({
-      method: 'SuperSea__Bid',
-      params: {
-        asset,
-        tokenId: asset?.token_id,
-        address: asset?.asset_contract.address,
-        price: massBid.price,
-        expirationTime: massBid.expirationTime,
-      },
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [massBid, postFilteredTokens])
-
-  useEffect(() => {
-    if (tokens && tokens.length <= loadedItems) return
     window.addEventListener('scroll', throttledLoadMore)
     window.addEventListener('resize', throttledLoadMore)
     return () => {
       window.removeEventListener('scroll', throttledLoadMore)
       window.removeEventListener('resize', throttledLoadMore)
     }
-  }, [throttledLoadMore, tokens, loadedItems])
+  }, [throttledLoadMore, tokens, loadedItems, isUnranked, cursor])
 
   useEffect(() => {
     if (tokens && tokens.length <= loadedItems) return
@@ -357,18 +298,26 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
     loadedItems,
   ])
 
+  const {
+    massBidStates,
+    isMassBidding,
+    startMassBid,
+    stopMassBid,
+    clearMassBid,
+  } = useMassBid({ tokens: postFilteredTokens })
+
   const placeholderBorderColor = useColorModeValue('#e5e8eb', '#151b22')
 
   return (
     <HStack width="100%" alignItems="flex-start" position="relative">
       <Filters
+        isUnranked={isUnranked}
         address={address}
         filters={filters}
         allTraits={allTraits}
         onApplyFilters={(appliedFilters) => {
           unstable_batchedUpdates(() => {
-            setMassBid(null)
-            setMassBidStates({})
+            clearMassBid()
             setFilters(appliedFilters)
             setLoadedItems(40)
             if (appliedFilters.traits !== filters.traits) {
@@ -382,28 +331,14 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
           filters.priceRange[1] !== undefined
         }
         searchNumber={loadedItems}
-        onStartMassBid={({ price, expirationTime }) => {
-          massBidProcessRef.current = {
-            processingIndex: -1,
-            processNumber: massBidProcessRef.current.processNumber + 1,
-            status: 'idle',
-          }
-          setMassBidStates({
-            [postFilteredTokens[0].tokenId]: 'PROCESSING',
-          })
-          setMassBid({
-            price,
-            expirationTime,
-            currentIndex: 0,
-          })
-        }}
+        onStartMassBid={startMassBid}
       />
-      {tokens === null || tokens?.length === 0 ? (
+      {!isUnranked && (tokens === null || tokens?.length === 0) ? (
         <Flex width="100%" justifyContent="center" py="16" height="800px">
           <Text fontSize="2xl" opacity={0.75}>
             {filters.traits.length
               ? 'No items matching filters available'
-              : 'This collection has not been ranked yet'}
+              : 'No items available'}
           </Text>
         </Flex>
       ) : (
@@ -453,14 +388,7 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
             : null}
         </SimpleGrid>
       )}
-      {massBid && (
-        <MassBidOverlay
-          onStop={() => {
-            massBidProcessRef.current.status = 'stopped'
-            setMassBid(null)
-          }}
-        />
-      )}
+      {isMassBidding && <MassBidOverlay onStop={stopMassBid} />}
     </HStack>
   )
 }

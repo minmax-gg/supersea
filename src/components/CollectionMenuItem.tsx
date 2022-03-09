@@ -34,7 +34,7 @@ const CollectionMenuItem = ({
         fontFamily="Poppins, sans-serif;"
         color={useColorModeValue('black', 'white')}
       >
-        Top Ranked
+        SuperSea
       </Text>
       {isSubscriber ? null : <LockedFeature level="subscriber" />}
     </HStack>

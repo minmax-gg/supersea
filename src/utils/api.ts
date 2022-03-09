@@ -98,6 +98,8 @@ const GRAPHQL_CDN_URL =
   window.localStorage.GRAPHQL_CDN_URL ||
   'https://supersea-worker.supersea.workers.dev/graphql'
 
+export const OPENSEA_ASSETS_BATCH_SIZE = 30
+
 const openSeaPublicRateLimit = RateLimit(2)
 
 let selectorsPromise: null | Promise<Selectors> = null
@@ -362,19 +364,23 @@ export const fetchIsRanked = async (address: string) => {
 }
 
 const assetLoader = new DataLoader(
-  async (addressIdPairs: readonly string[]) => {
+  async (
+    keys: readonly {
+      collectionSlug: string
+      tokenId: string
+    }[],
+  ) => {
     // Assume all are for the same address for now
-    const address = addressIdPairs[0].split('_')[0]
-    const tokenIds = addressIdPairs.map((pair) => pair.split('_')[1])
+    const slug = keys[0].collectionSlug
+    const tokenIds = keys.map(({ tokenId }) => tokenId)
     await openSeaPublicRateLimit()
     const res = await fetch(
-      `https://api.opensea.io/api/v1/assets?asset_contract_address=${address}&include_orders=true&token_ids=${tokenIds.join(
+      `https://api.opensea.io/api/v1/assets?collection_slug=${slug}&limit=${OPENSEA_ASSETS_BATCH_SIZE}&include_orders=true&token_ids=${tokenIds.join(
         '&token_ids=',
       )}`,
     ).then((res) => res.json())
-    return addressIdPairs.map((addressIdPair) => {
+    return keys.map(({ tokenId }) => {
       if (!res) return null
-      const tokenId = addressIdPair.split('_')[1]
       const asset = res.assets.find(
         ({ token_id }: { token_id: string }) => token_id === tokenId,
       )
@@ -384,18 +390,40 @@ const assetLoader = new DataLoader(
   },
   {
     batchScheduleFn: (callback) => setTimeout(callback, 500),
-    maxBatchSize: 20,
+    maxBatchSize: OPENSEA_ASSETS_BATCH_SIZE,
   },
 )
 
-export const fetchAssetBatched = (address: string, tokenId: number) => {
-  return assetLoader.load(`${address}_${tokenId}`) as Promise<Asset>
+export const fetchAssetBatched = (collectionSlug: string, tokenId: string) => {
+  return assetLoader.load({ collectionSlug, tokenId }) as Promise<Asset>
 }
 
 export const fetchListings = async (address: string, tokenId: string) => {
   return fetch(
     `https://api.opensea.io/api/v1/asset/${address}/${tokenId}/listings`,
   ).then((res) => res.json())
+}
+
+export const fetchAssets = async (
+  collectionSlug: string,
+  cursor?: string | null,
+): Promise<{ assets: Asset[]; next: string | null }> => {
+  return fetch(
+    `https://api.opensea.io/api/v1/assets?collection_slug=${collectionSlug}&order_direction=asc&limit=${OPENSEA_ASSETS_BATCH_SIZE}${
+      cursor ? `&cursor=${cursor}` : ''
+    }`,
+  )
+    .then((res) => res.json())
+    .then((res) => {
+      // Correct weird OpenSea behaviour with order_direction=asc
+      return {
+        ...res,
+        assets: res.assets.sort(
+          (a: any, b: any) => Number(a.token_id) - Number(b.token_id),
+        ),
+        next: res.previous,
+      }
+    })
 }
 
 export const fetchAllCollectionsForUser = async (

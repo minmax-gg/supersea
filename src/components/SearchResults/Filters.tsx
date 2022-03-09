@@ -14,6 +14,7 @@ import {
   Button,
   Text,
   Flex,
+  Tag,
 } from '@chakra-ui/react'
 import ButtonOptions from '../ButtonOptions'
 import EthereumIcon from '../EthereumIcon'
@@ -43,6 +44,7 @@ const Filters = ({
   showSearchProgress,
   searchNumber,
   onStartMassBid,
+  isUnranked,
 }: {
   address: string | null
   filters: FiltersType
@@ -51,6 +53,7 @@ const Filters = ({
   showSearchProgress: boolean
   searchNumber: number
   onStartMassBid: React.ComponentProps<typeof MassBidInput>['onConfirm']
+  isUnranked: boolean
 }) => {
   const minPriceProp = filters.priceRange[0]
   const maxPriceProp = filters.priceRange[1]
@@ -146,36 +149,6 @@ const Filters = ({
         </VStack>
         <VStack
           spacing="3"
-          divider={
-            <Divider
-              borderColor={useColorModeValue('gray.300', 'whiteAlpha.200')}
-            />
-          }
-          alignItems="flex-start"
-          width="100%"
-        >
-          <Text fontWeight="500">Highest Rarity</Text>
-          <Select
-            borderColor="transparent"
-            bg={useColorModeValue('gray.100', 'whiteAlpha.200')}
-            onChange={(e) => {
-              onApplyFilters({
-                ...filters,
-                highestRarity: e.target.value as FiltersType['highestRarity'],
-              })
-            }}
-          >
-            {RARITY_TYPES.map(({ name }) => {
-              return (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              )
-            })}
-          </Select>
-        </VStack>
-        <VStack
-          spacing="3"
           alignItems="flex-start"
           divider={
             <Divider
@@ -229,28 +202,6 @@ const Filters = ({
             </HStack>
           </VStack>
         </VStack>
-        <VStack
-          spacing="3"
-          alignItems="flex-start"
-          divider={
-            <Divider
-              borderColor={useColorModeValue('gray.300', 'whiteAlpha.200')}
-            />
-          }
-          width="100%"
-        >
-          <Text fontWeight="500">Traits</Text>
-          <TraitSelect
-            traits={allTraits}
-            onChange={(traits) => {
-              onApplyFilters({
-                ...filters,
-                traits: traits,
-              })
-            }}
-            value={filters.traits}
-          />
-        </VStack>{' '}
         <motion.div
           style={{
             display: showSearchProgress ? 'block' : 'none',
@@ -306,7 +257,46 @@ const Filters = ({
         borderWidth="1px"
         borderBottomRightRadius="lg"
         borderTopRightRadius="lg"
+        opacity={isUnranked ? 0.75 : 1}
       >
+        <VStack
+          spacing="3"
+          divider={
+            <Divider
+              borderColor={useColorModeValue('gray.300', 'whiteAlpha.200')}
+            />
+          }
+          alignItems="flex-start"
+          width="100%"
+        >
+          <Text fontWeight="500">
+            Highest Rarity{' '}
+            {isUnranked ? (
+              <Tag verticalAlign="middle" ml="0.5em" size="sm">
+                Unavailable
+              </Tag>
+            ) : null}
+          </Text>
+          <Select
+            borderColor="transparent"
+            bg={useColorModeValue('gray.100', 'whiteAlpha.200')}
+            onChange={(e) => {
+              onApplyFilters({
+                ...filters,
+                highestRarity: e.target.value as FiltersType['highestRarity'],
+              })
+            }}
+            isDisabled={isUnranked}
+          >
+            {RARITY_TYPES.map(({ name }) => {
+              return (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              )
+            })}
+          </Select>
+        </VStack>
         <VStack
           spacing="3"
           alignItems="flex-start"
@@ -317,12 +307,50 @@ const Filters = ({
           }
           width="100%"
         >
-          <Text fontWeight="500">Scoring</Text>
+          <Text fontWeight="500">
+            Traits{' '}
+            {isUnranked ? (
+              <Tag verticalAlign="middle" ml="0.5em" size="sm">
+                Unavailable
+              </Tag>
+            ) : null}
+          </Text>
+          <TraitSelect
+            traits={allTraits}
+            onChange={(traits) => {
+              onApplyFilters({
+                ...filters,
+                traits: traits,
+              })
+            }}
+            value={filters.traits}
+            isDisabled={isUnranked}
+          />
+        </VStack>{' '}
+        <VStack
+          spacing="3"
+          alignItems="flex-start"
+          divider={
+            <Divider
+              borderColor={useColorModeValue('gray.300', 'whiteAlpha.200')}
+            />
+          }
+          width="100%"
+        >
+          <Text fontWeight="500">
+            Scoring{' '}
+            {isUnranked ? (
+              <Tag verticalAlign="middle" ml="0.5em" size="sm">
+                Unavailable
+              </Tag>
+            ) : null}
+          </Text>
           <Box width="100%">
             <TraitCountToggle
               onToggle={setExcludeTraitCount}
               excludeTraitCount={excludeTraitCount}
               fontSize="14px"
+              isDisabled={isUnranked}
             />
             <Flex width="100%" mt="3">
               <Button
