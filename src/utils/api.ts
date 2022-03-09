@@ -513,7 +513,7 @@ export const fetchCollectionSlug = async (address: string, tokenId: string) => {
 }
 
 const tokenPropertiesQuery = gql`
-  query TokenPropertiesQuery($address: String!, $id: Int!) {
+  query TokenPropertiesQuery($address: String!, $id: StringOrInt!) {
     contract(address: $address) {
       rarityTable
       tokenCount
@@ -522,7 +522,7 @@ const tokenPropertiesQuery = gql`
         trait_type
         value
       }
-      tokens(input: { in: [$id] }) {
+      tokens(input: { stringOrIntIn: [$id] }) {
         score
         rank
         noTraitCountRank
