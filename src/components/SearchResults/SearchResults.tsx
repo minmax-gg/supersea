@@ -76,11 +76,36 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
   const [filters, setFilters] = useState<FiltersType>({
     status: [],
     priceRange: [undefined, undefined],
-    highestRarity: 'Legendary',
+    includedIds: null,
+    includedRanks: null,
     traits: [],
   })
 
   const isUnranked = Boolean(tokens && tokenCount === 0)
+  const fetchUnordered = isUnranked && _.isEmpty(filters.includedIds)
+
+  // Tokens filtered with data that we have _before_ fetching the asset
+  let preFilteredTokens = ((tokens && address
+    ? [...tokens].sort((a, b) =>
+        traitCountExcluded
+          ? a.noTraitCountRank - b.noTraitCountRank
+          : a.rank - b.rank,
+      )
+    : []) as any[])?.filter(({ rank, noTraitCountRank, iteratorID }) => {
+    const usedRank = traitCountExcluded ? noTraitCountRank : rank
+    let rankIncluded = true
+    if (filters.includedRanks) {
+      rankIncluded = filters.includedRanks[usedRank]
+    }
+    let idIncluded = true
+    if (filters.includedIds) {
+      idIncluded = filters.includedIds[iteratorID]
+    }
+    return rankIncluded && idIncluded
+  }) as (Rarities['tokens'][number] & {
+    placeholder: boolean
+  })[]
+  const slicedTokens = preFilteredTokens.slice(0, loadedItems)
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const throttledLoadMore = useCallback(
@@ -91,10 +116,19 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
         bottom > 0 &&
         bottom - window.innerHeight <= LOAD_MORE_SCROLL_THRESHOLD
       ) {
-        setLoadedItems((items) => items + OPENSEA_ASSETS_BATCH_SIZE)
+        setLoadedItems((items) =>
+          fetchUnordered
+            ? items + OPENSEA_ASSETS_BATCH_SIZE
+            : Math.min(
+                items + OPENSEA_ASSETS_BATCH_SIZE,
+                tokens?.length
+                  ? preFilteredTokens.length
+                  : items + OPENSEA_ASSETS_BATCH_SIZE,
+              ),
+        )
       }
     }, 250),
-    [],
+    [preFilteredTokens.length, fetchUnordered],
   )
 
   useEffect(() => {
@@ -134,33 +168,7 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [collectionSlug, filters.traits])
 
-  // Tokens filtered with data that we have _before_ fetching the asset
-  let preFilteredTokens = ((tokens && address
-    ? [...tokens].sort((a, b) =>
-        traitCountExcluded
-          ? a.noTraitCountRank - b.noTraitCountRank
-          : a.rank - b.rank,
-      )
-    : []) as any[])
-    ?.filter(({ rank, noTraitCountRank }) => {
-      const rarityType = determineRarityType(
-        traitCountExcluded ? noTraitCountRank : rank,
-        tokenCount,
-      )
-      if (!rarityType) return true
-      const rarityIndex = RARITY_TYPES.findIndex(
-        ({ name }) => rarityType.name === name,
-      )
-      const highestRarityIndex = RARITY_TYPES.findIndex(
-        ({ name }) => name === filters.highestRarity,
-      )
-      return rarityIndex >= highestRarityIndex
-    })
-    .slice(0, loadedItems) as (Rarities['tokens'][number] & {
-    placeholder: boolean
-  })[]
-
-  if (preFilteredTokens.length < loadedItems) {
+  if (preFilteredTokens.length < loadedItems && fetchUnordered) {
     preFilteredTokens = preFilteredTokens.concat(
       createPlaceholderTokens(
         loadedItems - preFilteredTokens.length,
@@ -171,7 +179,7 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
 
   // Load assets (ranked)
   useEffect(() => {
-    if (isUnranked) return
+    if (fetchUnordered) return
     const updateBatch: typeof assetMap = {}
     const batchUpdate = _.throttle(
       () => {
@@ -180,7 +188,7 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
       100,
       { leading: false },
     )
-    preFilteredTokens.forEach(async ({ iteratorID, placeholder }) => {
+    slicedTokens.forEach(async ({ iteratorID, placeholder }) => {
       if (
         assetMap[iteratorID] ||
         loadingAssetMapRef.current[iteratorID] ||
@@ -194,13 +202,13 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
       batchUpdate()
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isUnranked, filters.highestRarity, loadedItems, tokenCount, tokens])
+  }, [fetchUnordered, loadedItems, tokenCount, tokens])
 
   // Load assets (unranked)
   const fetchedTokenCount = tokens ? tokens.length : 0
   useEffect(() => {
     if (
-      !isUnranked ||
+      !fetchUnordered ||
       fetchedTokenCount >= loadedItems ||
       (fetchedTokenCount && !cursor) ||
       fetchingUnrankedRef.current
@@ -237,10 +245,10 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
       fetchingUnrankedRef.current = false
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isUnranked, fetchedTokenCount, loadedItems])
+  }, [fetchUnordered, fetchedTokenCount, loadedItems])
 
   // Tokens filtered with data that we have _after_ fetching the asset
-  const postFilteredTokens = preFilteredTokens
+  const postFilteredTokens = slicedTokens
     .map(({ iteratorID, placeholder }) => {
       return {
         tokenId: String(iteratorID),
@@ -273,7 +281,7 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
     })
 
   useEffect(() => {
-    if (isUnranked) {
+    if (fetchUnordered) {
       if (!cursor) return
     } else {
       if (tokens && tokens.length <= loadedItems) return
@@ -284,7 +292,7 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
       window.removeEventListener('scroll', throttledLoadMore)
       window.removeEventListener('resize', throttledLoadMore)
     }
-  }, [throttledLoadMore, tokens, loadedItems, isUnranked, cursor])
+  }, [throttledLoadMore, tokens, loadedItems, fetchUnordered, cursor])
 
   useEffect(() => {
     if (tokens && tokens.length <= loadedItems) return
@@ -312,6 +320,7 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
     <HStack width="100%" alignItems="flex-start" position="relative">
       <Filters
         isUnranked={isUnranked}
+        tokenCount={tokenCount}
         address={address}
         filters={filters}
         allTraits={allTraits}
@@ -322,6 +331,22 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
             setLoadedItems(40)
             if (appliedFilters.traits !== filters.traits) {
               setTokens(undefined)
+            }
+            if (isUnranked) {
+              if (!_.isEmpty(appliedFilters.includedIds)) {
+                setTokens(
+                  Object.keys(appliedFilters.includedIds!).map((id) => {
+                    return {
+                      iteratorID: Number(id),
+                      noTraitCountRank: 0,
+                      rank: 0,
+                    }
+                  }),
+                )
+              } else if (!_.isEmpty(filters.includedIds)) {
+                setTokens([])
+                setCursor(null)
+              }
             }
           })
         }}

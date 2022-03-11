@@ -399,8 +399,19 @@ export const fetchAssetBatched = (collectionSlug: string, tokenId: string) => {
 }
 
 export const fetchListings = async (address: string, tokenId: string) => {
+  await openSeaPublicRateLimit()
   return fetch(
     `https://api.opensea.io/api/v1/asset/${address}/${tokenId}/listings`,
+  ).then((res) => res.json())
+}
+
+export const fetchOffers = async (
+  address: string,
+  tokenId: string,
+): Promise<{ offers: { current_price: string }[] }> => {
+  await openSeaPublicRateLimit()
+  return fetch(
+    `https://api.opensea.io/api/v1/asset/${address}/${tokenId}/offers`,
   ).then((res) => res.json())
 }
 
@@ -409,7 +420,7 @@ export const fetchAssets = async (
   cursor?: string | null,
 ): Promise<{ assets: Asset[]; next: string | null }> => {
   return fetch(
-    `https://api.opensea.io/api/v1/assets?collection_slug=${collectionSlug}&order_direction=asc&limit=${OPENSEA_ASSETS_BATCH_SIZE}${
+    `https://api.opensea.io/api/v1/assets?collection_slug=${collectionSlug}&include_orders=true&order_direction=asc&limit=${OPENSEA_ASSETS_BATCH_SIZE}${
       cursor ? `&cursor=${cursor}` : ''
     }`,
   )

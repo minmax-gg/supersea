@@ -1,7 +1,7 @@
 import { useToast } from '@chakra-ui/toast'
 import { useEffect, useRef, useState } from 'react'
 import Toast from '../components/Toast'
-import { Asset } from '../utils/api'
+import { Asset, fetchOffers } from '../utils/api'
 import { MassBidState } from '../components/SearchResults/MassBidStatus'
 
 const DEFAULT_MASS_BID_PROCESS: {
@@ -24,6 +24,7 @@ const useMassBid = ({
   const [massBid, setMassBid] = useState<{
     price: number
     expirationTime: number
+    skipOnHigherOffer: boolean
     currentIndex: number
   } | null>(null)
   const [massBidStates, setMassBidStates] = useState<
@@ -82,14 +83,17 @@ const useMassBid = ({
             position: 'bottom-right',
             render: () => (
               <Toast
-                text={`Unable to place bid on item. Received error "${event.data.params.error.message}"`}
+                text={`Unable to place bid on item, will retry. Received error "${event.data.params.error.message}"`}
                 type="error"
               />
             ),
           })
-          state = 'FAILED'
-          initializeNext = true
+          console.log(event.data.params.error)
+          state = 'RETRYING'
         }
+      } else if (event.data.method === 'SuperSea__Bid__Skipped') {
+        state = event.data.params.reason === 'outbid' ? 'OUTBID' : 'SKIPPED'
+        initializeNext = true
       } else if (event.data.method === 'SuperSea__Bid__Signed') {
         state = 'SIGNED'
       } else if (event.data.method === 'SuperSea__Bid__Success') {
@@ -115,6 +119,16 @@ const useMassBid = ({
           ...massBid,
           currentIndex: massBid.currentIndex + 1,
         })
+      } else if (state === 'RETRYING') {
+        setMassBidStates((states) => ({
+          ...states,
+          [event.data.params.tokenId]: state,
+        }))
+        massBidProcessRef.current.status = 'idle'
+        massBidProcessRef.current.processingIndex = -1
+        setMassBid({
+          ...massBid,
+        })
       } else {
         setMassBidStates((states) => ({
           ...states,
@@ -125,18 +139,31 @@ const useMassBid = ({
         window.removeEventListener('message', messageListener)
       }
     }
-    window.addEventListener('message', messageListener)
 
-    window.postMessage({
-      method: 'SuperSea__Bid',
-      params: {
-        asset,
-        tokenId: asset?.token_id,
-        address: asset?.asset_contract.address,
-        price: massBid.price,
-        expirationTime: massBid.expirationTime,
-      },
-    })
+    ;(async () => {
+      let offers: any[] = []
+
+      if (massBid.skipOnHigherOffer) {
+        const res = await fetchOffers(
+          asset!.asset_contract.address,
+          asset!.token_id,
+        )
+        offers = res.offers
+      }
+
+      window.addEventListener('message', messageListener)
+      window.postMessage({
+        method: 'SuperSea__Bid',
+        params: {
+          asset,
+          offers,
+          tokenId: asset?.token_id,
+          address: asset?.asset_contract.address,
+          price: massBid.price,
+          expirationTime: massBid.expirationTime,
+        },
+      })
+    })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [massBid, tokens])
 
@@ -146,9 +173,11 @@ const useMassBid = ({
     startMassBid: ({
       price,
       expirationTime,
+      skipOnHigherOffer,
     }: {
       price: number
       expirationTime: number
+      skipOnHigherOffer: boolean
     }) => {
       massBidProcessRef.current = {
         processingIndex: -1,
@@ -160,6 +189,7 @@ const useMassBid = ({
       })
       setMassBid({
         price,
+        skipOnHigherOffer,
         expirationTime,
         currentIndex: 0,
       })

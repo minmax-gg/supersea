@@ -15,6 +15,12 @@ import {
   Text,
   Flex,
   Tag,
+  FormHelperText,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
 } from '@chakra-ui/react'
 import ButtonOptions from '../ButtonOptions'
 import EthereumIcon from '../EthereumIcon'
@@ -28,16 +34,19 @@ import {
 } from '../../utils/rarity'
 import MassBidInput from './MassBidInput'
 import { TraitCountToggle } from '../TraitCountToggle'
+import parseNumberRange from '../../utils/parseNumberRange'
 
 export type FiltersType = {
   status: 'buyNow'[]
   priceRange: [number | undefined, number | undefined]
-  highestRarity: RarityName
+  includedRanks: Record<number, boolean> | null
+  includedIds: Record<number, boolean> | null
   traits: string[]
 }
 
 const Filters = ({
   address,
+  tokenCount,
   filters,
   allTraits,
   onApplyFilters,
@@ -47,6 +56,7 @@ const Filters = ({
   isUnranked,
 }: {
   address: string | null
+  tokenCount: number
   filters: FiltersType
   allTraits: Trait[]
   onApplyFilters: (filters: FiltersType) => void
@@ -64,6 +74,14 @@ const Filters = ({
   const [maxPrice, setMaxPrice] = useState<string>(
     maxPriceProp !== undefined ? String(maxPriceProp) : '',
   )
+
+  const [highestRarityTier, setHighestRarityTier] = useState<RarityName>(
+    'Legendary',
+  )
+  const [lowestRarityTier, setLowestRarityTier] = useState<RarityName>('Common')
+
+  const [rankRangeInput, setRankRangeInput] = useState('')
+  const [idRangeInput, setIdRangeInput] = useState('')
 
   const [
     storedExcludeTraitCount,
@@ -101,6 +119,42 @@ const Filters = ({
   useEffect(() => {
     setExcludeTraitCount(storedExcludeTraitCount || false)
   }, [storedExcludeTraitCount])
+
+  const onChangeRarityTiers = ({
+    highestRarityTier,
+    lowestRarityTier,
+  }: {
+    highestRarityTier: RarityName
+    lowestRarityTier: RarityName
+  }) => {
+    const highestRarityIndex = RARITY_TYPES.findIndex(
+      ({ name }) => name === highestRarityTier,
+    )
+    const lowestRarityIndex = RARITY_TYPES.findIndex(
+      ({ name }) => name === lowestRarityTier,
+    )
+
+    const minRank =
+      highestRarityIndex === 0
+        ? 0
+        : Math.floor(tokenCount * RARITY_TYPES[highestRarityIndex - 1].top)
+    const maxRank =
+      lowestRarityIndex === RARITY_TYPES.length - 1
+        ? tokenCount
+        : Math.floor(tokenCount * RARITY_TYPES[lowestRarityIndex].top)
+
+    const includedRanks = _.range(minRank + 1, maxRank + 1).reduce<
+      Record<number, boolean>
+    >((acc, rank) => {
+      acc[rank] = true
+      return acc
+    }, {})
+
+    onApplyFilters({
+      ...filters,
+      includedRanks: _.isEmpty(includedRanks) ? null : includedRanks,
+    })
+  }
 
   return (
     <VStack
@@ -202,6 +256,54 @@ const Filters = ({
             </HStack>
           </VStack>
         </VStack>
+        <VStack
+          spacing="3"
+          divider={
+            <Divider
+              borderColor={useColorModeValue('gray.300', 'whiteAlpha.200')}
+            />
+          }
+          alignItems="flex-start"
+          width="100%"
+        >
+          <Text fontWeight="500">Token ID</Text>
+          <FormControl>
+            <FormLabel fontSize="sm">Range</FormLabel>
+            <HStack spacing="3">
+              <Input
+                borderColor={useColorModeValue(
+                  'blackAlpha.300',
+                  'whiteAlpha.300',
+                )}
+                value={idRangeInput}
+                onChange={(e) => setIdRangeInput(e.target.value)}
+                placeholder="1-10, 23, 42-100"
+              />
+              <Button
+                onClick={() => {
+                  const idRange = parseNumberRange(idRangeInput)
+                  const includedIds = idRange.reduce<Record<number, boolean>>(
+                    (acc, id) => {
+                      acc[id] = true
+                      return acc
+                    },
+                    {},
+                  )
+
+                  onApplyFilters({
+                    ...filters,
+                    includedIds: _.isEmpty(includedIds) ? null : includedIds,
+                  })
+                }}
+              >
+                Apply
+              </Button>
+            </HStack>
+            <FormHelperText fontSize="sm" maxWidth="220px">
+              Use comma for multiple numbers, and dash for ranges
+            </FormHelperText>
+          </FormControl>
+        </VStack>
         <motion.div
           style={{
             display: showSearchProgress ? 'block' : 'none',
@@ -270,32 +372,130 @@ const Filters = ({
           width="100%"
         >
           <Text fontWeight="500">
-            Highest Rarity{' '}
+            Rarity{' '}
             {isUnranked ? (
               <Tag verticalAlign="middle" ml="0.5em" size="sm">
                 Unavailable
               </Tag>
             ) : null}
           </Text>
-          <Select
-            borderColor="transparent"
-            bg={useColorModeValue('gray.100', 'whiteAlpha.200')}
-            onChange={(e) => {
-              onApplyFilters({
-                ...filters,
-                highestRarity: e.target.value as FiltersType['highestRarity'],
-              })
-            }}
-            isDisabled={isUnranked}
-          >
-            {RARITY_TYPES.map(({ name }) => {
-              return (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              )
-            })}
-          </Select>
+          <Tabs variant="soft-rounded" size="sm">
+            <TabList pt="1">
+              <Tab
+                isDisabled={isUnranked}
+                _selected={{
+                  bg: useColorModeValue('gray.100', 'whiteAlpha.200'),
+                  color: useColorModeValue('black', 'white'),
+                }}
+              >
+                Rarity Tier
+              </Tab>
+              <Tab
+                isDisabled={isUnranked}
+                _selected={{
+                  bg: useColorModeValue('gray.100', 'whiteAlpha.200'),
+                  color: useColorModeValue('black', 'white'),
+                }}
+              >
+                Rank Number
+              </Tab>
+            </TabList>
+
+            <TabPanels>
+              <TabPanel px="1" pb="0">
+                <HStack>
+                  <FormControl>
+                    <FormLabel fontSize="sm">Highest</FormLabel>
+                    <Select
+                      isDisabled={isUnranked}
+                      borderColor="transparent"
+                      bg={useColorModeValue('gray.100', 'whiteAlpha.200')}
+                      value={highestRarityTier}
+                      onChange={(e) => {
+                        const newValue = e.target.value as RarityName
+                        setHighestRarityTier(newValue)
+                        onChangeRarityTiers({
+                          lowestRarityTier,
+                          highestRarityTier: newValue,
+                        })
+                      }}
+                    >
+                      {RARITY_TYPES.map(({ name }) => {
+                        return (
+                          <option key={name} value={name}>
+                            {name}
+                          </option>
+                        )
+                      })}
+                    </Select>
+                  </FormControl>
+                  <FormControl>
+                    <FormLabel fontSize="sm">Lowest</FormLabel>
+                    <Select
+                      isDisabled={isUnranked}
+                      borderColor="transparent"
+                      bg={useColorModeValue('gray.100', 'whiteAlpha.200')}
+                      value={lowestRarityTier}
+                      onChange={(e) => {
+                        const newValue = e.target.value as RarityName
+                        setLowestRarityTier(newValue)
+                        onChangeRarityTiers({
+                          lowestRarityTier: newValue,
+                          highestRarityTier,
+                        })
+                      }}
+                    >
+                      {RARITY_TYPES.map(({ name }) => {
+                        return (
+                          <option key={name} value={name}>
+                            {name}
+                          </option>
+                        )
+                      })}
+                    </Select>
+                  </FormControl>
+                </HStack>
+              </TabPanel>
+              <TabPanel px="1" pb="0">
+                <FormControl>
+                  <FormLabel fontSize="sm">Range</FormLabel>
+                  <HStack spacing="3">
+                    <Input
+                      borderColor={useColorModeValue(
+                        'blackAlpha.300',
+                        'whiteAlpha.300',
+                      )}
+                      value={rankRangeInput}
+                      onChange={(e) => setRankRangeInput(e.target.value)}
+                      placeholder="1-10, 23, 42-100"
+                    />
+                    <Button
+                      onClick={() => {
+                        const includedRanks = parseNumberRange(
+                          rankRangeInput,
+                        ).reduce<Record<number, boolean>>((acc, rank) => {
+                          acc[rank] = true
+                          return acc
+                        }, {})
+                        onApplyFilters({
+                          ...filters,
+                          includedRanks: _.isEmpty(includedRanks)
+                            ? null
+                            : includedRanks,
+                        })
+                      }}
+                    >
+                      Apply
+                    </Button>
+                  </HStack>
+                  <FormHelperText fontSize="sm" maxWidth="220px">
+                    Use comma for multiple numbers, and dash for ranges
+                  </FormHelperText>
+                </FormControl>
+              </TabPanel>
+              <TabPanel></TabPanel>
+            </TabPanels>
+          </Tabs>
         </VStack>
         <VStack
           spacing="3"
