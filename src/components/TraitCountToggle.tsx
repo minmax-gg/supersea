@@ -14,13 +14,15 @@ export const TraitCountToggle = ({
   excludeTraitCount,
   onToggle,
   fontSize = 'md',
+  isDisabled,
 }: {
   excludeTraitCount: boolean
   onToggle: (exclude: boolean) => void
   fontSize?: TypographyProps['fontSize']
+  isDisabled?: boolean
 }) => {
   return (
-    <FormControl display="flex" alignItems="center">
+    <FormControl display="flex" alignItems="center" isDisabled={isDisabled}>
       <FormLabel
         htmlFor="include-trait-count"
         mb="0"
@@ -69,6 +71,7 @@ export const TraitCountToggle = ({
         id="include-trait-count"
         isChecked={!excludeTraitCount}
         onChange={(e) => onToggle(!e.target.checked)}
+        isDisabled={isDisabled}
       />
     </FormControl>
   )

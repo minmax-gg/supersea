@@ -1,6 +1,6 @@
 import { OpenSeaPort, Network, orderFromJSON, assetFromJSON } from 'opensea-js'
 import { RateLimit } from 'async-sema'
-import { readableEthValue } from './utils/ethereum'
+import { readableEthValue, weiToEth } from './utils/ethereum'
 ;((window: any) => {
   // Restore console for debugging
   // const i = document.createElement('iframe')
@@ -82,6 +82,21 @@ import { readableEthValue } from './utils/ethereum'
         })
       }
     } else if (event.data.method === 'SuperSea__Bid') {
+      const highestOffer = event.data.params.offers.reduce(
+        (acc: number, { current_price }: { current_price: string }) => {
+          return Math.max(acc, weiToEth(Number(current_price)))
+        },
+        0,
+      )
+
+      if (highestOffer >= event.data.params.price) {
+        window.postMessage({
+          method: 'SuperSea__Bid__Skipped',
+          params: { ...event.data.params, reason: 'outbid' },
+        })
+        return
+      }
+
       try {
         await bidRateLimit()
         const seaport = new OpenSeaPort((window as any).ethereum, {

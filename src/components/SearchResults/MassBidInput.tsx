@@ -25,6 +25,7 @@ import {
   Flex,
   Tooltip,
   Icon,
+  Checkbox,
 } from '@chakra-ui/react'
 import { FiHelpCircle } from 'react-icons/fi'
 import EthereumIcon from '../EthereumIcon'
@@ -49,7 +50,11 @@ const convertToLocalTime = (date: Date) => {
 const MassBidInput = ({
   onConfirm,
 }: {
-  onConfirm: (opts: { price: number; expirationTime: number }) => void
+  onConfirm: (opts: {
+    price: number
+    expirationTime: number
+    skipOnHigherOffer: boolean
+  }) => void
 }) => {
   const confirmDisclosure = useDisclosure()
   const toast = useToast()
@@ -57,10 +62,12 @@ const MassBidInput = ({
   const [expirationPreset, setExpirationPreset] = useState(
     EXPIRATION_PRESETS[0].value,
   )
+  const [skipOnHigherOffer, setSkipOnHigherOffer] = useState(false)
 
   const [unconfirmedOptions, setUnconfirmedOptions] = useState({
     price: 0,
     expirationTime: 0,
+    skipOnHigherOffer: false,
   })
 
   const [expirationTimeInput, setExpirationTimeInput] = useState(
@@ -78,16 +85,27 @@ const MassBidInput = ({
 
   return (
     <VStack alignItems="flex-start" spacing="4" width="100%">
-      <FormControl maxWidth="140px">
-        <FormLabel fontSize="sm">
-          <EthereumIcon wrapped /> Price
-        </FormLabel>
-        <Input
-          borderColor={useColorModeValue('blackAlpha.300', 'whiteAlpha.300')}
-          value={priceInput}
-          onChange={(e) => setPriceInput(e.target.value)}
-        />
-      </FormControl>
+      <Box>
+        <FormControl maxWidth="140px">
+          <FormLabel fontSize="sm">
+            <EthereumIcon wrapped /> Price
+          </FormLabel>
+          <Input
+            borderColor={useColorModeValue('blackAlpha.300', 'whiteAlpha.300')}
+            value={priceInput}
+            onChange={(e) => setPriceInput(e.target.value)}
+          />
+        </FormControl>
+        <Checkbox
+          mt="2"
+          size="sm"
+          isChecked={skipOnHigherOffer}
+          onChange={(e) => setSkipOnHigherOffer(e.target.checked)}
+          borderColor={useColorModeValue('blackAlpha.500', 'whiteAlpha.500')}
+        >
+          Skip items with higher offers
+        </Checkbox>
+      </Box>
       <FormControl>
         <FormLabel fontSize="sm">Expiration</FormLabel>
         <Select
@@ -168,6 +186,7 @@ const MassBidInput = ({
             setUnconfirmedOptions({
               price,
               expirationTime: expirationTimestamp / 1000,
+              skipOnHigherOffer,
             })
             confirmDisclosure.onOpen()
           }}

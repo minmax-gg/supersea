@@ -4,30 +4,37 @@ import { motion } from 'framer-motion'
 
 export type MassBidState =
   | 'PROCESSING'
+  | 'RETRYING'
   | 'SIGNED'
   | 'COMPLETED'
   | 'SKIPPED'
   | 'FAILED'
+  | 'OUTBID'
 
 const MassBidStatus = ({ state }: { state: MassBidState }) => {
   const spinnerColor = useColorModeValue('gray.500', 'white')
   const backgroundColors = useColorModeValue(
     {
       PROCESSING: 'gray.100',
+      RETRYING: 'gray.100',
       SIGNED: 'gray.100',
       COMPLETED: 'green.400',
       FAILED: 'red.400',
       SKIPPED: 'orange.400',
+      OUTBID: 'orange.400',
     },
     {
       PROCESSING: 'gray.500',
+      RETRYING: 'gray.500',
       SIGNED: 'gray.500',
       COMPLETED: 'green.500',
       FAILED: 'red.500',
       SKIPPED: 'orange.500',
+      OUTBID: 'orange.500',
     },
   )
-  const isCompletedState = state !== 'PROCESSING' && state !== 'SIGNED'
+  const isCompletedState =
+    state !== 'PROCESSING' && state !== 'SIGNED' && state !== 'RETRYING'
   return (
     <motion.div
       style={{ pointerEvents: 'none' }}
@@ -64,7 +71,9 @@ const MassBidStatus = ({ state }: { state: MassBidState }) => {
             '0 1px 2px rgba(0, 0, 0, 0.075)',
           )}
         >
-          {(state === 'PROCESSING' || state === 'SIGNED') && (
+          {(state === 'PROCESSING' ||
+            state === 'SIGNED' ||
+            state === 'RETRYING') && (
             <Text>
               <Spinner
                 color={spinnerColor}
@@ -75,7 +84,11 @@ const MassBidStatus = ({ state }: { state: MassBidState }) => {
                 position="relative"
                 top="-1px"
               />
-              {state === 'PROCESSING' ? 'Signing' : 'Bidding'}
+              {(() => {
+                if (state === 'PROCESSING') return 'Signing'
+                if (state === 'RETRYING') return 'Retrying'
+                return 'Bidding'
+              })()}
             </Text>
           )}
           {state === 'COMPLETED' && (
@@ -104,7 +117,7 @@ const MassBidStatus = ({ state }: { state: MassBidState }) => {
               Failed
             </Text>
           )}{' '}
-          {state === 'SKIPPED' && (
+          {state === 'SKIPPED' || state === 'OUTBID' ? (
             <Text color="white">
               <ArrowRightIcon
                 color="white"
@@ -114,9 +127,9 @@ const MassBidStatus = ({ state }: { state: MassBidState }) => {
                 position="relative"
                 top="-1px"
               />
-              Skipped
+              {state === 'OUTBID' ? 'Outbid' : 'Skipped'}
             </Text>
-          )}
+          ) : null}
         </Tag>
       </motion.div>
     </motion.div>

@@ -20,7 +20,8 @@ Default.args = {
   filters: {
     status: [],
     priceRange: [undefined, undefined],
-    highestRarity: 'Legendary',
+    includedIds: null,
+    includedRanks: null,
     traits: [],
   },
   showSearchProgress: false,
