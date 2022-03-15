@@ -40,7 +40,7 @@ export type FiltersType = {
   status: 'buyNow'[]
   priceRange: [number | undefined, number | undefined]
   includedRanks: Record<number, boolean> | null
-  includedIds: Record<number, boolean> | null
+  includedIds: Record<string | number, boolean> | null
   traits: string[]
 }
 
@@ -282,7 +282,7 @@ const Filters = ({
               <Button
                 onClick={() => {
                   const idRange = parseNumberRange(idRangeInput)
-                  const includedIds = idRange.reduce<Record<number, boolean>>(
+                  const includedIds = idRange.reduce<Record<string, boolean>>(
                     (acc, id) => {
                       acc[id] = true
                       return acc
@@ -473,7 +473,7 @@ const Filters = ({
                       onClick={() => {
                         const includedRanks = parseNumberRange(
                           rankRangeInput,
-                        ).reduce<Record<number, boolean>>((acc, rank) => {
+                        ).reduce<Record<string, boolean>>((acc, rank) => {
                           acc[rank] = true
                           return acc
                         }, {})
