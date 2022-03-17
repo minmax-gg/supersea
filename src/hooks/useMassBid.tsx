@@ -78,18 +78,32 @@ const useMassBid = ({
           state = 'FAILED'
           massBidProcessRef.current.status = 'stopped'
         } else {
-          toast({
-            duration: 7500,
-            position: 'bottom-right',
-            render: () => (
-              <Toast
-                text={`Unable to place bid on item, will retry. Received error "${event.data.params.error.message}"`}
-                type="error"
-              />
-            ),
-          })
-          console.log(event.data.params.error)
-          state = 'RETRYING'
+          if (/Trading is not enabled/i.test(event.data.params.error.message)) {
+            state = 'FAILED'
+            toast({
+              duration: 7500,
+              position: 'bottom-right',
+              render: () => (
+                <Toast
+                  text={`Asset has been locked from trading, likely due to suspicious activity.`}
+                  type="error"
+                />
+              ),
+            })
+            initializeNext = true
+          } else {
+            state = 'RETRYING'
+            toast({
+              duration: 7500,
+              position: 'bottom-right',
+              render: () => (
+                <Toast
+                  text={`Unable to place bid on item, will retry. Received error "${event.data.params.error.message}"`}
+                  type="error"
+                />
+              ),
+            })
+          }
         }
       } else if (event.data.method === 'SuperSea__Bid__Skipped') {
         state = event.data.params.reason === 'outbid' ? 'OUTBID' : 'SKIPPED'
