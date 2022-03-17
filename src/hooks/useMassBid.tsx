@@ -103,7 +103,11 @@ const useMassBid = ({
                 position: 'bottom-right',
                 render: () => (
                   <Toast
-                    text={`Unable to place bid on item, will try 3 times. Received error "${event.data.params.error.message}"`}
+                    text={
+                      /Failed to fetch/i.test(event.data.params.error.message)
+                        ? "You're getting rate limited by the OpenSea API. Please wait a minute or two before trying again."
+                        : `Unable to place bid on item, will try 3 times. Received error "${event.data.params.error.message}"`
+                    }
                     type="error"
                   />
                 ),
