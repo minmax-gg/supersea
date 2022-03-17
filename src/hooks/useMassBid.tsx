@@ -7,10 +7,12 @@ import { MassBidState } from '../components/SearchResults/MassBidStatus'
 const DEFAULT_MASS_BID_PROCESS: {
   processNumber: number
   processingIndex: number
+  retryCount: number
   status: 'idle' | 'processing' | 'stopped'
 } = {
   processingIndex: -1,
   processNumber: 0,
+  retryCount: 0,
   status: 'idle',
 }
 
@@ -44,6 +46,7 @@ const useMassBid = ({
     massBidProcessRef.current = {
       processNumber: massBidProcessRef.current.processNumber,
       processingIndex: massBid.currentIndex,
+      retryCount: massBidProcessRef.current.retryCount,
       status: 'processing',
     }
 
@@ -92,17 +95,23 @@ const useMassBid = ({
             })
             initializeNext = true
           } else {
-            state = 'RETRYING'
-            toast({
-              duration: 7500,
-              position: 'bottom-right',
-              render: () => (
-                <Toast
-                  text={`Unable to place bid on item, will retry. Received error "${event.data.params.error.message}"`}
-                  type="error"
-                />
-              ),
-            })
+            if (massBidProcessRef.current.retryCount < 3) {
+              state = 'RETRYING'
+              massBidProcessRef.current.retryCount += 1
+              toast({
+                duration: 7500,
+                position: 'bottom-right',
+                render: () => (
+                  <Toast
+                    text={`Unable to place bid on item, will try 3 times. Received error "${event.data.params.error.message}"`}
+                    type="error"
+                  />
+                ),
+              })
+            } else {
+              state = 'FAILED'
+              initializeNext = true
+            }
           }
         }
       } else if (event.data.method === 'SuperSea__Bid__Skipped') {
@@ -129,11 +138,15 @@ const useMassBid = ({
           [tokens[massBid.currentIndex + 1].tokenId]: 'PROCESSING',
         }))
         massBidProcessRef.current.status = 'idle'
+        massBidProcessRef.current.retryCount = 0
         setMassBid({
           ...massBid,
           currentIndex: massBid.currentIndex + 1,
         })
-      } else if (state === 'RETRYING') {
+      } else if (
+        state === 'RETRYING' &&
+        massBidProcessRef.current.status !== 'stopped'
+      ) {
         setMassBidStates((states) => ({
           ...states,
           [event.data.params.tokenId]: state,
@@ -196,6 +209,7 @@ const useMassBid = ({
       massBidProcessRef.current = {
         processingIndex: -1,
         processNumber: massBidProcessRef.current.processNumber + 1,
+        retryCount: 0,
         status: 'idle',
       }
       setMassBidStates({
