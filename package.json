@@ -24,7 +24,7 @@
     "graphql": "^15.5.2",
     "graphql-request": "^3.5.0",
     "lodash": "^4.17.21",
-    "opensea-js": "^2.0.0",
+    "opensea-js": "^3.0.0",
     "parcel": "^2.0.0-rc.0",
     "patch-package": "^6.4.7",
     "preact": "^10.5.14",
