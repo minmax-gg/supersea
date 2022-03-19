@@ -115,16 +115,22 @@ import { readableEthValue, weiToEth } from './utils/ethereum'
 
         const getAsset = seaport.api.getAsset.bind(seaport)
         seaport.api.getAsset = async (asset) => {
+          let returnedAsset = null
           if (asset.tokenId === event.data.params.tokenId) {
-            return assetFromJSON(event.data.params.asset)
+            returnedAsset = assetFromJSON(event.data.params.asset)
+          } else {
+            returnedAsset = await getAsset(asset)
           }
-          return getAsset(asset)
+          // Fix for ERC-1155 tokens, see https://github.com/ProjectOpenSea/opensea-js/issues/385
+          // Should be fixed in the next release of opensea-js
+          returnedAsset.schemaName = returnedAsset.assetContract.schemaName
+          return returnedAsset
         }
-
         await seaport.createBuyOrder({
           asset: {
             tokenId: event.data.params.tokenId,
             tokenAddress: event.data.params.address,
+            schemaName: event.data.params.asset?.asset_contract?.schema_name,
           },
           accountAddress: await getEthAccount(),
           startAmount: event.data.params.price,

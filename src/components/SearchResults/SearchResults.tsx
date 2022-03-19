@@ -234,7 +234,7 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
         setTokens((tokens) => {
           return (tokens || []).concat(
             assets.map((asset) => ({
-              iteratorID: Number(asset.token_id),
+              iteratorID: asset.token_id,
               rank: 1,
               noTraitCountRank: 1,
               placeholder: false,
@@ -337,7 +337,7 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
                 setTokens(
                   Object.keys(appliedFilters.includedIds!).map((id) => {
                     return {
-                      iteratorID: Number(id),
+                      iteratorID: id,
                       noTraitCountRank: 0,
                       rank: 0,
                     }

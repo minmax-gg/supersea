@@ -32,7 +32,7 @@ export type Rarities = {
   totalSupply: number | null
   rankWarning: string | null
   tokens: {
-    iteratorID: number
+    iteratorID: number | string
     rank: number
     noTraitCountRank: number
   }[]
