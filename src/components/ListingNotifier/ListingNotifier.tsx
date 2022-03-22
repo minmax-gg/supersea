@@ -182,6 +182,7 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
     stateToRestore.seenListingsCount,
   )
   const retriesRef = useRef(0)
+  const cooldownRef = useRef(0)
   const [notificationIds, setNotificationIds] = useState(
     stateToRestore.notificationIds,
   )
@@ -296,6 +297,9 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
         pollTimeRef.current = createPollTime(5)
       }
       pollTimeout = setInterval(async () => {
+        if (Date.now() < cooldownRef.current) {
+          return
+        }
         chrome.storage.local.get(
           ['openSeaGraphQlRequests'],
           async ({ openSeaGraphQlRequests }) => {
@@ -357,13 +361,14 @@ const ListingNotifier = ({ collectionSlug }: { collectionSlug: string }) => {
                     timestamp: _.get(edge, paths.timestamp),
                   }
                 })
+                retriesRef.current = 0
               } catch (e: any) {
                 console.error('failed poll request', e)
                 if (e.status === 429) {
                   setError({ type: 'RATE_LIMIT', message: e.message })
                   setPollStatus('FAILED')
                 } else {
-                  chrome.storage.local.remove(['openSeaGraphQlRequests'])
+                  cooldownRef.current = Date.now() + 1000 * 10
                   retriesRef.current += 1
                 }
               }
