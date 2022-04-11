@@ -16,6 +16,7 @@ import CollectionMenuItem from './components/CollectionMenuItem'
 import Activity from './components/Activity/Activity'
 import { isSubscriber } from './utils/user'
 import { createRouteParams } from './utils/route'
+import ReplacementNotice from './components/Activity/ReplacementNotice'
 
 const NODE_PROCESSED_DATA_KEY = '__SuperSea__Processed'
 
@@ -389,11 +390,13 @@ const setupInjections = async () => {
   injectRarityDisclaimer()
   injectCollectionMenu()
   injectActivity()
+  injectListingNotifier()
 
   const observer = new MutationObserver(() => {
     throttledInjectBundleVerification()
     throttledInjectAssetInfo()
     throttledInjectCollectionMenu()
+    throttledInjectListingNotifier()
     throttledDestroyRemovedInjections()
     throttledInjectActivity()
   })
@@ -473,6 +476,26 @@ const setupSearchResultsTab = () => {
     }
   })
 }
+
+const injectListingNotifier = async () => {
+  const { injectionSelectors: selectors } = await fetchRemoteConfig()
+  const node = document.querySelector(
+    selectors.listingNotifier.node.selector,
+  ) as HTMLElement | null
+  if (node && !node.dataset[NODE_PROCESSED_DATA_KEY]) {
+    node.dataset[NODE_PROCESSED_DATA_KEY] = '1'
+    const container = document.createElement('div')
+    container.classList.add('SuperSea__ListingNotifier')
+    injectElement(
+      node,
+      container,
+      selectors.listingNotifier.node.injectionMethod,
+    )
+    injectReact(<ReplacementNotice />, container)
+  }
+}
+
+const throttledInjectListingNotifier = _.throttle(injectListingNotifier, 250)
 
 // We need to keep the background script alive for webRequest handlers
 const setupKeepAlivePing = () => {
