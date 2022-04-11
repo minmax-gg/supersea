@@ -77,12 +77,10 @@ export type Notifier = {
 }
 
 const ListingNotifierForm = ({
-  isRanked,
   isSubscriber,
   collections,
   onAddNotifier,
 }: {
-  isRanked: boolean
   isSubscriber: boolean
   collections: Collection[]
   onAddNotifier: (notifier: Notifier | null) => void
@@ -99,6 +97,11 @@ const ListingNotifierForm = ({
   const [creatingNotifier, setCreatingNotifier] = useState(false)
   const [rarityTab, setRarityTab] = useState<number>(0)
 
+  const chosenCollection = collections.find(
+    ({ slug }) => slug === collectionSlug,
+  )
+
+  const isRanked = chosenCollection?.rarities.isRanked
   const rarityInputsDisabled = isRanked === false || !isSubscriber
   const inputBorder = useColorModeValue('blackAlpha.300', 'whiteAlpha.300')
 
@@ -274,10 +277,7 @@ const ListingNotifierForm = ({
           </FormLabel>
           <TraitSelect
             isDisabled={rarityInputsDisabled}
-            traits={
-              collections.find(({ slug }) => slug === collectionSlug)?.rarities
-                .traits || []
-            }
+            traits={chosenCollection?.rarities.traits || []}
             value={traits}
             onChange={(traits) => {
               setTraits(traits)
@@ -347,9 +347,10 @@ const ListingNotifierForm = ({
                 id: generateId(),
                 minPrice: minPrice ? Number(minPrice) : null,
                 maxPrice: maxPrice ? Number(maxPrice) : null,
-                lowestRarity: rarityTab === 0 ? lowestRarity : 'Common',
+                lowestRarity:
+                  rarityTab === 0 && isRanked ? lowestRarity : 'Common',
                 lowestRankNumber:
-                  rarityTab === 1 && Number(lowestRankNumber)
+                  rarityTab === 1 && Number(lowestRankNumber) && isRanked
                     ? Number(lowestRankNumber)
                     : null,
                 includeAuctions,

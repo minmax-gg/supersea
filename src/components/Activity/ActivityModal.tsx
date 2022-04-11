@@ -334,8 +334,7 @@ const ActivityModal = ({
                 <VStack alignItems="flex-start" width="100%" spacing="4">
                   {notifierFormOpen ? (
                     <ListingNotifierForm
-                      isRanked
-                      isSubscriber
+                      isSubscriber={isSubscriber}
                       collections={collections}
                       onAddNotifier={(notifier) => {
                         if (notifier) {
