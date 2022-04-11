@@ -15,6 +15,7 @@ import TimeAgo from 'react-timeago'
 import EthereumIcon from '../EthereumIcon'
 import { Chain } from '../../utils/api'
 import { Notifier } from './ListingNotifierForm'
+import InternalLink from '../InternalLink'
 
 export type MatchedAsset = {
   listingId: string
@@ -53,6 +54,7 @@ const MatchedAssetListing = ({ asset }: { asset: MatchedAsset }) => {
           type="list"
           chain={asset.chain}
           container={container}
+          isActivityEvent
         />
       ) : (
         <Box height={LIST_HEIGHT} width={LIST_WIDTH} />
@@ -66,16 +68,20 @@ const MatchedAssetListing = ({ asset }: { asset: MatchedAsset }) => {
           className="SuperSea__Image"
         />
         <Box>
-          <LinkOverlay
-            href={`/assets/${asset.chain === 'polygon' ? 'matic/' : ''}${
-              asset.contractAddress
-            }/${asset.tokenId}`}
-            target="_blank"
+          <InternalLink
+            as={LinkOverlay}
+            route="asset"
+            params={{
+              address: asset.contractAddress,
+              chainId: asset.chain,
+              chainPath: asset.chain === 'polygon' ? 'matic/' : '',
+              tokenId: asset.tokenId,
+            }}
           >
             <Text my="0" fontSize="sm" fontWeight="500">
               {asset.name}
             </Text>
-          </LinkOverlay>
+          </InternalLink>
           <Box fontSize="sm" opacity="0.5">
             <TimeAgo date={new Date(`${asset.timestamp}Z`)} />
           </Box>
