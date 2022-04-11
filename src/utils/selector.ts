@@ -16,6 +16,9 @@ export type AssetInfoSelector = {
 }
 
 export type Selectors = {
+  activity: {
+    button: InjectionSelector
+  }
   assetInfo: {
     grid: AssetInfoSelector
     list: AssetInfoSelector
@@ -34,10 +37,6 @@ export type Selectors = {
   searchResults: {
     menuSelector: string
     containerSelector: string
-    route: {
-      url: string
-      as: string
-    }
   }
   listingNotifier: {
     node: InjectionSelector

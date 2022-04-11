@@ -5,6 +5,7 @@
   "dependencies": {
     "@chakra-ui/icons": "^1.0.15",
     "@chakra-ui/react": "1.6.5",
+    "@craco/craco": "^6.4.3",
     "@emotion/babel-preset-css-prop": "^11.2.0",
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
@@ -20,7 +21,7 @@
     "async-sema": "^3.1.1",
     "bignumber.js": "^9.0.2",
     "dataloader": "^2.0.0",
-    "framer-motion": "^4.1.17",
+    "framer-motion": "^6.0.0",
     "graphql": "^15.5.2",
     "graphql-request": "^3.5.0",
     "lodash": "^4.17.21",
@@ -43,11 +44,11 @@
     "web3": "^1.5.3"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build && yarn clean-build-extension-scripts",
+    "start": "craco start",
+    "build": "craco build && yarn clean-build-extension-scripts",
     "clean-build-extension-scripts": "parcel build src/content.tsx src/background.ts src/pageContextInject.ts --dist-dir build/static/js --no-cache",
     "build-extension-scripts": "parcel build src/content.tsx src/background.ts src/pageContextInject.ts --dist-dir build/static/js",
-    "test": "react-scripts test",
+    "test": "craco test",
     "eject": "react-scripts eject",
     "postinstall": "patch-package",
     "storybook": "start-storybook -p 6006 -s public",

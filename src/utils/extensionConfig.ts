@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Notifier } from '../components/Activity/ListingNotifierForm'
 
 export type ExtensionConfig = {
   enabled: boolean
@@ -6,6 +7,13 @@ export type ExtensionConfig = {
   notificationSounds: boolean
   quickBuyGasPreset: 'none' | 'fixed' | 'optimal'
   fixedGas: { priorityFee: number; fee: number }
+}
+
+export type StoredActivityState = {
+  collections: { slug: string; name: string }[]
+  notifiers: (Omit<Notifier, 'collection' | 'tokenEligibilityMap'> & {
+    collectionSlug: string
+  })[]
 }
 
 const DEFAULTS: ExtensionConfig = {
@@ -54,4 +62,26 @@ export const useExtensionConfig = () => {
       saveExtensionConfig(updatedConfig)
     },
   ] as const
+}
+
+let storedActivityStatePromise: null | Promise<Record<string, any>> = null
+export const getStoredActivityState = async () => {
+  if (!storedActivityStatePromise) {
+    storedActivityStatePromise = new Promise((resolve) => {
+      if (process.env.NODE_ENV === 'production') {
+        chrome.storage.local.get(['activityState'], resolve)
+      } else {
+        setTimeout(() => resolve({}), 250)
+      }
+    })
+  }
+
+  const val = await storedActivityStatePromise
+  return (val?.activityState || null) as StoredActivityState | null
+}
+
+export const saveActivityState = (activityState: StoredActivityState) => {
+  if (process.env.NODE_ENV === 'production') {
+    chrome.storage.local.set({ activityState })
+  }
 }

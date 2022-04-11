@@ -33,6 +33,7 @@ import { BiReceipt } from 'react-icons/bi'
 import { fetchAllCollectionsForUser, fetchFloorPrice } from '../utils/api'
 import EthereumIcon from './EthereumIcon'
 import ScopedCSSPortal from './ScopedCSSPortal'
+import InternalLink from './InternalLink'
 
 type CollectionFloor = {
   name: string
@@ -318,11 +319,15 @@ const ProfileSummary = ({ shortenedAddress }: { shortenedAddress: string }) => {
                                       width="16px"
                                       height="16px"
                                     />
-                                    <Link
-                                      href={`https://opensea.io/collection/${slug}`}
+                                    <InternalLink
+                                      route="collection"
+                                      params={{ collectionSlug: slug }}
+                                      onClick={() => {
+                                        setBreakdownModalOpen(false)
+                                      }}
                                     >
                                       {name}
-                                    </Link>
+                                    </InternalLink>
                                   </HStack>
                                 </Td>
                                 <Td>

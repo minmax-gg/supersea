@@ -1,6 +1,6 @@
 import { Box, Text, Icon, useColorModeValue } from '@chakra-ui/react'
 import React from 'react'
-import LogoSvg from '../assets/logo.svg'
+import LogoFlippedSvg from '../assets/logo-flipped.svg'
 
 const Toast = ({
   text,
@@ -27,14 +27,14 @@ const Toast = ({
     >
       <Text color="white">{text}</Text>
       <Icon
-        as={LogoSvg as any}
+        as={LogoFlippedSvg as any}
         position="absolute"
         opacity={0.35}
         color="white"
-        width="80px"
-        height="80px"
+        width="50px"
+        height="50px"
         top="50%"
-        right="-16px"
+        right="8px"
         transform="translateY(-50%)"
       />
     </Box>
