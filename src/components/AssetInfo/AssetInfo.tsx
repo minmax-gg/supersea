@@ -31,7 +31,7 @@ import {
   fetchMetadata,
   fetchMetadataUriWithOpenSeaFallback,
   fetchRarities,
-  fetchSelectors,
+  fetchRemoteConfig,
   triggerOpenSeaMetadataRefresh,
 } from '../../utils/api'
 import Toast from '../Toast'
@@ -54,6 +54,7 @@ import {
 } from '../../utils/rarity'
 import useFloor from '../../hooks/useFloor'
 import PropertiesModal from './PropertiesModal'
+import InternalLink from '../InternalLink'
 
 export const HEIGHT = 85
 export const LIST_HEIGHT = 62
@@ -297,7 +298,7 @@ const AssetInfo = ({
 
   const replaceImage = useCallback(async () => {
     await replaceImageRateLimit()
-    const selectors = await fetchSelectors()
+    const { injectionSelectors: selectors } = await fetchRemoteConfig()
     try {
       const metadata = await fetchMetadata(address, +tokenId)
 
@@ -774,8 +775,9 @@ const AssetInfo = ({
                   px="3"
                   py="2"
                 >
-                  <Link
-                    href={floor ? floor.floorSearchUrl : undefined}
+                  <InternalLink
+                    route="collectionFloor"
+                    params={{ collectionSlug: collectionSlug! }}
                     fontWeight="500"
                     verticalAlign="middle"
                   >
@@ -784,7 +786,7 @@ const AssetInfo = ({
                       : `${floor.price} ${
                           floor.currency !== 'ETH' ? ` ${floor.currency}` : ''
                         }`}
-                  </Link>
+                  </InternalLink>
                 </Tooltip>
               </>
             ) : null}

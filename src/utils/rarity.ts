@@ -42,6 +42,8 @@ export type Rarity = {
   type: typeof RARITY_TYPES[number]
 }
 
+const TRAIT_COUNT_EXCLUDED_STORAGE_KEY = 'excludeTraitCount'
+
 export const determineRarityType = (rank: number, tokenCount: number) => {
   return rank === 1
     ? RARITY_TYPES[0]
@@ -52,10 +54,10 @@ export const useTraitCountExcluded = (address: string | null) => {
   const [traitCountExcluded, setTraitCountExcluded] = useState<boolean | null>(
     null,
   )
-  const storageKey = `excludeTraitCount:${address}`
+  const storageKey = `${TRAIT_COUNT_EXCLUDED_STORAGE_KEY}:${address}`
 
   useEffect(() => {
-    if (!address) return
+    if (!address || !chrome.storage) return
 
     const listener: Parameters<
       typeof chrome.storage.onChanged.addListener
@@ -85,6 +87,56 @@ export const useTraitCountExcluded = (address: string | null) => {
       setTraitCountExcluded(exclude)
     },
   ] as const
+}
+
+export const useAllTraitCountExcluded = () => {
+  const [allTraitCountExcluded, setAllTraitCountExcluded] = useState<
+    Record<string, boolean>
+  >({})
+
+  useEffect(() => {
+    if (!chrome.storage) return
+
+    const listener: Parameters<
+      typeof chrome.storage.onChanged.addListener
+    >[0] = (changes, area) => {
+      const traitCountExcludedKeys = Object.keys(changes).filter((key) =>
+        key.startsWith(TRAIT_COUNT_EXCLUDED_STORAGE_KEY),
+      )
+      if (area === 'sync' && traitCountExcludedKeys.length) {
+        setAllTraitCountExcluded((all) => {
+          return {
+            ...all,
+            ...traitCountExcludedKeys.reduce<Record<string, boolean>>(
+              (acc, key) => {
+                acc[key.replace(`${TRAIT_COUNT_EXCLUDED_STORAGE_KEY}:`, '')] =
+                  Boolean(changes[key].newValue) || false
+                return acc
+              },
+              {},
+            ),
+          }
+        })
+      }
+    }
+    chrome.storage.onChanged.addListener(listener)
+    chrome.storage.sync.get(null, (res) => {
+      const traitCountExcludedKeys = Object.keys(res).filter((key) =>
+        key.startsWith(TRAIT_COUNT_EXCLUDED_STORAGE_KEY),
+      )
+      setAllTraitCountExcluded(
+        traitCountExcludedKeys.reduce<Record<string, boolean>>((acc, key) => {
+          acc[key.replace(`${TRAIT_COUNT_EXCLUDED_STORAGE_KEY}:`, '')] =
+            Boolean(res[key]) || false
+          return acc
+        }, {}),
+      )
+    })
+
+    return () => chrome.storage.onChanged.removeListener(listener)
+  }, [])
+
+  return allTraitCountExcluded
 }
 
 export const getActiveRarity = (

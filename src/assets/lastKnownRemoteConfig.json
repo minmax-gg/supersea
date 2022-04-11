@@ -1,0 +1,215 @@
+{
+  "routes": {
+    "searchResults": {
+      "url": "/collection/[slug]?slug={collectionSlug}&collectionSlug={collectionSlug}&tab=supersea",
+      "as": "/collection/{collectionSlug}?tab=supersea"
+    },
+    "asset": {
+      "url": "/item?assetContractAddress={address}&tokenId={tokenId}&chainIdentifier={chainId}",
+      "as": "/assets/{chainPath}{address}/{tokenId}"
+    },
+    "collection": {
+      "url": "/collection/[slug]?slug={collectionSlug}&collectionSlug={collectionSlug}",
+      "as": "/collection/{collectionSlug}"
+    },
+    "collectionFloor": {
+      "url": "/collection/[slug]?slug={collectionSlug}&collectionSlug={collectionSlug}&search[sortAscending]=true&search[sortBy]=PRICE&search[toggles][0]=BUY_NOW",
+      "as": "/collection/{collectionSlug}?search[sortAscending]=true&search[sortBy]=PRICE&search[toggles][0]=BUY_NOW"
+    },
+    "traitFloor": {
+      "url": "/collection/[slug]?slug={collectionSlug}&collectionSlug={collectionSlug}&search[stringTraits][0][name]={name}&search[stringTraits][0][values][0]={value}&search[sortAscending]=true&search[sortBy]=PRICE",
+      "as": "/collection/{collectionSlug}?search[stringTraits][0][name]={name}&search[stringTraits][0][values][0]={value}&search[sortAscending]=true&search[sortBy]=PRICE"
+    }
+  },
+  "queryHeaders": {
+    "x-api-key": "2f6f419a083c46de9d83ce3dbe7db601",
+    "x-build-id": "8SgJR4aoK4YT9zXZhkly2",
+    "content-type": "application/json"
+  },
+  "queries": {
+    "EventHistoryQuery": {
+      "body": "query EventHistoryQuery(\n  $archetype: ArchetypeInputType\n  $bundle: BundleSlug\n  $collections: [CollectionSlug!]\n  $categories: [CollectionSlug!]\n  $chains: [ChainScalar!]\n  $eventTypes: [EventType!]\n  $cursor: String\n  $count: Int = 16\n  $showAll: Boolean = false\n  $identity: IdentityInputType\n) {\n  ...EventHistory_data_L1XK6\n}\n\nfragment AccountLink_data on AccountType {\n  address\n  config\n  isCompromised\n  user {\n    publicUsername\n    id\n  }\n  displayName\n  ...ProfileImage_data\n  ...wallet_accountKey\n  ...accounts_url\n}\n\nfragment AssetCell_asset on AssetType {\n  collection {\n    name\n    id\n  }\n  name\n  ...AssetMedia_asset\n  ...asset_url\n}\n\nfragment AssetCell_assetBundle on AssetBundleType {\n  assetQuantities(first: 2) {\n    edges {\n      node {\n        asset {\n          collection {\n            name\n            id\n          }\n          name\n          ...AssetMedia_asset\n          ...asset_url\n          id\n        }\n        relayId\n        id\n      }\n    }\n  }\n  name\n  ...bundle_url\n}\n\nfragment AssetMedia_asset on AssetType {\n  animationUrl\n  backgroundColor\n  collection {\n    displayData {\n      cardDisplayStyle\n    }\n    id\n  }\n  isDelisted\n  imageUrl\n  displayImageUrl\n}\n\nfragment AssetQuantity_data on AssetQuantityType {\n  asset {\n    ...Price_data\n    id\n  }\n  quantity\n}\n\nfragment CollectionLink_assetContract on AssetContractType {\n  address\n  blockExplorerLink\n}\n\nfragment CollectionLink_collection on CollectionType {\n  name\n  ...collection_url\n  ...verification_data\n}\n\nfragment EventHistory_data_L1XK6 on Query {\n  assetEvents(after: $cursor, bundle: $bundle, archetype: $archetype, first: $count, categories: $categories, collections: $collections, chains: $chains, eventTypes: $eventTypes, identity: $identity, includeHidden: true) {\n    edges {\n      node {\n        assetBundle @include(if: $showAll) {\n          relayId\n          ...AssetCell_assetBundle\n          ...bundle_url\n          id\n        }\n        assetQuantity {\n          asset @include(if: $showAll) {\n            relayId\n            assetContract {\n              ...CollectionLink_assetContract\n              id\n            }\n            ...AssetCell_asset\n            ...asset_url\n            collection {\n              ...CollectionLink_collection\n              id\n            }\n            id\n          }\n          ...quantity_data\n          id\n        }\n        relayId\n        eventTimestamp\n        eventType\n        offerExpired\n        customEventName\n        ...utilsAssetEventLabel\n        devFee {\n          asset {\n            assetContract {\n              chain\n              id\n            }\n            id\n          }\n          quantity\n          ...AssetQuantity_data\n          id\n        }\n        devFeePaymentEvent {\n          ...EventTimestamp_data\n          id\n        }\n        fromAccount {\n          address\n          ...AccountLink_data\n          id\n        }\n        price {\n          quantity\n          quantityInEth\n          ...AssetQuantity_data\n          id\n        }\n        endingPrice {\n          quantity\n          ...AssetQuantity_data\n          id\n        }\n        seller {\n          ...AccountLink_data\n          id\n        }\n        toAccount {\n          ...AccountLink_data\n          id\n        }\n        winnerAccount {\n          ...AccountLink_data\n          id\n        }\n        ...EventTimestamp_data\n        id\n        __typename\n      }\n      cursor\n    }\n    pageInfo {\n      endCursor\n      hasNextPage\n    }\n  }\n}\n\nfragment EventTimestamp_data on AssetEventType {\n  eventTimestamp\n  transaction {\n    blockExplorerLink\n    id\n  }\n}\n\nfragment Price_data on AssetType {\n  decimals\n  imageUrl\n  symbol\n  usdSpotPrice\n  assetContract {\n    blockExplorerLink\n    chain\n    id\n  }\n}\n\nfragment ProfileImage_data on AccountType {\n  imageUrl\n}\n\nfragment accounts_url on AccountType {\n  address\n  user {\n    publicUsername\n    id\n  }\n}\n\nfragment asset_url on AssetType {\n  assetContract {\n    address\n    chain\n    id\n  }\n  tokenId\n}\n\nfragment bundle_url on AssetBundleType {\n  slug\n}\n\nfragment collection_url on CollectionType {\n  slug\n}\n\nfragment quantity_data on AssetQuantityType {\n  asset {\n    decimals\n    id\n  }\n  quantity\n}\n\nfragment utilsAssetEventLabel on AssetEventType {\n  isMint\n  isAirdrop\n  eventType\n}\n\nfragment verification_data on CollectionType {\n  isMintable\n  isSafelisted\n  isVerified\n}\n\nfragment wallet_accountKey on AccountType {\n  address\n}\n",
+      "staticHeaders": {
+        "x-signed-query": "d3ae6ae8b381a0a9e02b27b5ca4801ec0c527a62fdbf6d2e90b6ad1b47a197f2"
+      },
+      "staticVariables": {
+        "archetype": null,
+        "bundle": null,
+        "categories": null,
+        "chains": null,
+        "cursor": null,
+        "identity": null,
+        "showAll": true,
+        "eventTypes": ["AUCTION_CREATED", "AUCTION_SUCCESSFUL"]
+      },
+      "dynamicVariablePaths": {
+        "count": "count",
+        "collectionSlugs": "collections"
+      },
+      "resultPaths": {
+        "edges": "data.assetEvents.edges",
+        "asset": "node.assetQuantity.asset",
+        "listingId": "node.relayId",
+        "tokenId": "node.assetQuantity.asset.tokenId",
+        "contractAddress": "node.assetQuantity.asset.assetContract.address",
+        "chain": "node.assetQuantity.asset.assetContract.chain",
+        "name": "node.assetQuantity.asset.name",
+        "collectionName": "node.assetQuantity.asset.collection.name",
+        "image": "node.assetQuantity.asset.displayImageUrl",
+        "price": "node.price.quantityInEth",
+        "currency": "node.price.asset.symbol",
+        "timestamp": "node.eventTimestamp",
+        "eventType": "node.eventType"
+      }
+    },
+    "EventHistoryPollQuery": {
+      "body": "query EventHistoryPollQuery(\n  $archetype: ArchetypeInputType\n  $categories: [CollectionSlug!]\n  $chains: [ChainScalar!]\n  $collections: [CollectionSlug!]\n  $count: Int = 10\n  $cursor: String\n  $eventTimestamp_Gt: DateTime\n  $eventTypes: [EventType!]\n  $identity: IdentityInputType\n  $showAll: Boolean = false\n) {\n  assetEvents(after: $cursor, archetype: $archetype, categories: $categories, chains: $chains, collections: $collections, eventTimestamp_Gt: $eventTimestamp_Gt, eventTypes: $eventTypes, first: $count, identity: $identity, includeHidden: true) {\n    edges {\n      node {\n        assetBundle @include(if: $showAll) {\n          relayId\n          ...AssetCell_assetBundle\n          ...bundle_url\n          id\n        }\n        assetQuantity {\n          asset @include(if: $showAll) {\n            relayId\n            assetContract {\n              ...CollectionLink_assetContract\n              id\n            }\n            ...AssetCell_asset\n            ...asset_url\n            collection {\n              ...CollectionLink_collection\n              id\n            }\n            id\n          }\n          ...quantity_data\n          id\n        }\n        relayId\n        eventTimestamp\n        eventType\n        customEventName\n        offerExpired\n        ...utilsAssetEventLabel\n        devFee {\n          asset {\n            assetContract {\n              chain\n              id\n            }\n            id\n          }\n          quantity\n          ...AssetQuantity_data\n          id\n        }\n        devFeePaymentEvent {\n          ...EventTimestamp_data\n          id\n        }\n        fromAccount {\n          address\n          ...AccountLink_data\n          id\n        }\n        price {\n          quantity\n          quantityInEth\n          ...AssetQuantity_data\n          id\n        }\n        endingPrice {\n          quantity\n          ...AssetQuantity_data\n          id\n        }\n        seller {\n          ...AccountLink_data\n          id\n        }\n        toAccount {\n          ...AccountLink_data\n          id\n        }\n        winnerAccount {\n          ...AccountLink_data\n          id\n        }\n        ...EventTimestamp_data\n        id\n      }\n    }\n  }\n}\n\nfragment AccountLink_data on AccountType {\n  address\n  config\n  isCompromised\n  user {\n    publicUsername\n    id\n  }\n  displayName\n  ...ProfileImage_data\n  ...wallet_accountKey\n  ...accounts_url\n}\n\nfragment AssetCell_asset on AssetType {\n  collection {\n    name\n    id\n  }\n  name\n  ...AssetMedia_asset\n  ...asset_url\n}\n\nfragment AssetCell_assetBundle on AssetBundleType {\n  assetQuantities(first: 2) {\n    edges {\n      node {\n        asset {\n          collection {\n            name\n            id\n          }\n          name\n          ...AssetMedia_asset\n          ...asset_url\n          id\n        }\n        relayId\n        id\n      }\n    }\n  }\n  name\n  ...bundle_url\n}\n\nfragment AssetMedia_asset on AssetType {\n  animationUrl\n  backgroundColor\n  collection {\n    displayData {\n      cardDisplayStyle\n    }\n    id\n  }\n  isDelisted\n  imageUrl\n  displayImageUrl\n}\n\nfragment AssetQuantity_data on AssetQuantityType {\n  asset {\n    ...Price_data\n    id\n  }\n  quantity\n}\n\nfragment CollectionLink_assetContract on AssetContractType {\n  address\n  blockExplorerLink\n}\n\nfragment CollectionLink_collection on CollectionType {\n  name\n  ...collection_url\n  ...verification_data\n}\n\nfragment EventTimestamp_data on AssetEventType {\n  eventTimestamp\n  transaction {\n    blockExplorerLink\n    id\n  }\n}\n\nfragment Price_data on AssetType {\n  decimals\n  imageUrl\n  symbol\n  usdSpotPrice\n  assetContract {\n    blockExplorerLink\n    chain\n    id\n  }\n}\n\nfragment ProfileImage_data on AccountType {\n  imageUrl\n}\n\nfragment accounts_url on AccountType {\n  address\n  user {\n    publicUsername\n    id\n  }\n}\n\nfragment asset_url on AssetType {\n  assetContract {\n    address\n    chain\n    id\n  }\n  tokenId\n}\n\nfragment bundle_url on AssetBundleType {\n  slug\n}\n\nfragment collection_url on CollectionType {\n  slug\n}\n\nfragment quantity_data on AssetQuantityType {\n  asset {\n    decimals\n    id\n  }\n  quantity\n}\n\nfragment utilsAssetEventLabel on AssetEventType {\n  isMint\n  eventType\n}\n\nfragment verification_data on CollectionType {\n  isMintable\n  isSafelisted\n  isVerified\n}\n\nfragment wallet_accountKey on AccountType {\n  address\n}\n",
+      "staticHeaders": {
+        "x-signed-query": "b378a4b4b0c856ddf8f38fe5bba4cc8cc7462ab2400396dd3fb12bb6bb03cff1"
+      },
+      "staticVariables": {
+        "archetype": null,
+        "categories": null,
+        "chains": null,
+        "cursor": null,
+        "identity": null,
+        "showAll": true,
+        "eventTypes": ["AUCTION_CREATED", "AUCTION_SUCCESSFUL"]
+      },
+      "dynamicVariablePaths": {
+        "count": "count",
+        "collectionSlugs": "collections",
+        "timestamp": "eventTimestamp_Gt"
+      },
+      "resultPaths": {
+        "edges": "data.assetEvents.edges",
+        "asset": "node.assetQuantity.asset",
+        "listingId": "node.relayId",
+        "tokenId": "node.assetQuantity.asset.tokenId",
+        "contractAddress": "node.assetQuantity.asset.assetContract.address",
+        "chain": "node.assetQuantity.asset.assetContract.chain",
+        "name": "node.assetQuantity.asset.name",
+        "collectionName": "node.assetQuantity.asset.collection.name",
+        "image": "node.assetQuantity.asset.displayImageUrl",
+        "price": "node.price.quantityInEth",
+        "currency": "node.price.asset.symbol",
+        "timestamp": "node.eventTimestamp",
+        "eventType": "node.eventType"
+      }
+    }
+  },
+  "injectionSelectors": {
+    "activity": {
+      "button": {
+        "selector": ".Navbar--main > ul:last-of-type",
+        "injectionMethod": "prepend"
+      }
+    },
+    "assetInfo": {
+      "grid": {
+        "node": {
+          "selector": "article.AssetSearchList--asset",
+          "injectionMethod": "append"
+        },
+        "link": {
+          "selector": ".Asset--anchor",
+          "hierarchy": "either"
+        },
+        "collectionLink": {
+          "selector": ".AssetCardFooter--collection-name",
+          "hierarchy": "either"
+        },
+        "image": {
+          "selector": ".Image--image, .SuperSea__Image",
+          "hierarchy": "child"
+        }
+      },
+      "list": {
+        "node": {
+          "selector": "div[role=\"listitem\"] .AssetCell--container",
+          "injectionMethod": "prepend"
+        },
+        "link": {
+          "selector": ".AssetCell--link",
+          "hierarchy": "either"
+        },
+        "collectionLink": {
+          "selector": ".CollectionLink--link",
+          "hierarchy": "either"
+        },
+        "image": {
+          "selector": ".Image--image, .SuperSea__Image",
+          "hierarchy": "child"
+        }
+      },
+      "item": {
+        "node": {
+          "selector": ".item--summary > article, .item--small > article",
+          "injectionMethod": "append"
+        },
+        "link": {
+          "selector": ".AssetCell--link",
+          "hierarchy": "child"
+        },
+        "collectionLink": {
+          "selector": ".CollectionLink--link",
+          "hierarchy": "outside"
+        },
+        "image": {
+          "selector": ".Image--image",
+          "hierarchy": "child"
+        }
+      }
+    },
+    "bundleVerification": {
+      "frameSelector": ".Bundle--summary-frame",
+      "linkSelector": ".Bundle--items-list > a",
+      "headerSelector": ".Panel--header"
+    },
+    "profileSummary": {
+      "accountTitleSelector": ".AccountHeader--subtitle",
+      "accountEnsNameSelector": ".AccountHeader--name",
+      "shortenedAddressSelector": ".AccountHeader--address"
+    },
+    "searchResults": {
+      "menuSelector": "*[class*=\"CollectionPagereact\"] ul[class*=\"Menureact__MenuBase\"]",
+      "containerSelector": ".AssetSearchView--main, .collection--ActivityTabSection"
+    },
+    "listingNotifier": {
+      "node": {
+        "selector": ".collection--ActivityTabSection .fresnel-container ~ .fresnel-container ~ *[class*=\"FlexColumnreact\"]",
+        "injectionMethod": "prepend"
+      },
+      "api": {
+        "staticVariables": {
+          "archetype": null,
+          "categories": null,
+          "chains": null,
+          "count": 100,
+          "cursor": null,
+          "eventTypes": ["AUCTION_CREATED"],
+          "identity": null,
+          "showAll": true
+        },
+        "variablePaths": {
+          "collectionSlug": "collections",
+          "timestamp": "eventTimestamp_Gt"
+        },
+        "resultPaths": {
+          "edges": "data.assetEvents.edges",
+          "asset": "node.assetQuantity.asset",
+          "listingId": "node.relayId",
+          "tokenId": "node.assetQuantity.asset.tokenId",
+          "contractAddress": "node.assetQuantity.asset.assetContract.address",
+          "chain": "node.assetQuantity.asset.assetContract.chain",
+          "name": "node.assetQuantity.asset.name",
+          "collectionName": "node.assetQuantity.asset.collection.name",
+          "image": "node.assetQuantity.asset.displayImageUrl",
+          "price": "node.price.quantityInEth",
+          "currency": "node.price.asset.symbol",
+          "timestamp": "node.eventTimestamp"
+        }
+      }
+    }
+  }
+}
