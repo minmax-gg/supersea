@@ -50,6 +50,7 @@ const ActivityEvent = ({ event }: { event: Event }) => {
           type="list"
           chain={event.chain}
           container={container}
+          isActivityEvent
         />
       ) : (
         <Box height={LIST_HEIGHT} width={LIST_WIDTH} />

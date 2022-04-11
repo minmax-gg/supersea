@@ -258,6 +258,7 @@ const AssetInfo = ({
   collectionSlug: inputCollectionSlug,
   chain,
   displayedPrice,
+  isActivityEvent = false,
 }: {
   address: string
   tokenId: string
@@ -266,6 +267,7 @@ const AssetInfo = ({
   chain: Chain
   container: HTMLElement
   displayedPrice?: string
+  isActivityEvent?: boolean
 }) => {
   const events = useContext(EventEmitterContext)
   const globalConfig = useContext(GlobalConfigContext)
@@ -822,6 +824,7 @@ const AssetInfo = ({
             address={address}
             tokenId={tokenId}
             displayedPrice={displayedPrice}
+            visibleOnAccountPage={isActivityEvent}
           />
         </Box>
       </Flex>
