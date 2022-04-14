@@ -83,13 +83,13 @@
         "archetype": null,
         "categories": null,
         "chains": null,
-        "count": 100,
         "cursor": null,
         "eventTypes": ["AUCTION_CREATED"],
         "identity": null,
         "showAll": true
       },
       "variablePaths": {
+        "count": "count",
         "collectionSlug": "collections",
         "timestamp": "eventTimestamp_Gt"
       },

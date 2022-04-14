@@ -9,12 +9,14 @@ import ProfileSummary from './components/ProfileSummary'
 import GlobalStyles from './components/GlobalStyles'
 import RarityDisclaimer from './components/RarityDisclaimer'
 import { getExtensionConfig } from './utils/extensionConfig'
-import { fetchGlobalCSS, fetchSelectors, getUser } from './utils/api'
+import { fetchGlobalCSS, fetchRemoteConfig, getUser } from './utils/api'
 import { injectElement, selectElement, Selectors } from './utils/selector'
 import SearchResults from './components/SearchResults/SearchResults'
 import CollectionMenuItem from './components/CollectionMenuItem'
-import ListingNotifier from './components/ListingNotifier/ListingNotifier'
+import Activity from './components/Activity/Activity'
 import { isSubscriber } from './utils/user'
+import { createRouteParams } from './utils/route'
+import ReplacementNotice from './components/Activity/ReplacementNotice'
 
 const NODE_PROCESSED_DATA_KEY = '__SuperSea__Processed'
 
@@ -30,7 +32,7 @@ const addGlobalStyle = () => {
 }
 
 const injectAssetInfo = async () => {
-  const selectors = await fetchSelectors()
+  const { injectionSelectors: selectors } = await fetchRemoteConfig()
 
   const gridNodes = Array.from(
     document.querySelectorAll(selectors.assetInfo.grid.node.selector),
@@ -164,7 +166,7 @@ const destroyRemovedInjections = () => {
 }
 
 const injectBundleVerification = async () => {
-  const selectors = await fetchSelectors()
+  const { injectionSelectors: selectors } = await fetchRemoteConfig()
   const bundleFrames = Array.from(
     document.querySelectorAll(selectors.bundleVerification.frameSelector),
   ) as HTMLElement[]
@@ -201,7 +203,7 @@ const injectBundleVerification = async () => {
 }
 
 const injectProfileSummary = async () => {
-  const selectors = await fetchSelectors()
+  const { injectionSelectors: selectors } = await fetchRemoteConfig()
   const accountTitle = document.querySelector(
     selectors.profileSummary.accountTitleSelector,
   ) as HTMLElement
@@ -254,7 +256,7 @@ const injectSearchResults = async () => {
     .filter(Boolean)
     .pop()!
 
-  const selectors = await fetchSelectors()
+  const { injectionSelectors: selectors } = await fetchRemoteConfig()
   const container = document.querySelector(
     selectors.searchResults.containerSelector,
   )!.parentElement as HTMLElement | null
@@ -306,7 +308,7 @@ const injectSearchResults = async () => {
 }
 
 const injectCollectionMenu = async () => {
-  const selectors = await fetchSelectors()
+  const { injectionSelectors: selectors, routes } = await fetchRemoteConfig()
   const collectionMenu = document.querySelector(
     selectors.searchResults.menuSelector,
   ) as HTMLElement | null
@@ -327,14 +329,9 @@ const injectCollectionMenu = async () => {
           window.postMessage({
             method: 'SuperSea__Navigate',
             params: {
-              url: selectors.searchResults.route.url.replace(
-                '[COLLECTION_SLUG]',
-                collectionSlug!,
-              ),
-              as: selectors.searchResults.route.as.replace(
-                '[COLLECTION_SLUG]',
-                collectionSlug!,
-              ),
+              ...createRouteParams(routes.searchResults, {
+                collectionSlug: collectionSlug!,
+              }),
               options: {
                 scroll: false,
               },
@@ -347,30 +344,6 @@ const injectCollectionMenu = async () => {
   }
 }
 const throttledInjectCollectionMenu = _.throttle(injectCollectionMenu, 250)
-
-const injectListingNotifier = async () => {
-  const selectors = await fetchSelectors()
-  const node = document.querySelector(
-    selectors.listingNotifier.node.selector,
-  ) as HTMLElement | null
-  if (node && !node.dataset[NODE_PROCESSED_DATA_KEY]) {
-    node.dataset[NODE_PROCESSED_DATA_KEY] = '1'
-    const container = document.createElement('div')
-    container.classList.add('SuperSea__ListingNotifier')
-    const collectionSlug = window.location.pathname
-      .split('/')
-      .filter(Boolean)
-      .pop()!
-    injectElement(
-      node,
-      container,
-      selectors.listingNotifier.node.injectionMethod,
-    )
-    injectReact(<ListingNotifier collectionSlug={collectionSlug!} />, container)
-  }
-}
-
-const throttledInjectListingNotifier = _.throttle(injectListingNotifier, 250)
 
 const injectRarityDisclaimer = async () => {
   const user = await getUser()
@@ -395,19 +368,37 @@ const injectRarityDisclaimer = async () => {
   }
 }
 
+const injectActivity = async () => {
+  const { injectionSelectors: selectors } = await fetchRemoteConfig()
+  const node = document.querySelector(
+    selectors.activity.button.selector,
+  ) as HTMLElement | null
+  if (node && !node.dataset[NODE_PROCESSED_DATA_KEY]) {
+    node.dataset[NODE_PROCESSED_DATA_KEY] = '1'
+    const container = document.createElement('div')
+    container.classList.add('SuperSea__Activity')
+    injectElement(node, container, selectors.activity.button.injectionMethod)
+    injectReact(<Activity />, container)
+  }
+}
+
+const throttledInjectActivity = _.throttle(injectActivity, 250)
+
 const setupInjections = async () => {
   injectBundleVerification()
   injectAssetInfo()
   injectRarityDisclaimer()
   injectCollectionMenu()
+  injectActivity()
   injectListingNotifier()
 
   const observer = new MutationObserver(() => {
     throttledInjectBundleVerification()
     throttledInjectAssetInfo()
     throttledInjectCollectionMenu()
-    throttledDestroyRemovedInjections()
     throttledInjectListingNotifier()
+    throttledDestroyRemovedInjections()
+    throttledInjectActivity()
   })
 
   observer.observe(document, {
@@ -485,6 +476,26 @@ const setupSearchResultsTab = () => {
     }
   })
 }
+
+const injectListingNotifier = async () => {
+  const { injectionSelectors: selectors } = await fetchRemoteConfig()
+  const node = document.querySelector(
+    selectors.listingNotifier.node.selector,
+  ) as HTMLElement | null
+  if (node && !node.dataset[NODE_PROCESSED_DATA_KEY]) {
+    node.dataset[NODE_PROCESSED_DATA_KEY] = '1'
+    const container = document.createElement('div')
+    container.classList.add('SuperSea__ListingNotifier')
+    injectElement(
+      node,
+      container,
+      selectors.listingNotifier.node.injectionMethod,
+    )
+    injectReact(<ReplacementNotice />, container)
+  }
+}
+
+const throttledInjectListingNotifier = _.throttle(injectListingNotifier, 250)
 
 // We need to keep the background script alive for webRequest handlers
 const setupKeepAlivePing = () => {

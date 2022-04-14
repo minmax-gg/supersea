@@ -175,11 +175,13 @@ const useMassBid = ({
       let offers: any[] = []
 
       if (massBid.skipOnHigherOffer) {
-        const res = await fetchOffers(
-          asset!.asset_contract.address,
-          asset!.token_id,
-        )
-        offers = res.offers
+        try {
+          const res = await fetchOffers(
+            asset!.asset_contract.address,
+            asset!.token_id,
+          )
+          offers = res.offers
+        } catch (e) {}
       }
 
       window.addEventListener('message', messageListener)

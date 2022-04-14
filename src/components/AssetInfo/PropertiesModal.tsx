@@ -10,7 +10,6 @@ import {
   ModalOverlay,
   Spinner,
   Tag,
-  Link,
   Table,
   Tbody,
   Td,
@@ -36,6 +35,7 @@ import {
   useTraitCountExcluded,
 } from '../../utils/rarity'
 import { TraitCountToggle } from '../TraitCountToggle'
+import InternalLink from '../InternalLink'
 
 type Properties = {
   name: string
@@ -318,11 +318,17 @@ const PropertiesModal = ({
                                 {collectionSlug &&
                                 value !== null &&
                                 name !== 'Trait Count' ? (
-                                  <Link
-                                    href={`https://opensea.io/assets/${collectionSlug}?search[stringTraits][0][name]=${name}&search[stringTraits][0][values][0]=${value}&search[sortAscending]=true&search[sortBy]=PRICE`}
+                                  <InternalLink
+                                    route="traitFloor"
+                                    params={{
+                                      collectionSlug,
+                                      name,
+                                      value,
+                                    }}
+                                    onClick={onClose}
                                   >
                                     {renderedValue}
-                                  </Link>
+                                  </InternalLink>
                                 ) : (
                                   renderedValue
                                 )}

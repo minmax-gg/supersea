@@ -3,7 +3,7 @@ import { request, gql, GraphQLClient } from 'graphql-request'
 import { fetchMetadataUri } from '../utils/web3'
 import { RateLimit, Sema } from 'async-sema'
 import { User } from './user'
-import lastKnownInjectionSelectors from '../assets/lastKnownInjectionSelectors.json'
+import lastKnownRemoteConfig from '../assets/lastKnownRemoteConfig.json'
 import { Selectors } from './selector'
 
 // Parcel will inline the string
@@ -22,10 +22,6 @@ const OPENSEA_SHARED_CONTRACT_ADDRESSES = [
 ]
 // Not exactly right but good enough to split tokenIds into their unique collections
 const OPENSEA_SHARED_CONTRACT_COLLECTION_ID_LENGTH = 60
-
-const COLLECTION_SLUG_ADDRESS_OVERRIDES: Record<string, string> = {
-  bossbeauties: '0xb5c747561a185a146f83cfff25bdfd2455b31ff4',
-}
 
 export type Rarities = {
   tokenCount: number
@@ -88,6 +84,13 @@ export type Asset = {
   }[]
 }
 
+type Collection = {
+  name: string
+  slug: string
+  image_url: string
+  primary_asset_contracts: { address: string }[]
+}
+
 export type Chain = 'ethereum' | 'polygon'
 
 const REMOTE_ASSET_BASE = 'https://nonfungible.tools/supersea'
@@ -102,23 +105,85 @@ export const OPENSEA_ASSETS_BATCH_SIZE = 30
 
 const openSeaPublicRateLimit = RateLimit(2)
 
-let selectorsPromise: null | Promise<Selectors> = null
-export const fetchSelectors = () => {
-  if (!selectorsPromise) {
+export type RouteConfig = { url: string; as: string }
+export type RemoteConfig = {
+  routes: {
+    searchResults: RouteConfig
+    asset: RouteConfig
+    collectionFloor: RouteConfig
+    traitFloor: RouteConfig
+    collection: RouteConfig
+  }
+  injectionSelectors: Selectors
+  queryHeaders: Record<string, string>
+  queries: {
+    EventHistoryPollQuery: {
+      body: string
+      staticHeaders: Record<string, string>
+      staticVariables: Record<string, any>
+      dynamicVariablePaths: {
+        collectionSlugs: string
+        timestamp: string
+        count: string
+      }
+      resultPaths: {
+        edges: string
+        asset: string
+        listingId: string
+        tokenId: string
+        contractAddress: string
+        name: string
+        collectionName: string
+        chain: string
+        image: string
+        price: string
+        currency: string
+        timestamp: string
+        eventType: string
+      }
+    }
+    EventHistoryQuery: {
+      body: string
+      staticHeaders: Record<string, string>
+      staticVariables: Record<string, any>
+      dynamicVariablePaths: {
+        collectionSlugs: string
+        count: string
+      }
+      resultPaths: {
+        edges: string
+        asset: string
+        listingId: string
+        tokenId: string
+        contractAddress: string
+        name: string
+        collectionName: string
+        chain: string
+        image: string
+        price: string
+        currency: string
+        timestamp: string
+        eventType: string
+      }
+    }
+  }
+}
+
+let remoteConfigPromise: null | Promise<RemoteConfig> = null
+export const fetchRemoteConfig = () => {
+  if (!remoteConfigPromise) {
     // Fallback to last known selectors if request takes more than 5 seconds
-    selectorsPromise = Promise.race<Promise<Selectors>>([
-      fetch(`${REMOTE_ASSET_BASE}/injectionSelectors.json`).then((res) =>
-        res.json(),
-      ),
+    remoteConfigPromise = Promise.race<Promise<RemoteConfig>>([
+      fetch(`${REMOTE_ASSET_BASE}/config.json`).then((res) => res.json()),
       new Promise((_, reject) => {
         setTimeout(() => reject(new Error('timeout')), 5000)
       }),
     ]).catch((err) => {
       console.error(err)
-      return lastKnownInjectionSelectors as Selectors
+      return lastKnownRemoteConfig as RemoteConfig
     })
   }
-  return selectorsPromise
+  return remoteConfigPromise
 }
 
 let cssPromise: null | Promise<string> = null
@@ -419,6 +484,7 @@ export const fetchAssets = async (
   collectionSlug: string,
   cursor?: string | null,
 ): Promise<{ assets: Asset[]; next: string | null }> => {
+  await openSeaPublicRateLimit()
   return fetch(
     `https://api.opensea.io/api/v1/assets?collection_slug=${collectionSlug}&include_orders=true&order_direction=asc&limit=${OPENSEA_ASSETS_BATCH_SIZE}${
       cursor ? `&cursor=${cursor}` : ''
@@ -478,6 +544,7 @@ export const fetchMetadataUriWithOpenSeaFallback = async (
 ) => {
   let contractTokenUri = await fetchMetadataUri(address, tokenId)
   if (!contractTokenUri) {
+    await openSeaPublicRateLimit()
     const asset = await fetch(
       `https://api.opensea.io/api/v1/asset/${address}/${tokenId}`,
     ).then((res) => res.json())
@@ -496,18 +563,16 @@ export const triggerOpenSeaMetadataRefresh = async (
   )
 }
 
-const collectionAddressLoader = new DataLoader(
+const collectionLoader = new DataLoader(
   async (slugs: readonly string[]) => {
     // Max batch size is 1, we only use this for client side caching
     const slug = slugs[0]
-    if (COLLECTION_SLUG_ADDRESS_OVERRIDES[slug]) {
-      return [COLLECTION_SLUG_ADDRESS_OVERRIDES[slug]]
-    }
     try {
+      await openSeaPublicRateLimit()
       const data = await fetch(
-        `https://api.opensea.io/api/v1/assets?limit=1&collection=${slug}`,
+        `https://api.opensea.io/api/v1/collection/${slug}`,
       ).then((res) => res.json())
-      return [data.assets[0].asset_contract.address]
+      return [data.collection]
     } catch (e) {
       return [null]
     }
@@ -517,8 +582,14 @@ const collectionAddressLoader = new DataLoader(
     maxBatchSize: 1,
   },
 )
+
 export const fetchCollectionAddress = async (slug: string) => {
-  return collectionAddressLoader.load(slug) as Promise<string>
+  const collection = await collectionLoader.load(slug)
+  return collection.primary_asset_contracts[0].address
+}
+
+export const fetchCollection = async (slug: string) => {
+  return collectionLoader.load(slug) as Promise<Collection>
 }
 
 const collectionSlugLoader = new DataLoader(
@@ -616,4 +687,47 @@ export const fetchMetadata = async (
   return fetch(
     `https://nonfungible.tools/api/metadata-proxy?address=${contractAddress}&tokenId=${tokenId}`,
   ).then((res) => res.json())
+}
+
+export const fetchOpenSeaGraphQL = async <
+  T extends keyof RemoteConfig['queries']
+>(
+  query: T,
+  {
+    variables,
+    cacheBust = true,
+  }: {
+    variables: Record<
+      keyof RemoteConfig['queries'][T]['dynamicVariablePaths'],
+      any
+    >
+    cacheBust?: boolean
+  },
+) => {
+  const remoteConfig = await fetchRemoteConfig()
+  return fetch('https://api.opensea.io/graphql/', {
+    method: 'POST',
+    headers: {
+      ...remoteConfig.queryHeaders,
+      ...remoteConfig.queries[query].staticHeaders,
+    },
+    body: JSON.stringify({
+      id: query,
+      query: remoteConfig.queries[query].body,
+      variables: {
+        ...remoteConfig.queries[query].staticVariables,
+        ...Object.keys(remoteConfig.queries[query].dynamicVariablePaths).reduce(
+          (acc: any, key: any) => {
+            acc[
+              (remoteConfig.queries[query].dynamicVariablePaths as any)[key]
+            ] = (variables as any)[key]
+            return acc
+          },
+          {},
+        ),
+        ...(cacheBust ? { cacheBust: Math.random() } : {}),
+      },
+    }),
+    credentials: 'omit',
+  }).then((res) => res.json())
 }

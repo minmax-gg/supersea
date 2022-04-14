@@ -8,13 +8,14 @@ import {
   Circle,
   useColorModeValue,
 } from '@chakra-ui/react'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { readableEthValue } from '../../utils/ethereum'
 import AssetInfo, { LIST_HEIGHT, LIST_WIDTH } from '../AssetInfo/AssetInfo'
 import TimeAgo from 'react-timeago'
 import EthereumIcon from '../EthereumIcon'
-import { Notifier } from './ListingNotifierModal'
 import { Chain } from '../../utils/api'
+import { Notifier } from './ListingNotifierForm'
+import InternalLink from '../InternalLink'
 
 export type MatchedAsset = {
   listingId: string
@@ -26,11 +27,10 @@ export type MatchedAsset = {
   price: string
   currency: string
   timestamp: string
-  notifier: Notifier
+  notifier: Pick<Notifier, 'id'>
 }
 
 const MatchedAssetListing = ({ asset }: { asset: MatchedAsset }) => {
-  const containerRef = useRef<HTMLDivElement>(null)
   const [container, setContainer] = useState<HTMLDivElement | null>(null)
   const idCircleBackground = useColorModeValue(
     'blackAlpha.100',
@@ -46,16 +46,6 @@ const MatchedAssetListing = ({ asset }: { asset: MatchedAsset }) => {
       }}
       width="100%"
     >
-      <Circle
-        p="2"
-        width="28px"
-        height="28px"
-        mr="3"
-        fontWeight="bold"
-        bg={idCircleBackground}
-      >
-        {asset.notifier.id}
-      </Circle>
       {container ? (
         <AssetInfo
           displayedPrice={asset.price}
@@ -63,24 +53,35 @@ const MatchedAssetListing = ({ asset }: { asset: MatchedAsset }) => {
           tokenId={asset.tokenId}
           type="list"
           chain={asset.chain}
-          container={containerRef.current!}
+          container={container}
+          isActivityEvent
         />
       ) : (
         <Box height={LIST_HEIGHT} width={LIST_WIDTH} />
       )}
       <HStack flex="1 1 auto" spacing="3" position="relative">
-        <Image src={asset.image} width="48px" height="48px" borderRadius="md" />
+        <Image
+          src={asset.image}
+          width="48px"
+          height="48px"
+          borderRadius="md"
+          className="SuperSea__Image"
+        />
         <Box>
-          <LinkOverlay
-            href={`/assets/${asset.chain === 'polygon' ? 'matic/' : ''}${
-              asset.contractAddress
-            }/${asset.tokenId}`}
-            target="_blank"
+          <InternalLink
+            as={LinkOverlay}
+            route="asset"
+            params={{
+              address: asset.contractAddress,
+              chainId: asset.chain,
+              chainPath: asset.chain === 'polygon' ? 'matic/' : '',
+              tokenId: asset.tokenId,
+            }}
           >
             <Text my="0" fontSize="sm" fontWeight="500">
               {asset.name}
             </Text>
-          </LinkOverlay>
+          </InternalLink>
           <Box fontSize="sm" opacity="0.5">
             <TimeAgo date={new Date(`${asset.timestamp}Z`)} />
           </Box>
@@ -90,6 +91,17 @@ const MatchedAssetListing = ({ asset }: { asset: MatchedAsset }) => {
         <EthereumIcon mx="0.5em" wrapped={asset.currency === 'WETH'} />
         <Text fontWeight="600">{readableEthValue(+asset.price)}</Text>
       </Flex>
+      <Box pl="4">
+        <Circle
+          p="2"
+          width="28px"
+          height="28px"
+          fontWeight="bold"
+          bg={idCircleBackground}
+        >
+          {asset.notifier.id}
+        </Circle>
+      </Box>
     </HStack>
   )
 }

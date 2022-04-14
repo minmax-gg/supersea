@@ -14,6 +14,9 @@ import AssetInfo, { HEIGHT as ASSET_INFO_HEIGHT } from '../AssetInfo/AssetInfo'
 import EthereumIcon from '../EthereumIcon'
 import { readableEthValue } from '../../utils/ethereum'
 import MassBidStatus, { MassBidState } from './MassBidStatus'
+import useRemoteConfig from '../../hooks/useRemoteConfig'
+import { createRouteParams } from '../../utils/route'
+import InternalLink from '../InternalLink'
 
 const SearchAsset = ({
   address,
@@ -28,6 +31,7 @@ const SearchAsset = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const [imageLoaded, setImageLoaded] = useState(false)
+  const remoteConfig = useRemoteConfig()
 
   useEffect(() => {
     if (massBidState === 'PROCESSING' && containerRef.current) {
@@ -106,18 +110,14 @@ const SearchAsset = ({
                 >
                   {asset.collection.name}
                 </Text>
-                <LinkOverlay
-                  href={`/assets/${address}/${tokenId}`}
-                  onClick={(event) => {
-                    if (event.metaKey || event.ctrlKey) return
-                    event.preventDefault()
-                    window.postMessage({
-                      method: 'SuperSea__Navigate',
-                      params: {
-                        url: `/item?assetContractAddress=${address}&tokenId=${tokenId}`,
-                        as: `/assets/${address}/${tokenId}`,
-                      },
-                    })
+                <InternalLink
+                  as={LinkOverlay}
+                  route="asset"
+                  params={{
+                    address: address!,
+                    chainId: 'ethereum',
+                    chainPath: '',
+                    tokenId,
                   }}
                 >
                   <Text
@@ -138,7 +138,7 @@ const SearchAsset = ({
                   >
                     {asset.name}
                   </Text>
-                </LinkOverlay>
+                </InternalLink>
               </Box>
               <Flex
                 width="40%"
