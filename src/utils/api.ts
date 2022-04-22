@@ -563,6 +563,26 @@ export const triggerOpenSeaMetadataRefresh = async (
   )
 }
 
+const collectionAddressLoader = new DataLoader(
+  async (slugs: readonly string[]) => {
+    // Max batch size is 1, we only use this for client side caching
+    const slug = slugs[0]
+    try {
+      await openSeaPublicRateLimit()
+      const data = await fetch(
+        `https://api.opensea.io/api/v1/assets?limit=1&collection=${slug}`,
+      ).then((res) => res.json())
+      return [data.assets[0].asset_contract.address]
+    } catch (e) {
+      return [null]
+    }
+  },
+  {
+    batchScheduleFn: (callback) => setTimeout(callback, 250),
+    maxBatchSize: 1,
+  },
+)
+
 const collectionLoader = new DataLoader(
   async (slugs: readonly string[]) => {
     // Max batch size is 1, we only use this for client side caching
@@ -585,7 +605,10 @@ const collectionLoader = new DataLoader(
 
 export const fetchCollectionAddress = async (slug: string) => {
   const collection = await collectionLoader.load(slug)
-  return collection.primary_asset_contracts[0].address
+  if (collection.primary_asset_contracts[0]) {
+    return collection.primary_asset_contracts[0].address as string
+  }
+  return collectionAddressLoader.load(slug) as Promise<string>
 }
 
 export const fetchCollection = async (slug: string) => {
