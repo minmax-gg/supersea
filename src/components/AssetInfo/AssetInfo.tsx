@@ -258,6 +258,7 @@ const AssetInfo = ({
   collectionSlug: inputCollectionSlug,
   chain,
   displayedPrice,
+  quickBuyGasOverride,
   isActivityEvent = false,
 }: {
   address: string
@@ -267,6 +268,7 @@ const AssetInfo = ({
   chain: Chain
   container: HTMLElement
   displayedPrice?: string
+  quickBuyGasOverride: null | { fee: number; priorityFee: number }
   isActivityEvent?: boolean
 }) => {
   const events = useContext(EventEmitterContext)
@@ -825,6 +827,7 @@ const AssetInfo = ({
             tokenId={tokenId}
             displayedPrice={displayedPrice}
             visibleOnAccountPage={isActivityEvent}
+            gasOverride={quickBuyGasOverride}
           />
         </Box>
       </Flex>

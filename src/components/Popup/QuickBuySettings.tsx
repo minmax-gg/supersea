@@ -179,21 +179,6 @@ const QuickBuySettings = ({
           >
             <HStack spacing="2" mt="3" alignItems="flex-start">
               <FormControl maxWidth="120px" isDisabled={gasPreset !== 'fixed'}>
-                <FormLabel fontSize="xs">Max Priority Fee</FormLabel>
-                <Input
-                  value={priorityFeeInput}
-                  onChange={(e) => {
-                    setPriorityFeeInput(e.target.value)
-                    debouncedOnChangeFixedGas({
-                      priorityFee: Number(e.target.value),
-                      fee: Number(feeInput),
-                    })
-                  }}
-                  size="sm"
-                  borderColor="whiteAlpha.300"
-                />
-              </FormControl>{' '}
-              <FormControl maxWidth="120px" isDisabled={gasPreset !== 'fixed'}>
                 <FormLabel fontSize="xs">Max Fee</FormLabel>
                 <Input
                   value={feeInput}
@@ -208,6 +193,21 @@ const QuickBuySettings = ({
                   borderColor="whiteAlpha.300"
                 />
               </FormControl>
+              <FormControl maxWidth="120px" isDisabled={gasPreset !== 'fixed'}>
+                <FormLabel fontSize="xs">Max Priority Fee</FormLabel>
+                <Input
+                  value={priorityFeeInput}
+                  onChange={(e) => {
+                    setPriorityFeeInput(e.target.value)
+                    debouncedOnChangeFixedGas({
+                      priorityFee: Number(e.target.value),
+                      fee: Number(feeInput),
+                    })
+                  }}
+                  size="sm"
+                  borderColor="whiteAlpha.300"
+                />
+              </FormControl>{' '}
             </HStack>
           </GasPresetOption>
           <GasPresetOption

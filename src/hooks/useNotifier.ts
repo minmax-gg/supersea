@@ -89,6 +89,15 @@ let processedEvents: Record<string, boolean> = {}
 let cachedMatchedAsset: MatchedAsset[] = []
 let cachedUnseenMatchesCount = 0
 
+const notifierPriorityScore = (notifier: Notifier) => {
+  return (
+    Number(notifier.autoQuickBuy) * 1000000 +
+    (notifier.gasOverride
+      ? notifier.gasOverride.fee + notifier.gasOverride?.priorityFee
+      : 0)
+  )
+}
+
 const useNotifier = ({
   activityEvents,
   notifiers,
@@ -124,7 +133,7 @@ const useNotifier = ({
     if (!newEvents.length) return
 
     const sortedNotifiers = [...notifiers].sort(
-      (a, b) => Number(b.autoQuickBuy) - Number(a.autoQuickBuy),
+      (a, b) => notifierPriorityScore(b) - notifierPriorityScore(a),
     )
 
     const matches = newEvents
@@ -184,6 +193,7 @@ const useNotifier = ({
           tokenId: asset.tokenId,
           displayedPrice: asset.price,
           toast,
+          gasOverride: asset.notifier.gasOverride,
           onComplete: () => {},
         })
       }

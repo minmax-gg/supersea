@@ -30,6 +30,7 @@ export const triggerQuickBuy = async ({
   address,
   tokenId,
   displayedPrice,
+  gasOverride,
   onComplete,
 }: {
   isFounder: boolean
@@ -37,6 +38,7 @@ export const triggerQuickBuy = async ({
   address: string
   tokenId: string
   displayedPrice?: string
+  gasOverride: null | { fee: number; priorityFee: number }
   onComplete: () => void
 }) => {
   const [{ listings }, gasPreset] = await Promise.all([
@@ -44,6 +46,7 @@ export const triggerQuickBuy = async ({
       return {}
     }),
     (async () => {
+      if (gasOverride) return gasOverride
       const config = await getExtensionConfig(false)
       if (config.quickBuyGasPreset === 'fixed') {
         return config.fixedGas
@@ -131,11 +134,13 @@ export const BuyNowButtonUI = ({
   tokenId,
   active,
   displayedPrice,
+  gasOverride,
 }: {
   address: string
   tokenId: string
   active: boolean
   displayedPrice?: string
+  gasOverride: null | { fee: number; priorityFee: number }
 }) => {
   const toast = useToast()
   const { isFounder } = useUser() || { isFounder: false }
@@ -191,6 +196,7 @@ export const BuyNowButtonUI = ({
               tokenId,
               address,
               displayedPrice,
+              gasOverride,
               onComplete: () => setIsLoading(false),
             })
           } else {

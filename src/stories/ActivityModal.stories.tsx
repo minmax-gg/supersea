@@ -158,6 +158,7 @@ Default.args = {
       includeAuctions: false,
       traits: ['{"value": "faceface", "groupName": "face"}'],
       autoQuickBuy: true,
+      gasOverride: { fee: 300, priorityFee: 25 },
       tokenEligibilityMap: {},
     },
   ],

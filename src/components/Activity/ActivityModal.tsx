@@ -28,6 +28,7 @@ import {
   PopoverTrigger,
   useDisclosure,
   Switch,
+  Select,
 } from '@chakra-ui/react'
 import { useState, useEffect } from 'react'
 import ActivityEvent, { Event } from './ActivityEvent'
@@ -41,7 +42,7 @@ import {
   fetchIsRanked,
   fetchRaritiesWithTraits,
 } from '../../utils/api'
-import { PollStatus } from '../../hooks/useActivity'
+import { ActivityFilter, PollStatus } from '../../hooks/useActivity'
 import { BiRefresh } from 'react-icons/bi'
 import ListingNotifierForm, { Notifier } from './ListingNotifierForm'
 import MatchedAssetListing, { MatchedAsset } from './MatchedAssetListing'
@@ -125,9 +126,12 @@ const ActivityModal = ({
   onAddCollection,
   onRemoveCollection,
   onAddNotifier,
+  onEditNotifier,
   onRemoveNotifier,
   onClearMatches,
   activeCollectionSlug,
+  activityFilter,
+  onChangeActivityFilter,
   playSound,
   onChangePlaySound,
   sendNotification,
@@ -147,9 +151,12 @@ const ActivityModal = ({
   onAddCollection: (collection: Collection) => void
   onRemoveCollection: (collection: Collection) => void
   onAddNotifier: (notifier: Notifier) => void
+  onEditNotifier: (notifier: Notifier) => void
   onRemoveNotifier: (notifier: Notifier) => void
   onClearMatches: () => void
   activeCollectionSlug?: string
+  activityFilter: ActivityFilter
+  onChangeActivityFilter: (filter: ActivityFilter) => void
   playSound: boolean
   onChangePlaySound: (playSound: boolean) => void
   sendNotification: boolean
@@ -168,6 +175,8 @@ const ActivityModal = ({
     activeCollectionSlug &&
       !collections.find((c) => c.slug === activeCollectionSlug),
   )
+
+  const [editingNotifier, setEditingNotifier] = useState<Notifier | null>(null)
 
   const [pollIntervalInput, setPollIntervalInput] = useState(
     String(pollInterval),
@@ -336,11 +345,19 @@ const ActivityModal = ({
                     <ListingNotifierForm
                       isSubscriber={isSubscriber}
                       collections={collections}
+                      onCancel={() => {
+                        onCloseNotifierForm()
+                        setEditingNotifier(null)
+                      }}
+                      editingNotifier={editingNotifier}
                       onAddNotifier={(notifier) => {
-                        if (notifier) {
+                        if (editingNotifier) {
+                          onEditNotifier(notifier)
+                        } else {
                           onAddNotifier(notifier)
                         }
                         onCloseNotifierForm()
+                        setEditingNotifier(null)
                       }}
                     />
                   ) : null}
@@ -363,6 +380,10 @@ const ActivityModal = ({
                         notifier={notifier}
                         onRemove={(notifier) => {
                           onRemoveNotifier(notifier)
+                        }}
+                        onEdit={(notifier) => {
+                          setEditingNotifier(notifier)
+                          onOpenNotifierForm()
                         }}
                         isActive={collections.some(
                           ({ slug }) => slug === notifier.collection.slug,
@@ -409,142 +430,193 @@ const ActivityModal = ({
             >
               <Box
                 width="100%"
-                display={collections.length === 0 ? 'none' : 'block'}
+                display={
+                  collections.length === 0 &&
+                  events.length === 0 &&
+                  matchedAssets.length === 0
+                    ? 'none'
+                    : 'block'
+                }
               >
-                <HStack alignItems="center" width="100%" spacing="2">
-                  <Heading as="h4" size="md" mb="0">
-                    Activity
-                  </Heading>
-                  <Flex alignItems="center">
-                    {(() => {
-                      if (status === 'STARTING') {
-                        return (
-                          <>
-                            <Text fontSize="sm" opacity="0.75">
-                              Initializing
-                            </Text>
-                            <Spinner
-                              size="xs"
-                              ml="0.5em"
-                              opacity="0.75"
-                              mt="1px"
-                            />
-                          </>
-                        )
-                      } else if (status === 'RATE_LIMITED') {
-                        return (
-                          <>
-                            <Text
-                              fontSize="sm"
-                              opacity="0.75"
-                              color={warningTextColor}
-                            >
-                              Rate limited by OpenSea, cooling down
-                            </Text>
-                            <Spinner
-                              size="xs"
-                              ml="0.5em"
-                              opacity="0.75"
-                              color={warningTextColor}
-                              mt="1px"
-                            />
-                          </>
-                        )
-                      } else if (status === 'ACTIVE') {
-                        return (
-                          <>
-                            <Text fontSize="sm" position="relative" top="2px">
-                              Checking every{' '}
-                              <Popover
-                                placement="top"
-                                isOpen={pollIntervalInputOpen}
-                                onClose={onClosePollIntervalInput}
-                                onOpen={onOpenPollIntervalInput}
-                              >
-                                <PopoverTrigger>
-                                  <Button size="xs">{pollInterval}</Button>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                  maxW="210px"
-                                  borderColor={borderColor}
+                <HStack
+                  justifyContent="space-between"
+                  alignItems="center"
+                  mb="3"
+                >
+                  <Box>
+                    <HStack alignItems="center" width="100%" spacing="2">
+                      <Heading as="h4" size="md" mb="0">
+                        Activity
+                      </Heading>
+                      <Flex alignItems="center">
+                        {(() => {
+                          if (status === 'STARTING') {
+                            return (
+                              <>
+                                <Text fontSize="sm" opacity="0.75">
+                                  Initializing
+                                </Text>
+                                <Spinner
+                                  size="xs"
+                                  ml="0.5em"
+                                  opacity="0.75"
+                                  mt="1px"
+                                />
+                              </>
+                            )
+                          } else if (status === 'RATE_LIMITED') {
+                            return (
+                              <>
+                                <Text
+                                  fontSize="sm"
+                                  opacity="0.75"
+                                  color={warningTextColor}
                                 >
-                                  <PopoverArrow />
-                                  <PopoverBody>
-                                    <FormControl>
-                                      <FormLabel>
-                                        Poll Interval (Seconds)
-                                      </FormLabel>
-                                      <HStack spacing="2">
-                                        <Input
-                                          maxW="100px"
-                                          borderColor={inputBorder}
-                                          value={pollIntervalInput}
-                                          onChange={(e) =>
-                                            setPollIntervalInput(e.target.value)
-                                          }
-                                        />
-                                        <Button
-                                          onClick={() => {
-                                            onChangePollInterval(
-                                              Number(pollIntervalInput) ||
-                                                pollInterval,
-                                            )
-                                            onClosePollIntervalInput()
-                                          }}
-                                        >
-                                          Apply
-                                        </Button>
-                                      </HStack>
-                                    </FormControl>
-                                  </PopoverBody>
-                                </PopoverContent>
-                              </Popover>{' '}
-                              seconds
-                            </Text>
-                            <Icon
-                              as={BiRefresh}
-                              width="18px"
-                              height="18px"
-                              ml="0.25em"
-                              mt="1px"
-                              animation="SuperSea__Rotate 4s linear infinite"
-                            ></Icon>
-                          </>
-                        )
-                      }
-                    })()}
-                  </Flex>
+                                  Rate limited by OpenSea, cooling down
+                                </Text>
+                                <Spinner
+                                  size="xs"
+                                  ml="0.5em"
+                                  opacity="0.75"
+                                  color={warningTextColor}
+                                  mt="1px"
+                                />
+                              </>
+                            )
+                          } else if (status === 'ACTIVE') {
+                            return (
+                              <>
+                                <Text
+                                  fontSize="sm"
+                                  position="relative"
+                                  top="2px"
+                                >
+                                  Checking every{' '}
+                                  <Popover
+                                    placement="top"
+                                    isOpen={pollIntervalInputOpen}
+                                    onClose={onClosePollIntervalInput}
+                                    onOpen={onOpenPollIntervalInput}
+                                  >
+                                    <PopoverTrigger>
+                                      <Button size="xs">{pollInterval}</Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                      maxW="210px"
+                                      borderColor={borderColor}
+                                    >
+                                      <PopoverArrow />
+                                      <PopoverBody>
+                                        <FormControl>
+                                          <FormLabel>
+                                            Poll Interval (Seconds)
+                                          </FormLabel>
+                                          <HStack spacing="2">
+                                            <Input
+                                              maxW="100px"
+                                              borderColor={inputBorder}
+                                              value={pollIntervalInput}
+                                              onChange={(e) =>
+                                                setPollIntervalInput(
+                                                  e.target.value,
+                                                )
+                                              }
+                                            />
+                                            <Button
+                                              onClick={() => {
+                                                onChangePollInterval(
+                                                  Number(pollIntervalInput) ||
+                                                    pollInterval,
+                                                )
+                                                onClosePollIntervalInput()
+                                              }}
+                                            >
+                                              Apply
+                                            </Button>
+                                          </HStack>
+                                        </FormControl>
+                                      </PopoverBody>
+                                    </PopoverContent>
+                                  </Popover>{' '}
+                                  seconds
+                                </Text>
+                                <Icon
+                                  as={BiRefresh}
+                                  width="18px"
+                                  height="18px"
+                                  ml="0.25em"
+                                  mt="1px"
+                                  animation="SuperSea__Rotate 4s linear infinite"
+                                ></Icon>
+                              </>
+                            )
+                          }
+                        })()}
+                      </Flex>
+                    </HStack>
+                    <Text fontSize="sm" opacity="0.65" mt="1">
+                      Real-time feed of selected activity for the watched
+                      collections.
+                    </Text>
+                  </Box>
+                  <Select
+                    size="sm"
+                    maxWidth="170px"
+                    borderColor="transparent"
+                    borderRadius="md"
+                    bg={useColorModeValue('gray.100', 'whiteAlpha.200')}
+                    value={activityFilter}
+                    onChange={(e) =>
+                      onChangeActivityFilter(e.target.value as ActivityFilter)
+                    }
+                  >
+                    <option value="ALL">Listings &amp; Sales</option>
+                    <option value="CREATED">Listings Only</option>
+                    <option value="SUCCESSFUL">Sales Only</option>
+                    <option value="NONE">Nothing</option>
+                  </Select>
                 </HStack>
-                <Text fontSize="sm" opacity="0.65" mt="1" mb="3">
-                  Real-time feed of all listings and sales for the watched
-                  collections.
-                </Text>
                 <VStack alignItems="flex-start" width="100%" spacing="2">
-                  <AnimatePresence initial={false}>
-                    {events.map((event) => {
-                      return (
-                        <MotionBox
-                          key={event.listingId}
-                          layout
-                          layoutDependency={events[0].listingId}
-                          width="100%"
-                          initial={{ y: -20, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          transition={{
-                            type: 'spring',
-                            stiffness: 150,
-                            damping: 25,
-                          }}
-                        >
-                          <ActivityEvent event={event} />
-                        </MotionBox>
-                      )
-                    })}
-                  </AnimatePresence>
+                  {activityFilter === 'NONE' ? (
+                    <Box
+                      width="100%"
+                      bg={placeholderBg}
+                      p="3"
+                      borderRadius="md"
+                    >
+                      <Text opacity="0.75" maxWidth="500px">
+                        Activity disabled. Matched listings will still appear to
+                        the right, but you won't see the general collection
+                        activity here.
+                      </Text>
+                    </Box>
+                  ) : (
+                    <AnimatePresence initial={false} key={activityFilter}>
+                      {events.map((event) => {
+                        return (
+                          <MotionBox
+                            key={event.listingId}
+                            layout
+                            layoutDependency={events[0].listingId}
+                            width="100%"
+                            initial={{ y: -20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{
+                              type: 'spring',
+                              stiffness: 150,
+                              damping: 25,
+                            }}
+                          >
+                            <ActivityEvent event={event} />
+                          </MotionBox>
+                        )
+                      })}
+                    </AnimatePresence>
+                  )}
                 </VStack>
               </Box>
               <Box width="100%">
-                {notifiers.length ? (
+                {notifiers.length || matchedAssets.length ? (
                   <>
                     <Flex alignItems="center" justifyContent="center">
                       <Heading as="h4" size="md">
