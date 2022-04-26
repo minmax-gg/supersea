@@ -38,7 +38,7 @@ export const triggerQuickBuy = async ({
   address: string
   tokenId: string
   displayedPrice?: string
-  gasOverride: null | { fee: number; priorityFee: number }
+  gasOverride?: null | { fee: number; priorityFee: number }
   onComplete: () => void
 }) => {
   const [{ listings }, gasPreset] = await Promise.all([
@@ -140,7 +140,7 @@ export const BuyNowButtonUI = ({
   tokenId: string
   active: boolean
   displayedPrice?: string
-  gasOverride: null | { fee: number; priorityFee: number }
+  gasOverride?: null | { fee: number; priorityFee: number }
 }) => {
   const toast = useToast()
   const { isFounder } = useUser() || { isFounder: false }

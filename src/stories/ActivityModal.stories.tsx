@@ -98,6 +98,7 @@ Default.args = {
       timestamp: new Date().toISOString().replace('Z', ''),
       notifier: {
         id: '1',
+        gasOverride: null,
       },
     },
   ],

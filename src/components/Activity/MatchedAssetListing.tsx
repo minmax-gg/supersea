@@ -28,7 +28,7 @@ export type MatchedAsset = {
   price: string
   currency: string
   timestamp: string
-  notifier: Pick<Notifier, 'id'>
+  notifier: Pick<Notifier, 'id' | 'gasOverride'>
 }
 
 const MatchedAssetListing = memo(

@@ -268,7 +268,7 @@ const AssetInfo = ({
   chain: Chain
   container: HTMLElement
   displayedPrice?: string
-  quickBuyGasOverride: null | { fee: number; priorityFee: number }
+  quickBuyGasOverride?: null | { fee: number; priorityFee: number }
   isActivityEvent?: boolean
 }) => {
   const events = useContext(EventEmitterContext)

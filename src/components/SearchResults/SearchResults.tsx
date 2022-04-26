@@ -279,7 +279,7 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
       }
 
       return true
-    })
+    }) as { tokenId: string; asset: Asset; placeholder: boolean }[]
 
   useEffect(() => {
     if (fetchUnordered) {
