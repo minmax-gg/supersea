@@ -6,7 +6,6 @@ import {
   Text,
   Box,
   Flex,
-  Link,
   Spinner,
   Tooltip,
   IconButton,
@@ -17,6 +16,7 @@ import TimeAgo from 'react-timeago'
 import EthereumIcon from '../EthereumIcon'
 import { SmallCloseIcon } from '@chakra-ui/icons'
 import { Trait } from '../../utils/api'
+import InternalLink from '../InternalLink'
 
 export type Collection = {
   name: string
@@ -63,9 +63,17 @@ const WatchedCollection = ({
           borderRadius="md"
         />
         <Box>
-          <Text my="0" fontSize="sm" fontWeight="500">
+          <InternalLink
+            route="collection"
+            params={{
+              collectionSlug: collection.slug,
+            }}
+            my="0"
+            fontSize="sm"
+            fontWeight="500"
+          >
             {collection.name}
-          </Text>
+          </InternalLink>
         </Box>
       </HStack>
       <HStack spacing="2">

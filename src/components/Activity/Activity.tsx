@@ -8,7 +8,7 @@ import {
 } from '@chakra-ui/react'
 import { useEffect, useState } from 'react'
 import { BiRefresh } from 'react-icons/bi'
-import useActivity from '../../hooks/useActivity'
+import useActivity, { ActivityFilter } from '../../hooks/useActivity'
 import useNotifier from '../../hooks/useNotifier'
 import {
   getStoredActivityState,
@@ -30,20 +30,18 @@ import Toast from '../Toast'
 // Keep state cached so it's not lost when component is unmounted from
 // navigating on OpenSea
 type CachedState = {
-  activityState: ReturnType<typeof useActivity> | null
   pollInterval: number
-  pollTimestamp: string | null
   watchedCollections: Collection[]
   notifiers: Notifier[]
+  activityFilter: ActivityFilter
   playSound: boolean
   sendNotification: boolean
 }
 let cachedState: CachedState = {
-  activityState: null,
   pollInterval: 2,
-  pollTimestamp: null,
   watchedCollections: [],
   notifiers: [],
+  activityFilter: 'ALL',
   playSound: true,
   sendNotification: true,
 }
@@ -58,6 +56,9 @@ const Activity = () => {
   )
   const toast = useToast()
   const [notifiers, setNotifiers] = useState<Notifier[]>(cachedState.notifiers)
+  const [activityFilter, setActivityFilter] = useState<ActivityFilter>(
+    cachedState.activityFilter,
+  )
   const [pollInterval, setPollInterval] = useState(cachedState.pollInterval)
   const [playSound, setPlaySound] = useState(cachedState.playSound)
   const [sendNotification, setSendNotification] = useState(
@@ -75,15 +76,7 @@ const Activity = () => {
   const activityState = useActivity({
     pollInterval,
     collectionSlugs: watchedCollections.map(({ slug }) => slug),
-    defaultState: cachedState.activityState
-      ? {
-          ...cachedState.activityState,
-          pollTimestamp: cachedState.pollTimestamp!,
-        }
-      : null,
-    onUpdate: ({ pollTimestamp }) => {
-      cachedState.pollTimestamp = pollTimestamp
-    },
+    filter: activityFilter,
   })
 
   const { matchedAssets, unseenMatchCount, clearMatches } = useNotifier({
@@ -124,19 +117,18 @@ const Activity = () => {
 
   useEffect(() => {
     cachedState = {
-      activityState,
-      pollTimestamp: cachedState.pollTimestamp,
       pollInterval,
       watchedCollections,
       notifiers,
+      activityFilter,
       playSound,
       sendNotification,
     }
   }, [
-    activityState,
     pollInterval,
     watchedCollections,
     notifiers,
+    activityFilter,
     playSound,
     sendNotification,
   ])
@@ -225,6 +217,16 @@ const Activity = () => {
               notifiers: newNotifiers,
             })
           }}
+          onEditNotifier={(notifier) => {
+            const newNotifiers = notifiers.map((n) =>
+              n.id === notifier.id ? notifier : n,
+            )
+            setNotifiers(newNotifiers)
+            storeActivityState({
+              collections: watchedCollections,
+              notifiers: newNotifiers,
+            })
+          }}
           onRemoveNotifier={(notifier) => {
             const newNotifiers = notifiers.filter((n) => n.id !== notifier.id)
             setNotifiers(newNotifiers)
@@ -233,9 +235,11 @@ const Activity = () => {
               notifiers: newNotifiers,
             })
           }}
+          activityFilter={activityFilter}
+          onChangeActivityFilter={setActivityFilter}
           isOpen={modalDisclosure.isOpen}
           onClose={modalDisclosure.onClose}
-          events={activityState.events}
+          events={activityState.filteredEvents}
           playSound={playSound}
           onChangePlaySound={setPlaySound}
           sendNotification={sendNotification}

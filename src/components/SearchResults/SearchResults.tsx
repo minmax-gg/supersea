@@ -252,12 +252,13 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
     .map(({ iteratorID, placeholder }) => {
       return {
         tokenId: String(iteratorID),
-        asset: placeholder ? null : assetMap[iteratorID],
+        asset: placeholder ? { placeholder: true } : assetMap[iteratorID],
         placeholder,
       }
     })
     .filter(({ asset }) => {
-      if (!asset) return true
+      if (asset === null) return false
+      if (!asset || 'placeholder' in asset) return true
       if (
         filters.status.includes('buyNow') &&
         (!asset.sell_orders?.length ||
@@ -278,7 +279,7 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
       }
 
       return true
-    })
+    }) as { tokenId: string; asset: Asset; placeholder: boolean }[]
 
   useEffect(() => {
     if (fetchUnordered) {

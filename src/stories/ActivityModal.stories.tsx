@@ -98,6 +98,7 @@ Default.args = {
       timestamp: new Date().toISOString().replace('Z', ''),
       notifier: {
         id: '1',
+        gasOverride: null,
       },
     },
   ],
@@ -158,6 +159,7 @@ Default.args = {
       includeAuctions: false,
       traits: ['{"value": "faceface", "groupName": "face"}'],
       autoQuickBuy: true,
+      gasOverride: { fee: 300, priorityFee: 25 },
       tokenEligibilityMap: {},
     },
   ],

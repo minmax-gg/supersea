@@ -8,6 +8,7 @@ import {
 } from '@chakra-ui/react'
 import { SunIcon } from '@chakra-ui/icons'
 import theme from '../src/theme'
+import GlobalStyles from '../src/components/GlobalStyles'
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
@@ -42,6 +43,7 @@ export const decorators = [
   (Story) => (
     <ChakraProvider theme={theme}>
       <Container>
+        <GlobalStyles />
         <ColorModeScript initialColorMode={theme.config.initialColorMode} />
         <Story />
       </Container>

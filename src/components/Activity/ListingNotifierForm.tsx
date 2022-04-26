@@ -7,6 +7,7 @@ import {
   FormLabel,
   HStack,
   Input,
+  Stack,
   Select,
   Switch,
   Tab,
@@ -73,29 +74,61 @@ export type Notifier = {
   traits: string[]
   autoQuickBuy: boolean
   collection: Collection
+  gasOverride: { priorityFee: number; fee: number } | null
   tokenEligibilityMap: Record<string, boolean> | null
 }
 
 const ListingNotifierForm = ({
   isSubscriber,
   collections,
+  editingNotifier,
   onAddNotifier,
+  onCancel,
 }: {
   isSubscriber: boolean
   collections: Collection[]
-  onAddNotifier: (notifier: Notifier | null) => void
+  editingNotifier: Notifier | null
+  onCancel: () => void
+  onAddNotifier: (notifier: Notifier) => void
 }) => {
   const [extensionConfig] = useExtensionConfig()
-  const [minPrice, setMinPrice] = useState('')
-  const [maxPrice, setMaxPrice] = useState('')
-  const [includeAuctions, setIncludeAuctions] = useState(false)
-  const [lowestRarity, setLowestRarity] = useState<RarityName>('Common')
-  const [collectionSlug, setCollectionSlug] = useState(collections[0].slug)
-  const [lowestRankNumber, setLowestRankNumber] = useState('')
-  const [traits, setTraits] = useState<string[]>([])
-  const [autoQuickBuy, setAutoQuickBuy] = useState(false)
+  const [minPrice, setMinPrice] = useState(
+    String(editingNotifier?.minPrice || ''),
+  )
+  const [maxPrice, setMaxPrice] = useState(
+    String(editingNotifier?.maxPrice || ''),
+  )
+  const [includeAuctions, setIncludeAuctions] = useState(
+    editingNotifier?.includeAuctions || false,
+  )
+  const [lowestRarity, setLowestRarity] = useState<RarityName>(
+    editingNotifier?.lowestRarity || 'Common',
+  )
+  const [collectionSlug, setCollectionSlug] = useState(
+    editingNotifier?.collection.slug || collections[0].slug,
+  )
+  const [lowestRankNumber, setLowestRankNumber] = useState(
+    String(editingNotifier?.lowestRankNumber || ''),
+  )
+
+  const [gasOverrideEnabled, setGasOverrideEnabled] = useState(
+    editingNotifier?.gasOverride ? true : false,
+  )
+  const [gasFee, setGasFee] = useState(
+    String(editingNotifier?.gasOverride?.fee || '300'),
+  )
+  const [gasPriorityFee, setGasPriorityFee] = useState(
+    String(editingNotifier?.gasOverride?.priorityFee || '25'),
+  )
+
+  const [traits, setTraits] = useState<string[]>(editingNotifier?.traits || [])
+  const [autoQuickBuy, setAutoQuickBuy] = useState(
+    editingNotifier?.autoQuickBuy || false,
+  )
   const [creatingNotifier, setCreatingNotifier] = useState(false)
-  const [rarityTab, setRarityTab] = useState<number>(0)
+  const [rarityTab, setRarityTab] = useState<number>(
+    editingNotifier?.lowestRankNumber ? 1 : 0,
+  )
 
   const chosenCollection = collections.find(
     ({ slug }) => slug === collectionSlug,
@@ -174,6 +207,88 @@ const ListingNotifierForm = ({
             </Checkbox>
           </Flex>
         </HStack>
+        <Stack direction={{ base: 'column', lg: 'row' }} spacing="4">
+          <FormControl isDisabled={!isSubscriber}>
+            <FormLabel fontSize="sm" htmlFor="auto-quick-buy" mb="2">
+              Trigger Quick Buy
+              {!isSubscriber ? <LockedFeature ml="0.5em" /> : null}
+            </FormLabel>
+            <HStack spacing="2" alignItems="center">
+              <Switch
+                id="auto-quick-buy"
+                isChecked={autoQuickBuy}
+                isDisabled={!extensionConfig?.quickBuyEnabled}
+                onChange={(event) => {
+                  setAutoQuickBuy(event.target.checked && isSubscriber)
+                }}
+              />
+              {isSubscriber && !extensionConfig?.quickBuyEnabled ? (
+                <Text opacity="0.75" fontSize="sm">
+                  Quick Buy is disabled.{' '}
+                  <Button
+                    size="sm"
+                    variant="link"
+                    color="blue.400"
+                    onClick={() => {
+                      chrome.runtime.sendMessage({
+                        method: 'openPopup',
+                        params: { action: 'activateQuickBuy' },
+                      })
+                    }}
+                  >
+                    Enable?
+                  </Button>
+                </Text>
+              ) : null}
+            </HStack>
+            <FormHelperText maxWidth="300px" lineHeight="1.6em" pr="5" pt="1">
+              Automatically trigger Quick Buy when a listing that matches this
+              alert is found.
+            </FormHelperText>
+          </FormControl>
+          <FormControl isDisabled={!extensionConfig?.quickBuyEnabled}>
+            <FormLabel
+              fontSize="sm"
+              mb="2"
+              isDisabled={!extensionConfig?.quickBuyEnabled}
+            >
+              Gas Override
+              {!isSubscriber ? <LockedFeature ml="0.5em" /> : null}
+            </FormLabel>
+            <Switch
+              id="auto-quick-buy"
+              isChecked={gasOverrideEnabled}
+              isDisabled={!extensionConfig?.quickBuyEnabled}
+              onChange={(event) => {
+                setGasOverrideEnabled(event.target.checked && isSubscriber)
+              }}
+            />
+            <HStack spacing="2" mt="3" alignItems="flex-start">
+              <FormControl maxWidth="120px" isDisabled={!gasOverrideEnabled}>
+                <FormLabel fontSize="xs">Max Fee</FormLabel>
+                <Input
+                  size="sm"
+                  value={gasFee}
+                  onChange={(e) => {
+                    setGasFee(e.target.value)
+                  }}
+                  borderColor={inputBorder}
+                />
+              </FormControl>
+              <FormControl maxWidth="120px" isDisabled={!gasOverrideEnabled}>
+                <FormLabel fontSize="xs">Max Priority Fee</FormLabel>
+                <Input
+                  size="sm"
+                  value={gasPriorityFee}
+                  onChange={(e) => {
+                    setGasPriorityFee(e.target.value)
+                  }}
+                  borderColor={inputBorder}
+                />
+              </FormControl>{' '}
+            </HStack>
+          </FormControl>
+        </Stack>
         <FormControl>
           <FormLabel fontSize="sm">
             <Text as="span" opacity={rarityInputsDisabled ? 0.75 : 1}>
@@ -284,52 +399,9 @@ const ListingNotifierForm = ({
             }}
           />
         </FormControl>
-        <FormControl isDisabled={!isSubscriber}>
-          <FormLabel fontSize="sm" htmlFor="auto-quick-buy" mb="3">
-            Trigger Quick Buy
-            {!isSubscriber ? <LockedFeature ml="0.5em" /> : null}
-          </FormLabel>
-          <HStack spacing="2" alignItems="center">
-            <Switch
-              id="auto-quick-buy"
-              isChecked={autoQuickBuy}
-              isDisabled={!extensionConfig?.quickBuyEnabled}
-              onChange={(event) => {
-                setAutoQuickBuy(event.target.checked && isSubscriber)
-              }}
-            />
-            {isSubscriber && !extensionConfig?.quickBuyEnabled ? (
-              <Text opacity="0.75" fontSize="sm">
-                Quick Buy is disabled.{' '}
-                <Button
-                  size="sm"
-                  variant="link"
-                  color="blue.400"
-                  onClick={() => {
-                    chrome.runtime.sendMessage({
-                      method: 'openPopup',
-                      params: { action: 'activateQuickBuy' },
-                    })
-                  }}
-                >
-                  Enable?
-                </Button>
-              </Text>
-            ) : null}
-          </HStack>
-          <FormHelperText maxWidth="300px" lineHeight="1.6em">
-            Automatically trigger Quick Buy when a listing that matches this
-            alert is found.
-          </FormHelperText>
-        </FormControl>
+
         <HStack justify="flex-end" width="100%" spacing="2">
-          <Button
-            onClick={() => {
-              onAddNotifier(null)
-            }}
-          >
-            Cancel
-          </Button>
+          <Button onClick={onCancel}>Cancel</Button>
           <Button
             isLoading={creatingNotifier}
             onClick={async () => {
@@ -344,7 +416,7 @@ const ListingNotifierForm = ({
               })
 
               onAddNotifier({
-                id: generateId(),
+                id: editingNotifier?.id || generateId(),
                 minPrice: minPrice ? Number(minPrice) : null,
                 maxPrice: maxPrice ? Number(maxPrice) : null,
                 lowestRarity:
@@ -358,6 +430,9 @@ const ListingNotifierForm = ({
                 tokenEligibilityMap,
                 collection,
                 autoQuickBuy,
+                gasOverride: gasOverrideEnabled
+                  ? { priorityFee: +gasPriorityFee, fee: +gasFee }
+                  : null,
               })
             }}
             color="white"
@@ -365,7 +440,7 @@ const ListingNotifierForm = ({
             _hover={{ bg: 'blue.400' }}
             _active={{ bg: 'blue.300' }}
           >
-            Add Listing Alert
+            {editingNotifier ? 'Edit Listing Alert' : 'Add Listing Alert'}
           </Button>
         </HStack>
       </VStack>

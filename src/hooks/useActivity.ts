@@ -4,6 +4,7 @@ import { Event } from '../components/Activity/ActivityEvent'
 import { fetchOpenSeaGraphQL, fetchRemoteConfig } from '../utils/api'
 
 export type PollStatus = 'INACTIVE' | 'STARTING' | 'ACTIVE' | 'RATE_LIMITED'
+export type ActivityFilter = 'ALL' | 'CREATED' | 'SUCCESSFUL' | 'NONE'
 
 let seen: Record<string, boolean> = {}
 let consecutiveRateLimits = 0
@@ -17,34 +18,40 @@ const getBufferedTime = (time: string, minimum: string) => {
   return date.toISOString().replace('Z', '')
 }
 
+let cachedStatus: PollStatus = 'INACTIVE'
+let cachedEvents: Event[] = []
+let cachedListingEvents: Event[] = []
+let cachedSaleEvents: Event[] = []
+let cachedPollTimestamp = '2021-01-01T00:00:00'
+
 const useActivity = ({
   collectionSlugs,
   pollInterval,
-  defaultState,
-  onUpdate,
+  filter,
 }: {
   collectionSlugs: string[]
   pollInterval: number
-  defaultState: {
-    status: PollStatus
-    events: Event[]
-    pollTimestamp: string
-  } | null
-  onUpdate: (params: { pollTimestamp: string }) => void
+  filter: ActivityFilter
 }) => {
-  const [events, setEvents] = useState<Event[]>(defaultState?.events ?? [])
-  const [status, setStatus] = useState<PollStatus>(
-    defaultState?.status ?? 'INACTIVE',
+  const [events, setEvents] = useState<Event[]>(cachedEvents)
+  const [listingEvents, setListingEvents] = useState<Event[]>(
+    cachedListingEvents,
   )
+  const [saleEvents, setSaleEvents] = useState<Event[]>(cachedSaleEvents)
+
+  const [status, setStatus] = useState<PollStatus>(cachedStatus)
   const collectionSlugsKey = collectionSlugs.join(',')
   const prevCollectionSlugsKey = useRef<string>(collectionSlugsKey)
-  const pollTimestampRef = useRef(
-    defaultState?.pollTimestamp ?? '2021-01-01T00:00:00',
-  )
-  const initialPollTimeRef = useRef(
-    defaultState?.pollTimestamp ?? '2021-01-01T00:00:00',
-  )
+  const pollTimestampRef = useRef(cachedPollTimestamp)
+  const initialPollTimeRef = useRef(cachedPollTimestamp)
   const pollIndexRef = useRef(0)
+
+  useEffect(() => {
+    cachedEvents = events
+    cachedStatus = status
+    cachedListingEvents = listingEvents
+    cachedSaleEvents = saleEvents
+  }, [status, events, saleEvents, listingEvents])
 
   useEffect(() => {
     let isInitialFetch = prevCollectionSlugsKey.current !== collectionSlugsKey
@@ -131,10 +138,28 @@ const useActivity = ({
               })
               return [...unique, ...e].slice(0, 50)
             })
+
+            setListingEvents((e) => {
+              const unique = (events as Event[]).filter((event) => {
+                if (seen[event.listingId]) return false
+                if (event.eventType !== 'CREATED') return false
+                return true
+              })
+              return [...unique, ...e].slice(0, 50)
+            })
+
+            setSaleEvents((e) => {
+              const unique = (events as Event[]).filter((event) => {
+                if (seen[event.listingId]) return false
+                if (event.eventType === 'CREATED') return false
+                return true
+              })
+              return [...unique, ...e].slice(0, 50)
+            })
           }
         }
 
-        onUpdate({ pollTimestamp: pollTimestampRef.current })
+        cachedPollTimestamp = pollTimestampRef.current
 
         const fetchDuration = Date.now() - fetchStartTime
         consecutiveRateLimits = 0
@@ -157,6 +182,7 @@ const useActivity = ({
     updateActivity()
 
     return () => {
+      pollIndexRef.current++
       clearTimeout(timeout)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -164,6 +190,11 @@ const useActivity = ({
 
   return {
     events,
+    filteredEvents: (() => {
+      if (filter === 'CREATED') return listingEvents
+      if (filter === 'SUCCESSFUL') return saleEvents
+      return events
+    })(),
     status,
   }
 }

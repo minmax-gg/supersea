@@ -1,4 +1,4 @@
-import { DeleteIcon } from '@chakra-ui/icons'
+import { DeleteIcon, EditIcon } from '@chakra-ui/icons'
 import {
   HStack,
   Circle,
@@ -22,15 +22,18 @@ import {
 import { RARITY_TYPES } from '../../utils/rarity'
 import EthereumIcon from '../EthereumIcon'
 import TraitTag from '../SearchResults/TraitTag'
+import TooltipIconButton from '../TooltipIconButton'
 import { Notifier } from './ListingNotifierForm'
 
 const ListingNotifier = ({
   notifier,
   onRemove,
+  onEdit,
   isActive,
 }: {
   notifier: Notifier
   onRemove: (notifier: Notifier) => void
+  onEdit: (notifier: Notifier) => void
   isActive: boolean
 }) => {
   const {
@@ -42,6 +45,7 @@ const ListingNotifier = ({
     traits,
     autoQuickBuy,
     collection,
+    gasOverride,
   } = notifier
 
   const { colorMode } = useColorMode()
@@ -75,15 +79,30 @@ const ListingNotifier = ({
               </Text>
             </Box>
           </HStack>
-          <IconButton
-            icon={<DeleteIcon />}
-            bg="transparent"
-            size="sm"
-            aria-label="delete"
-            onClick={() => {
-              onRemove(notifier)
-            }}
-          />
+          <HStack spacing="0">
+            <TooltipIconButton
+              label="Edit Listing Alert"
+              icon={<EditIcon />}
+              bg="transparent"
+              size="sm"
+              minWidth="28px"
+              aria-label="delete"
+              onClick={() => {
+                onEdit(notifier)
+              }}
+            />{' '}
+            <TooltipIconButton
+              label="Remove Listing Alert"
+              icon={<DeleteIcon />}
+              bg="transparent"
+              size="sm"
+              minWidth="28px"
+              aria-label="delete"
+              onClick={() => {
+                onRemove(notifier)
+              }}
+            />
+          </HStack>
         </HStack>
         <Table
           variant="simple"
@@ -103,6 +122,7 @@ const ListingNotifier = ({
               <Th>Rarity</Th>
               <Th>Traits</Th>
               <Th>Quick Buy</Th>
+              <Th>Gas</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -185,11 +205,16 @@ const ListingNotifier = ({
                 )}
               </Td>
               <Td>{autoQuickBuy ? 'On' : 'Off'}</Td>
+              <Td>
+                {gasOverride
+                  ? `${gasOverride.fee}/${gasOverride.priorityFee}`
+                  : 'Off'}
+              </Td>
             </Tr>
           </Tbody>
         </Table>
         {!isActive && (
-          <Alert status="error" borderRadius="md" mb="2">
+          <Alert status="error" borderRadius="md" mb="2" mt="2">
             <AlertIcon />
             <Text>
               The "{collection.name}" collection is not currently being watched,
