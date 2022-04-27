@@ -2,7 +2,9 @@ import { IconButton, Tooltip } from '@chakra-ui/react'
 import React from 'react'
 
 const TooltipIconButton = (
-  props: React.ComponentProps<typeof IconButton> & { label: string },
+  props: Omit<React.ComponentProps<typeof IconButton>, 'aria-label'> & {
+    label: string
+  },
 ) => {
   return (
     <Tooltip
@@ -15,7 +17,7 @@ const TooltipIconButton = (
       px="2"
       py="1"
     >
-      <IconButton {...props} />
+      <IconButton {...props} aria-label={props.label} />
     </Tooltip>
   )
 }

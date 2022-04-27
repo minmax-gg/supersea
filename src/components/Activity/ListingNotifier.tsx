@@ -86,7 +86,6 @@ const ListingNotifier = ({
               bg="transparent"
               size="sm"
               minWidth="28px"
-              aria-label="delete"
               onClick={() => {
                 onEdit(notifier)
               }}
@@ -97,7 +96,6 @@ const ListingNotifier = ({
               bg="transparent"
               size="sm"
               minWidth="28px"
-              aria-label="delete"
               onClick={() => {
                 onRemove(notifier)
               }}

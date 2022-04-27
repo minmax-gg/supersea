@@ -40,6 +40,11 @@ import {
 import Toast from '../Toast'
 import EthereumIcon from '../EthereumIcon'
 import Logo from '../Logo'
+import LooksRareSvg from '../../assets/looksrare.svg'
+import GemSvg from '../../assets/gemxyz.svg'
+import EtherScanSvg from '../../assets/etherscan.svg'
+import PolygonScanSvg from '../../assets/polygonscan.svg'
+import { CgNotes } from 'react-icons/cg'
 import { useUser } from '../../utils/user'
 import ScopedCSSPortal from '../ScopedCSSPortal'
 import RefreshIndicator, { RefreshState } from './RefreshIndicator'
@@ -58,6 +63,7 @@ import {
 import useFloor from '../../hooks/useFloor'
 import PropertiesModal from './PropertiesModal'
 import InternalLink from '../InternalLink'
+import TooltipIconButton from '../TooltipIconButton'
 
 export const HEIGHT = 85
 export const LIST_HEIGHT = 62
@@ -681,10 +687,22 @@ const AssetInfo = ({
                   <MenuDivider />
                   {isAccountPage && (
                     <>
-                      <MenuGroup title="Account">
+                      <MenuGroup
+                        // @ts-ignore
+                        title={
+                          <Text>
+                            Account{' '}
+                            {chain !== 'ethereum' ? (
+                              <Tag fontSize="xs" mt="-1px" ml="0.35em">
+                                Unavailable
+                              </Tag>
+                            ) : null}
+                          </Text>
+                        }
+                      >
                         <MenuItem
                           closeOnSelect={false}
-                          isDisabled={!isSubscriber}
+                          isDisabled={!isSubscriber || chain !== 'ethereum'}
                           onClick={async () => {
                             if (hidingItems || !isSubscriber) return
                             setHidingItems(true)
@@ -820,70 +838,98 @@ const AssetInfo = ({
                     </>
                   )}
                   <MenuGroup title="Links">
-                    {chain === 'ethereum' && (
-                      <MenuItem
+                    <HStack spacing="0" px="1">
+                      {chain === 'ethereum' && (
+                        <TooltipIconButton
+                          label="LooksRare"
+                          icon={<Icon as={LooksRareSvg as any} />}
+                          bg="transparent"
+                          onClick={async () => {
+                            onClose()
+                            window.open(
+                              `https://looksrare.org/collections/${address}/${tokenId}`,
+                              '_blank',
+                            )
+                          }}
+                        />
+                      )}{' '}
+                      {chain === 'ethereum' && (
+                        <TooltipIconButton
+                          label="gem.xyz"
+                          icon={<Icon as={GemSvg as any} />}
+                          bg="transparent"
+                          onClick={async () => {
+                            onClose()
+                            window.open(
+                              `https://gem.xyz/collection/${collectionSlug}`,
+                              '_blank',
+                            )
+                          }}
+                        />
+                      )}{' '}
+                      <TooltipIconButton
+                        label="Contract"
+                        icon={
+                          <Icon
+                            as={
+                              (chain === 'ethereum'
+                                ? EtherScanSvg
+                                : PolygonScanSvg) as any
+                            }
+                          />
+                        }
+                        bg="transparent"
                         onClick={async () => {
-                          let metadataUri = null
-                          try {
-                            metadataUri = await fetchMetadataUriWithOpenSeaFallback(
-                              address,
-                              +tokenId,
-                            )
-                          } catch (err) {}
-                          if (!metadataUri) {
-                            toast({
-                              duration: 3000,
-                              position: 'bottom-right',
-                              render: () => (
-                                <Toast
-                                  text="Unable to load metadata."
-                                  type="error"
-                                />
-                              ),
-                            })
-                            return
-                          }
-                          if (/^data:/.test(metadataUri)) {
-                            const blob = await fetch(metadataUri).then((res) =>
-                              res.blob(),
-                            )
-                            window.open(URL.createObjectURL(blob), '_blank')
-                          } else {
-                            window.open(metadataUri, '_blank')
-                          }
-                        }}
-                      >
-                        Raw Metadata{' '}
-                        <Icon as={FiExternalLink} ml="0.3em" mt="-2px" />
-                      </MenuItem>
-                    )}
-                    <MenuItem
-                      onClick={() => {
-                        window.open(
-                          `https://${
-                            chain === 'ethereum'
-                              ? 'etherscan.io'
-                              : 'polygonscan.com'
-                          }/token/${address}`,
-                          '_blank',
-                        )
-                      }}
-                    >
-                      Contract <Icon as={FiExternalLink} ml="0.3em" mt="-2px" />
-                    </MenuItem>{' '}
-                    {chain === 'ethereum' && (
-                      <MenuItem
-                        onClick={() => {
+                          onClose()
                           window.open(
-                            `https://looksrare.org/collections/${address}/${tokenId}`,
+                            `https://${
+                              chain === 'ethereum'
+                                ? 'etherscan.io'
+                                : 'polygonscan.com'
+                            }/token/${address}`,
                             '_blank',
                           )
                         }}
-                      >
-                        LooksRare{' '}
-                        <Icon as={FiExternalLink} ml="0.3em" mt="-2px" />
-                      </MenuItem>
-                    )}
+                      />
+                      {chain === 'ethereum' && (
+                        <TooltipIconButton
+                          label="Raw Metadata"
+                          icon={<Icon as={CgNotes} />}
+                          bg="transparent"
+                          onClick={async () => {
+                            onClose()
+                            let metadataUri = null
+                            try {
+                              metadataUri = await fetchMetadataUriWithOpenSeaFallback(
+                                address,
+                                +tokenId,
+                              )
+                            } catch (err) {}
+                            if (!metadataUri) {
+                              toast({
+                                duration: 3000,
+                                position: 'bottom-right',
+                                render: () => (
+                                  <Toast
+                                    text="Unable to load metadata."
+                                    type="error"
+                                  />
+                                ),
+                              })
+                              return
+                            }
+                            if (/^data:/.test(metadataUri)) {
+                              const blob = await fetch(
+                                metadataUri,
+                              ).then((res) => res.blob())
+                              window.open(URL.createObjectURL(blob), '_blank')
+                            } else {
+                              window.open(metadataUri, '_blank')
+                            }
+                          }}
+                        />
+                      )}{' '}
+                    </HStack>
                   </MenuGroup>
                 </MenuList>
               </ScopedCSSPortal>
