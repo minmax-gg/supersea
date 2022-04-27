@@ -96,6 +96,20 @@
         "timestamp": "node.eventTimestamp",
         "eventType": "node.eventType"
       }
+    },
+    "AssetSelectionSetPrivacyMutation": {
+      "body": "mutation AssetSelectionSetPrivacyMutation(\n  $assets: [AssetRelayID!]!\n  $isPrivate: Boolean!\n) {\n  assetOwnerships {\n    batchSetPrivacy(assets: $assets, isPrivate: $isPrivate)\n  }\n}\n",
+      "staticHeaders": {
+        "x-signed-query": "76bfedb6347a46b1e94eb9bd6ea445cff873538d64b2b0a0d28f0779c43c5609"
+      },
+      "staticVariables": {},
+      "dynamicVariablePaths": {
+        "assets": "assets",
+        "isPrivate": "isPrivate"
+      },
+      "resultPaths": {
+        "success": "data.assetOwnerships.batchSetPrivacy"
+      }
     }
   },
   "injectionSelectors": {

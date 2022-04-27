@@ -10,7 +10,7 @@ const Toast = ({
   type?: 'success' | 'error'
 }) => {
   const bgs: Record<typeof type, React.ComponentProps<typeof Box>['bg']> = {
-    success: useColorModeValue('gray.500', 'gray.700'),
+    success: useColorModeValue('green.500', 'green.600'),
     error: useColorModeValue('red.500', 'red.700'),
   }
 
@@ -19,6 +19,7 @@ const Toast = ({
       bg={bgs[type]}
       borderRadius="md"
       px="6"
+      pr="14"
       py="2"
       mx="5"
       minWidth="380px"

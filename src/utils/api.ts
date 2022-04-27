@@ -59,6 +59,7 @@ export type AssetInfo = {
 }
 
 export type Asset = {
+  id: number
   token_id: string
   asset_contract: {
     address: string
@@ -164,6 +165,18 @@ export type RemoteConfig = {
         currency: string
         timestamp: string
         eventType: string
+      }
+    }
+    AssetSelectionSetPrivacyMutation: {
+      body: string
+      staticHeaders: Record<string, string>
+      staticVariables: Record<string, any>
+      dynamicVariablePaths: {
+        assets: string
+        isPrivate: string
+      }
+      resultPaths: {
+        success: string
       }
     }
   }
@@ -538,6 +551,31 @@ export const fetchAllCollectionsForUser = async (
   }
 }
 
+export const fetchCollectionAssetsForUser = async (
+  {
+    walletAddress,
+    contractAddress,
+  }: {
+    walletAddress: string
+    contractAddress: string
+  },
+  list = [],
+  cursor?: string,
+): Promise<Asset[]> => {
+  await openSeaPublicRateLimit()
+  const data = await fetch(
+    `https://api.opensea.io/api/v1/assets?owner=${walletAddress}&asset_contract_address=${contractAddress}&limit=50`,
+  ).then((res) => res.json())
+  if (data.next) {
+    return fetchCollectionAssetsForUser(
+      { walletAddress, contractAddress },
+      list.concat(data.assets),
+      data.next,
+    )
+  }
+  return list.concat(data.assets)
+}
+
 export const fetchMetadataUriWithOpenSeaFallback = async (
   address: string,
   tokenId: number,
@@ -718,12 +756,14 @@ export const fetchOpenSeaGraphQL = async <
   query: T,
   {
     variables,
+    sessionKey,
     cacheBust = true,
   }: {
     variables: Record<
       keyof RemoteConfig['queries'][T]['dynamicVariablePaths'],
       any
     >
+    sessionKey?: string
     cacheBust?: boolean
   },
 ) => {
@@ -733,6 +773,7 @@ export const fetchOpenSeaGraphQL = async <
     headers: {
       ...remoteConfig.queryHeaders,
       ...remoteConfig.queries[query].staticHeaders,
+      ...(sessionKey ? { authorization: `JWT ${sessionKey}` } : {}),
     },
     body: JSON.stringify({
       id: query,

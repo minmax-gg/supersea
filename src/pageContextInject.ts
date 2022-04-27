@@ -160,6 +160,8 @@ import { readableEthValue, weiToEth } from './utils/ethereum'
           ethAddress: await getEthAccount(),
         },
       })
+    } else if (event.data.method === 'SuperSea__RefreshPage') {
+      window.next.router.replace(window.next.router.asPath)
     }
   })
 
