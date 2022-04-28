@@ -152,7 +152,9 @@ const PropertiesModal = ({
               name: trait_type,
               value,
               score: rarityTable.scoreMap[trait_type][value],
-              excluded: rarityTable.implicitExcludes?.includes(trait_type),
+              excluded:
+                rarityTable.implicitExcludes?.includes(trait_type) ||
+                rarityTable.excludeTraits?.includes(trait_type),
               rarity: trait ? trait.count / tokenCount : null,
             }
           }) as Properties)
@@ -179,9 +181,6 @@ const PropertiesModal = ({
   }, [address, tokenId])
 
   const activeRarityField = excludeTraitCount ? 'noTraitCountRarity' : 'rarity'
-
-  const warningTextBg = useColorModeValue('orange.200', 'orange.600')
-  const warningTextColor = useColorModeValue('black', 'white')
 
   return (
     <ScopedCSSPortal>
