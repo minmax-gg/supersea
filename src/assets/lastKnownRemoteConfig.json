@@ -173,6 +173,24 @@
           "selector": ".Image--image",
           "hierarchy": "child"
         }
+      },
+      "sell": {
+        "node": {
+          "selector": "article[class*=AssetSellPreview]",
+          "injectionMethod": "append"
+        },
+        "link": {
+          "selector": ".AssetCell--link",
+          "hierarchy": "child"
+        },
+        "collectionLink": {
+          "selector": ".AssetSellPreviewFooter--collection-name",
+          "hierarchy": "outside"
+        },
+        "image": {
+          "selector": ".Image--image",
+          "hierarchy": "child"
+        }
       }
     },
     "bundleVerification": {

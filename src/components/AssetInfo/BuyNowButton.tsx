@@ -211,22 +211,15 @@ export const BuyNowButtonUI = ({
   )
 }
 
-const BuyNowButton = ({
-  visibleOnAccountPage = false,
-  ...props
-}: Omit<React.ComponentProps<typeof BuyNowButtonUI>, 'active'> & {
-  visibleOnAccountPage?: boolean
-}) => {
+const BuyNowButton = (
+  props: Omit<React.ComponentProps<typeof BuyNowButtonUI>, 'active'> & {},
+) => {
   const [config] = useExtensionConfig()
   const user = useUser()
-  const isAccountPage = window.location.pathname.split('/')[1] === 'account'
-  if (
-    config === null ||
-    user === null ||
-    !user.isSubscriber ||
-    (isAccountPage && !visibleOnAccountPage)
-  )
+  if (config === null || user === null || !user.isSubscriber) {
     return null
+  }
+
   return <BuyNowButtonUI {...props} active={config.quickBuyEnabled} />
 }
 

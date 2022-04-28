@@ -23,6 +23,7 @@ export type Selectors = {
     grid: AssetInfoSelector
     list: AssetInfoSelector
     item: AssetInfoSelector
+    sell: AssetInfoSelector
   }
   bundleVerification: {
     frameSelector: string

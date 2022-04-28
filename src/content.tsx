@@ -43,6 +43,9 @@ const injectAssetInfo = async () => {
   const itemNode = document.querySelector(
     selectors.assetInfo.item.node.selector,
   )
+  const sellNode = document.querySelector(
+    selectors.assetInfo.sell.node.selector,
+  )
 
   const nodes = [
     ...gridNodes.map((node) => ({
@@ -61,6 +64,15 @@ const injectAssetInfo = async () => {
             node: itemNode,
             type: 'item',
             selectorConfig: selectors.assetInfo.item,
+          },
+        ]
+      : []),
+    ...(sellNode
+      ? [
+          {
+            node: sellNode,
+            type: 'sell',
+            selectorConfig: selectors.assetInfo.sell,
           },
         ]
       : []),
@@ -92,6 +104,19 @@ const injectAssetInfo = async () => {
       if (type === 'item') {
         const path = window.location.pathname.split('/')
         const [tokenType, address, tokenId] = path.slice(-3)
+        return {
+          address: address.toLowerCase(),
+          tokenId: tokenId,
+          collectionSlug,
+          chain:
+            tokenType === 'matic'
+              ? ('polygon' as const)
+              : ('ethereum' as const),
+        }
+      }
+      if (type === 'sell') {
+        const path = window.location.pathname.split('/')
+        const [tokenType, address, tokenId] = path.slice(-4, -1)
         return {
           address: address.toLowerCase(),
           tokenId: tokenId,

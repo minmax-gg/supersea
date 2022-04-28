@@ -273,7 +273,7 @@ const AssetInfo = ({
   address: string
   tokenId: string
   collectionSlug?: string
-  type: 'grid' | 'list' | 'item'
+  type: 'grid' | 'list' | 'item' | 'sell'
   chain: Chain
   container: HTMLElement
   displayedPrice?: string
@@ -303,6 +303,12 @@ const AssetInfo = ({
   const isAccountPage = window.location.pathname.split('/')[1] === 'account'
   const isHiddenTab =
     queryString.parse(window.location.search).tab === 'private'
+
+  const quickBuyAvailable = (() => {
+    if (isAccountPage && !isActivityEvent) return false
+    if (type === 'sell') return false
+    return true
+  })()
 
   const activeRarity = rarity && {
     isRanked: rarity.isRanked,
@@ -1019,23 +1025,24 @@ const AssetInfo = ({
             <RefreshIndicator state={refreshState} />
           </Box>
         </Box>
-        <Box
-          position="absolute"
-          top="0"
-          right="0"
-          m="1"
-          className="SuperSea__BuyNowContainer"
-          opacity="0"
-          transition="opacity 115ms ease"
-        >
-          <BuyNowButton
-            address={address}
-            tokenId={tokenId}
-            displayedPrice={displayedPrice}
-            visibleOnAccountPage={isActivityEvent}
-            gasOverride={quickBuyGasOverride}
-          />
-        </Box>
+        {quickBuyAvailable && (
+          <Box
+            position="absolute"
+            top="0"
+            right="0"
+            m="1"
+            className="SuperSea__BuyNowContainer"
+            opacity="0"
+            transition="opacity 115ms ease"
+          >
+            <BuyNowButton
+              address={address}
+              tokenId={tokenId}
+              displayedPrice={displayedPrice}
+              gasOverride={quickBuyGasOverride}
+            />
+          </Box>
+        )}
       </Flex>
       {propertiesModalOpen && (
         <PropertiesModal
