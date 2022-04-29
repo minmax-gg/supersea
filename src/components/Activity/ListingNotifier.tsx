@@ -117,6 +117,7 @@ const ListingNotifier = ({
             <Tr>
               <Th px="4">ID</Th>
               <Th>Price Range</Th>
+              <Th>Name</Th>
               <Th>Rarity</Th>
               <Th>Traits</Th>
               <Th>Quick Buy</Th>
@@ -136,6 +137,7 @@ const ListingNotifier = ({
                   {id}
                 </Circle>
               </Td>
+
               <Td>
                 {(() => {
                   if (minPrice === null && maxPrice === null) {
@@ -171,6 +173,9 @@ const ListingNotifier = ({
                 })()}
               </Td>
               <Td>
+                {notifier.nameContains ? `"${notifier.nameContains}"` : 'Any'}
+              </Td>
+              <Td>
                 {(() => {
                   if (lowestRarity === 'Common') {
                     if (lowestRankNumber === null) {
@@ -191,7 +196,7 @@ const ListingNotifier = ({
                   )
                 })()}
               </Td>
-              <Td>
+              <Td minW={traits.length > 1 ? '200px' : 0}>
                 {traits.length ? (
                   <Flex flexWrap="wrap">
                     {traits.map((trait) => {

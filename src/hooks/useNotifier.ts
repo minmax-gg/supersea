@@ -44,6 +44,13 @@ const listingMatchesNotifier = ({
   ) {
     return false
   }
+  // Name
+  if (
+    notifier.nameContains &&
+    !event.name.toLowerCase().includes(notifier.nameContains.toLowerCase())
+  ) {
+    return false
+  }
   // Rarity
   if (notifier.collection.rarities) {
     const rank = traitCountExcluded

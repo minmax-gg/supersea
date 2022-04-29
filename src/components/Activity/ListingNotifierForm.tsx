@@ -72,6 +72,7 @@ export type Notifier = {
   lowestRankNumber: number | null
   includeAuctions: boolean
   traits: string[]
+  nameContains: string
   autoQuickBuy: boolean
   collection: Collection
   gasOverride: { priorityFee: number; fee: number } | null
@@ -104,6 +105,7 @@ const ListingNotifierForm = ({
   const [lowestRarity, setLowestRarity] = useState<RarityName>(
     editingNotifier?.lowestRarity || 'Common',
   )
+  const [nameContains, setNameContains] = useState('')
   const [collectionSlug, setCollectionSlug] = useState(
     editingNotifier?.collection.slug || collections[0].slug,
   )
@@ -290,6 +292,18 @@ const ListingNotifierForm = ({
           </FormControl>
         </Stack>
         <FormControl>
+          <FormLabel fontSize="sm">Name Contains</FormLabel>
+          <Input
+            maxW="240px"
+            borderColor={inputBorder}
+            value={nameContains}
+            onChange={(e) => setNameContains(e.target.value)}
+          />
+          <FormHelperText>
+            Filter items by name (case insensitive)
+          </FormHelperText>
+        </FormControl>
+        <FormControl>
           <FormLabel fontSize="sm">
             <Text as="span" opacity={rarityInputsDisabled ? 0.75 : 1}>
               Rarity
@@ -429,6 +443,7 @@ const ListingNotifierForm = ({
                 traits,
                 tokenEligibilityMap,
                 collection,
+                nameContains,
                 autoQuickBuy,
                 gasOverride: gasOverrideEnabled
                   ? { priorityFee: +gasPriorityFee, fee: +gasFee }

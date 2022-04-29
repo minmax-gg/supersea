@@ -154,6 +154,7 @@ Default.args = {
       },
       minPrice: null,
       maxPrice: 15,
+      nameContains: '',
       lowestRarity: 'Rare',
       lowestRankNumber: null,
       includeAuctions: false,
