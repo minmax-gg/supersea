@@ -722,6 +722,7 @@ export const fetchTokenProperties = async (
     scoreMap: Record<string, Record<string, number>>
     missingTraitScores: Record<string, { score: number }>
     implicitExcludes?: string[]
+    excludeTraits?: string[]
   }
   traits: { count: number; trait_type: string; value: string }[]
 }> => {

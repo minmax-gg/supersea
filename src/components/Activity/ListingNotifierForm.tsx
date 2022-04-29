@@ -105,7 +105,9 @@ const ListingNotifierForm = ({
   const [lowestRarity, setLowestRarity] = useState<RarityName>(
     editingNotifier?.lowestRarity || 'Common',
   )
-  const [nameContains, setNameContains] = useState('')
+  const [nameContains, setNameContains] = useState(
+    editingNotifier?.nameContains || '',
+  )
   const [collectionSlug, setCollectionSlug] = useState(
     editingNotifier?.collection.slug || collections[0].slug,
   )
