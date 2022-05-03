@@ -369,7 +369,7 @@ const rarityLoader = new DataLoader(
 )
 
 const rarityTraitQuery = gql`
-  query RarityQuery($address: String!, $input: TokenInputType) {
+  query RarityTraitQuery($address: String!, $input: TokenInputType) {
     contract(address: $address) {
       contractAddress
       tokenCount
@@ -390,6 +390,28 @@ const rarityTraitQuery = gql`
   }
 `
 
+const rarityTraitQueryAllTokens = gql`
+  query RarityTraitQueryAllTokens($address: String!) {
+    contract(address: $address) {
+      contractAddress
+      tokenCount
+      traits {
+        count
+        trait_type
+        value
+      }
+      rankingOptions {
+        excludeTraits
+      }
+      tokens {
+        iteratorID
+        rank
+        noTraitCountRank
+      }
+    }
+  }
+`
+
 export const fetchRarities = async (address: string) => {
   return rarityLoader.load(address) as Promise<Rarities>
 }
@@ -398,14 +420,13 @@ export const fetchRaritiesWithTraits = async (
   address: string,
   traits: { key: string; value: string }[],
 ) => {
-  const res = await nonFungibleRequest(rarityTraitQuery, {
-    address,
-    input: traits.length
-      ? {
-          traits,
-        }
-      : {},
-  })
+  const res = traits.length
+    ? await nonFungibleRequest(rarityTraitQuery, {
+        address,
+        input: { traits },
+      })
+    : await nonFungibleRequest(rarityTraitQueryAllTokens, { address })
+
   return res.contract as RaritiesWithTraits
 }
 
