@@ -1,4 +1,11 @@
 {
+  "nextSsrProps": {
+    "scriptId": "__NEXT_DATA__",
+    "paths": {
+      "profileUsername": "props.ssrData.account.user.publicUsername",
+      "profileImageUrl": "props.ssrData.account.imageUrl"
+    }
+  },
   "routes": {
     "searchResults": {
       "url": "/collection/[slug]?slug={collectionSlug}&collectionSlug={collectionSlug}&tab=supersea",
@@ -19,6 +26,10 @@
     "traitFloor": {
       "url": "/collection/[slug]?slug={collectionSlug}&collectionSlug={collectionSlug}&search[stringTraits][0][name]={name}&search[stringTraits][0][values][0]={value}&search[sortAscending]=true&search[sortBy]=PRICE",
       "as": "/collection/{collectionSlug}?search[stringTraits][0][name]={name}&search[stringTraits][0][values][0]={value}&search[sortAscending]=true&search[sortBy]=PRICE"
+    },
+    "profile": {
+      "url": "/account?identifier={identifier}",
+      "as": "/{identifier}"
     }
   },
   "queryHeaders": {
@@ -117,6 +128,13 @@
       "button": {
         "selector": ".Navbar--main > ul:last-of-type",
         "injectionMethod": "prepend"
+      }
+    },
+    "transferInfo": {
+      "formSelector": "*[class*=ItemTransferPage] form",
+      "node": {
+        "selector": "*[class*=ItemTransferPage] form i[value=report_problem]",
+        "injectionMethod": "insertBefore"
       }
     },
     "assetInfo": {
