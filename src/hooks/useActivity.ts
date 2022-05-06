@@ -113,8 +113,7 @@ const useActivity = ({
               tokenId: _.get(edge, paths.tokenId),
               contractAddress: _.get(edge, paths.contractAddress),
               chain: chain === 'MATIC' ? 'polygon' : 'ethereum',
-              name:
-                _.get(edge, paths.name) || _.get(edge, paths.collectionName),
+              name: _.get(edge, paths.name) || `#${_.get(edge, paths.tokenId)}`,
               image: _.get(edge, paths.image),
               price: _.get(edge, paths.price),
               currency: _.get(edge, paths.currency),
