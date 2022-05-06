@@ -82,12 +82,17 @@ import { readableEthValue, weiToEth } from './utils/ethereum'
         })
       }
     } else if (event.data.method === 'SuperSea__Bid') {
-      const highestOffer = event.data.params.offers.reduce(
-        (acc: number, { current_price }: { current_price: string }) => {
+      const highestOffer = event.data.params.offers
+        .filter(
+          ({
+            payment_token_contract,
+          }: {
+            payment_token_contract: { symbol: string }
+          }) => payment_token_contract.symbol === 'WETH',
+        )
+        .reduce((acc: number, { current_price }: { current_price: string }) => {
           return Math.max(acc, weiToEth(Number(current_price)))
-        },
-        0,
-      )
+        }, 0)
 
       if (highestOffer >= event.data.params.price) {
         window.postMessage({
