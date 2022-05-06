@@ -33,8 +33,8 @@ const TransferInfo = ({ address }: { address: string }) => {
       const html = document.createElement('html')
       html.innerHTML = serverRender
       const nextData = JSON.parse(
-        html.querySelector(remoteConfig.nextSsrProps.scriptId)?.innerHTML ||
-          '{}',
+        html.querySelector(remoteConfig.nextSsrProps.scriptSelector)
+          ?.innerHTML || '{}',
       )
       const username = _.get(
         nextData,
@@ -44,6 +44,13 @@ const TransferInfo = ({ address }: { address: string }) => {
         nextData,
         remoteConfig.nextSsrProps.paths.profileImageUrl,
       )
+      console.log({
+        nextData,
+        username,
+        imageUrl,
+        usernamePath: remoteConfig.nextSsrProps.paths.profileUsername,
+        imageUrlPath: remoteConfig.nextSsrProps.paths.profileImageUrl,
+      })
       setUsername(username)
       setImageUrl(imageUrl)
     })()

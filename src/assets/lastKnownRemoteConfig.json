@@ -1,6 +1,6 @@
 {
   "nextSsrProps": {
-    "scriptId": "__NEXT_DATA__",
+    "scriptSelector": "script#__NEXT_DATA__",
     "paths": {
       "profileUsername": "props.ssrData.account.user.publicUsername",
       "profileImageUrl": "props.ssrData.account.imageUrl"

@@ -109,7 +109,7 @@ const openSeaPublicRateLimit = RateLimit(2)
 export type RouteConfig = { url: string; as: string }
 export type RemoteConfig = {
   nextSsrProps: {
-    scriptId: string
+    scriptSelector: string
     paths: {
       profileUsername: string
       profileImageUrl: string
