@@ -14,6 +14,21 @@ const throttledPlayNotificationSound = _.throttle(() => {
   audio.play()
 }, 1000)
 
+const nameMatches = (
+  name: string,
+  { value, isRegExp }: { value: string; isRegExp: boolean },
+) => {
+  if (isRegExp) {
+    try {
+      return new RegExp(value, 'i').test(name)
+    } catch (e) {
+      console.error(e)
+      return true
+    }
+  }
+  return name.toLowerCase().includes(value.toLowerCase())
+}
+
 const listingMatchesNotifier = ({
   event,
   notifier,
@@ -46,8 +61,8 @@ const listingMatchesNotifier = ({
   }
   // Name
   if (
-    notifier.nameContains &&
-    !event.name.toLowerCase().includes(notifier.nameContains.toLowerCase())
+    notifier.nameContains.value &&
+    !nameMatches(event.name, notifier.nameContains)
   ) {
     return false
   }

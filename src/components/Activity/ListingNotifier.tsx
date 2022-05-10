@@ -173,7 +173,16 @@ const ListingNotifier = ({
                 })()}
               </Td>
               <Td>
-                {notifier.nameContains ? `"${notifier.nameContains}"` : 'Any'}
+                {(() => {
+                  if (!notifier.nameContains.value) return 'Any'
+                  if (notifier.nameContains.isRegExp)
+                    return (
+                      <Text fontFamily="monospace">
+                        /{notifier.nameContains.value}/i
+                      </Text>
+                    )
+                  return `"${notifier.nameContains.value}"`
+                })()}
               </Td>
               <Td>
                 {(() => {
