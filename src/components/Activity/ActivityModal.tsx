@@ -547,7 +547,23 @@ const ActivityModal = ({
                                   ml="0.25em"
                                   mt="1px"
                                   animation="SuperSea__Rotate 4s linear infinite"
-                                ></Icon>
+                                />
+                              </>
+                            )
+                          } else if (status === 'STREAMING') {
+                            return (
+                              <>
+                                <Text fontSize="sm">
+                                  Streaming activity from OpenSea
+                                  <Icon
+                                    as={BiRefresh}
+                                    width="18px"
+                                    height="18px"
+                                    ml="0.25em"
+                                    verticalAlign="middle"
+                                    animation="SuperSea__Rotate 4s linear infinite"
+                                  />
+                                </Text>
                               </>
                             )
                           }

@@ -2,8 +2,15 @@ import _ from 'lodash'
 import { useEffect, useRef, useState } from 'react'
 import { Event } from '../components/Activity/ActivityEvent'
 import { fetchOpenSeaGraphQL, fetchRemoteConfig } from '../utils/api'
+import { useExtensionConfig } from '../utils/extensionConfig'
+import openseaStream from '../utils/openseaStream'
 
-export type PollStatus = 'INACTIVE' | 'STARTING' | 'ACTIVE' | 'RATE_LIMITED'
+export type PollStatus =
+  | 'INACTIVE'
+  | 'STARTING'
+  | 'ACTIVE'
+  | 'RATE_LIMITED'
+  | 'STREAMING'
 export type ActivityFilter = 'ALL' | 'CREATED' | 'SUCCESSFUL' | 'NONE'
 
 let seen: Record<string, boolean> = {}
@@ -46,6 +53,8 @@ const useActivity = ({
   const initialPollTimeRef = useRef(cachedPollTimestamp)
   const pollIndexRef = useRef(0)
 
+  const [extensionConfig] = useExtensionConfig()
+
   useEffect(() => {
     cachedEvents = events
     cachedStatus = status
@@ -53,7 +62,10 @@ const useActivity = ({
     cachedSaleEvents = saleEvents
   }, [status, events, saleEvents, listingEvents])
 
+  // Polling
   useEffect(() => {
+    if (extensionConfig === null || extensionConfig.useStreamClient) return
+
     let isInitialFetch = prevCollectionSlugsKey.current !== collectionSlugsKey
     prevCollectionSlugsKey.current = collectionSlugsKey
 
@@ -185,7 +197,33 @@ const useActivity = ({
       clearTimeout(timeout)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [collectionSlugsKey, pollInterval])
+  }, [collectionSlugsKey, pollInterval, extensionConfig?.useStreamClient])
+
+  // Streaming
+  useEffect(() => {
+    if (extensionConfig === null || !extensionConfig.useStreamClient) return
+    if (collectionSlugs.length === 0) {
+      setStatus('INACTIVE')
+    } else {
+      setStatus('STREAMING')
+    }
+
+    const syncEventsState = () => {
+      setEvents(openseaStream.getEvents('ALL'))
+      setListingEvents(openseaStream.getEvents('CREATED'))
+      setSaleEvents(openseaStream.getEvents('SUCCESSFUL'))
+    }
+
+    syncEventsState()
+
+    openseaStream.syncActiveStreams(collectionSlugs)
+    openseaStream.addEventListener('eventAdded', syncEventsState)
+
+    return () => {
+      openseaStream.removeEventListener('eventAdded', syncEventsState)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collectionSlugsKey, extensionConfig?.useStreamClient])
 
   return {
     events,

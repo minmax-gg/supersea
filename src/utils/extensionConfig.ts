@@ -7,6 +7,7 @@ export type ExtensionConfig = {
   notificationSounds: boolean
   quickBuyGasPreset: 'none' | 'fixed' | 'optimal'
   fixedGas: { priorityFee: number; fee: number }
+  useStreamClient: boolean
 }
 
 export type StoredActivityState = {
@@ -22,6 +23,7 @@ const DEFAULTS: ExtensionConfig = {
   notificationSounds: true,
   quickBuyGasPreset: 'none',
   fixedGas: { priorityFee: 25, fee: 300 },
+  useStreamClient: false,
 }
 
 let configPromise: null | Promise<Record<string, any>> = null
