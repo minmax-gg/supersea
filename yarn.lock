@@ -2961,10 +2961,10 @@
     mkdirp "^1.0.4"
     rimraf "^3.0.2"
 
-"@opensea/stream-js@^0.0.14":
-  version "0.0.14"
-  resolved "https://registry.yarnpkg.com/@opensea/stream-js/-/stream-js-0.0.14.tgz#0a2f8b2c4ad1a00e97dcf51bed40d0df9ed814f5"
-  integrity sha512-OYS5blm8wU36VpfPYUTD2EjEKwPDzi8bbXpLncVgBuyf4q2y9pvMnNa9arQkS56fcke8y2P+R6WqkltSNTpNAA==
+"@opensea/stream-js@^0.0.19":
+  version "0.0.19"
+  resolved "https://registry.yarnpkg.com/@opensea/stream-js/-/stream-js-0.0.19.tgz#e197f8ccd75bf351d701fbce4a9344b0d86c9cfd"
+  integrity sha512-xeFU5jiIlcoMUTz/2uPWXwTufNjNk9YvXfwTFUw2UPmBDK8oUG1rOQ2PRkX99VPnLxgxzQyfWb50wQplspNnzA==
   dependencies:
     phoenix "^1.6.2"
 
@@ -15705,9 +15705,9 @@ performance-now@^2.1.0:
   integrity sha1-Ywn04OX6kT7BxpMHrjZLSzd8nns=
 
 phoenix@^1.6.2:
-  version "1.6.7"
-  resolved "https://registry.yarnpkg.com/phoenix/-/phoenix-1.6.7.tgz#0036b36f199436ccb94a76c94f9a60b396576a72"
-  integrity sha512-vkwAcrtX0Xa6bZI1ZlNGf1VDVVd4DLTIOv+mnLUsewk1UNHBE+19M2jetfNdxdjn62P7FfFDRxgZ8PKB8RsClg==
+  version "1.6.8"
+  resolved "https://registry.yarnpkg.com/phoenix/-/phoenix-1.6.8.tgz#1ac47dfe5453365b25e1d55724fa9eb10c276800"
+  integrity sha512-utrfX8fcFbtZC33RtxrK01q5/q6xClMfuAS7FVo8NOqgnHEnBTxh/CF/GCd/eSO5yXyDAEzuhdAox2Rj35fYfA==
 
 picocolors@^0.2.1:
   version "0.2.1"
