@@ -44,13 +44,6 @@ const TransferInfo = ({ address }: { address: string }) => {
         nextData,
         remoteConfig.nextSsrProps.paths.profileImageUrl,
       )
-      console.log({
-        nextData,
-        username,
-        imageUrl,
-        usernamePath: remoteConfig.nextSsrProps.paths.profileUsername,
-        imageUrlPath: remoteConfig.nextSsrProps.paths.profileImageUrl,
-      })
       setUsername(username)
       setImageUrl(imageUrl)
     })()

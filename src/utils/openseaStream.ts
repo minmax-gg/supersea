@@ -3,6 +3,7 @@ import {
   ItemListedEvent,
   ItemSoldEvent,
   OpenSeaStreamClient,
+  // @ts-ignore
 } from '@opensea/stream-js'
 import { Event } from '../components/Activity/ActivityEvent'
 import { Chain } from './api'
