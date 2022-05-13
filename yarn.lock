@@ -2961,6 +2961,13 @@
     mkdirp "^1.0.4"
     rimraf "^3.0.2"
 
+"@opensea/stream-js@^0.0.19":
+  version "0.0.19"
+  resolved "https://registry.yarnpkg.com/@opensea/stream-js/-/stream-js-0.0.19.tgz#e197f8ccd75bf351d701fbce4a9344b0d86c9cfd"
+  integrity sha512-xeFU5jiIlcoMUTz/2uPWXwTufNjNk9YvXfwTFUw2UPmBDK8oUG1rOQ2PRkX99VPnLxgxzQyfWb50wQplspNnzA==
+  dependencies:
+    phoenix "^1.6.2"
+
 "@parcel/babel-ast-utils@2.0.0-rc.0":
   version "2.0.0-rc.0"
   resolved "https://registry.yarnpkg.com/@parcel/babel-ast-utils/-/babel-ast-utils-2.0.0-rc.0.tgz#acc368d6c9e1c9a63657a02ca3766b2c81c62fb8"
@@ -15696,6 +15703,11 @@ performance-now@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/performance-now/-/performance-now-2.1.0.tgz#6309f4e0e5fa913ec1c69307ae364b4b377c9e7b"
   integrity sha1-Ywn04OX6kT7BxpMHrjZLSzd8nns=
+
+phoenix@^1.6.2:
+  version "1.6.8"
+  resolved "https://registry.yarnpkg.com/phoenix/-/phoenix-1.6.8.tgz#1ac47dfe5453365b25e1d55724fa9eb10c276800"
+  integrity sha512-utrfX8fcFbtZC33RtxrK01q5/q6xClMfuAS7FVo8NOqgnHEnBTxh/CF/GCd/eSO5yXyDAEzuhdAox2Rj35fYfA==
 
 picocolors@^0.2.1:
   version "0.2.1"

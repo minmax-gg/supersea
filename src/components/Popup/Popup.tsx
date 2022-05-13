@@ -27,6 +27,7 @@ import {
   useExtensionConfig,
 } from '../../utils/extensionConfig'
 import { useUser } from '../../utils/user'
+import StreamingToggle from './StreamingToggle'
 
 const Popup = () => {
   const [isChanged, setIsChanged] = useState(false)
@@ -120,6 +121,17 @@ const Popup = () => {
                     setExtensionConfig({
                       ...extensionConfig,
                       enabled,
+                    })
+                  }}
+                />,
+                <StreamingToggle
+                  key="streamingToggle"
+                  isChecked={extensionConfig.useStreamClient}
+                  onChange={(useStreamClient) => {
+                    setIsChanged(true)
+                    setExtensionConfig({
+                      ...extensionConfig,
+                      useStreamClient,
                     })
                   }}
                 />,

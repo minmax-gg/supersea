@@ -21,6 +21,8 @@ import {
   VStack,
   Text,
   Alert,
+  Tooltip,
+  Icon,
   AlertIcon,
 } from '@chakra-ui/react'
 import { useState } from 'react'
@@ -31,6 +33,7 @@ import EthereumIcon from '../EthereumIcon'
 import LockedFeature from '../LockedFeature'
 import TraitSelect from '../SearchResults/TraitSelect'
 import { Collection } from './WatchedCollection'
+import { FiHelpCircle } from 'react-icons/fi'
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 let notifierNumber = 0
@@ -72,6 +75,10 @@ export type Notifier = {
   lowestRankNumber: number | null
   includeAuctions: boolean
   traits: string[]
+  nameContains: {
+    value: string
+    isRegExp: boolean
+  }
   autoQuickBuy: boolean
   collection: Collection
   gasOverride: { priorityFee: number; fee: number } | null
@@ -103,6 +110,12 @@ const ListingNotifierForm = ({
   )
   const [lowestRarity, setLowestRarity] = useState<RarityName>(
     editingNotifier?.lowestRarity || 'Common',
+  )
+  const [nameContainsValue, setNameContainsValue] = useState(
+    editingNotifier?.nameContains.value || '',
+  )
+  const [nameContainsIsRegExp, setNameContainsIsRegExp] = useState(
+    editingNotifier?.nameContains.isRegExp || false,
   )
   const [collectionSlug, setCollectionSlug] = useState(
     editingNotifier?.collection.slug || collections[0].slug,
@@ -202,6 +215,7 @@ const ListingNotifierForm = ({
                 'blackAlpha.500',
                 'whiteAlpha.500',
               )}
+              fontSize="sm"
             >
               Include auctions
             </Checkbox>
@@ -289,6 +303,71 @@ const ListingNotifierForm = ({
             </HStack>
           </FormControl>
         </Stack>
+        <FormControl>
+          <FormLabel fontSize="sm">Name Contains</FormLabel>
+          <HStack>
+            <Input
+              borderColor={inputBorder}
+              maxW="240px"
+              value={nameContainsValue}
+              onChange={(e) => setNameContainsValue(e.target.value)}
+            />
+            <Flex height="40px" alignItems="center" pl="2">
+              <Checkbox
+                isChecked={nameContainsIsRegExp}
+                onChange={(e) => setNameContainsIsRegExp(e.target.checked)}
+                borderColor={useColorModeValue(
+                  'blackAlpha.500',
+                  'whiteAlpha.500',
+                )}
+                size="sm"
+              >
+                Use Regular Expression{' '}
+                <Tooltip
+                  label={
+                    <>
+                      <Text>
+                        A regular expression is a sequence of characters that
+                        specifies a search pattern in text. This allows you to
+                        do more complex filtering than just a simple string
+                        match.
+                      </Text>
+                      <Text mt="2">
+                        If you don't know how to use regular expressions but
+                        still want to do an advanced name search, feel free to
+                        ping one of the devs in the SuperSea Discord for help.
+                      </Text>
+                    </>
+                  }
+                  fontSize="sm"
+                  hasArrow
+                  bg="gray.700"
+                  placement="top"
+                  color="white"
+                  px="3"
+                  py="3"
+                  mr="2"
+                  borderRadius="sm"
+                >
+                  <Flex
+                    height="100%"
+                    alignItems="center"
+                    px="2px"
+                    top="2px"
+                    position="relative"
+                    display="inline-flex"
+                  >
+                    <Icon as={FiHelpCircle} />
+                  </Flex>
+                </Tooltip>
+              </Checkbox>
+            </Flex>
+          </HStack>
+          <FormHelperText>
+            Filter items by name (case insensitive).
+          </FormHelperText>
+        </FormControl>
+
         <FormControl>
           <FormLabel fontSize="sm">
             <Text as="span" opacity={rarityInputsDisabled ? 0.75 : 1}>
@@ -429,6 +508,10 @@ const ListingNotifierForm = ({
                 traits,
                 tokenEligibilityMap,
                 collection,
+                nameContains: {
+                  value: nameContainsValue,
+                  isRegExp: nameContainsIsRegExp,
+                },
                 autoQuickBuy,
                 gasOverride: gasOverrideEnabled
                   ? { priorityFee: +gasPriorityFee, fee: +gasFee }

@@ -14,6 +14,7 @@ import { injectElement, selectElement, Selectors } from './utils/selector'
 import SearchResults from './components/SearchResults/SearchResults'
 import CollectionMenuItem from './components/CollectionMenuItem'
 import Activity from './components/Activity/Activity'
+import TransferInfo from './components/TransferInfo'
 import { isSubscriber } from './utils/user'
 import { createRouteParams } from './utils/route'
 import ReplacementNotice from './components/Activity/ReplacementNotice'
@@ -43,6 +44,9 @@ const injectAssetInfo = async () => {
   const itemNode = document.querySelector(
     selectors.assetInfo.item.node.selector,
   )
+  const sellNode = document.querySelector(
+    selectors.assetInfo.sell.node.selector,
+  )
 
   const nodes = [
     ...gridNodes.map((node) => ({
@@ -61,6 +65,15 @@ const injectAssetInfo = async () => {
             node: itemNode,
             type: 'item',
             selectorConfig: selectors.assetInfo.item,
+          },
+        ]
+      : []),
+    ...(sellNode
+      ? [
+          {
+            node: sellNode,
+            type: 'sell',
+            selectorConfig: selectors.assetInfo.sell,
           },
         ]
       : []),
@@ -92,6 +105,19 @@ const injectAssetInfo = async () => {
       if (type === 'item') {
         const path = window.location.pathname.split('/')
         const [tokenType, address, tokenId] = path.slice(-3)
+        return {
+          address: address.toLowerCase(),
+          tokenId: tokenId,
+          collectionSlug,
+          chain:
+            tokenType === 'matic'
+              ? ('polygon' as const)
+              : ('ethereum' as const),
+        }
+      }
+      if (type === 'sell') {
+        const path = window.location.pathname.split('/')
+        const [tokenType, address, tokenId] = path.slice(-4, -1)
         return {
           address: address.toLowerCase(),
           tokenId: tokenId,
@@ -384,6 +410,42 @@ const injectActivity = async () => {
 
 const throttledInjectActivity = _.throttle(injectActivity, 250)
 
+const injectTransferInfo = async () => {
+  const { injectionSelectors: selectors } = await fetchRemoteConfig()
+
+  const transferForm = document.querySelector(
+    selectors.transferInfo.formSelector,
+  ) as HTMLElement | null
+
+  const injectionNode = document.querySelector(
+    selectors.transferInfo.node.selector,
+  )?.parentNode
+
+  if (!injectionNode || !transferForm) return
+
+  const [address] = transferForm?.textContent?.match(/0x[0-9a-fA-F]{40}/) || []
+  if (!address || transferForm.dataset[NODE_PROCESSED_DATA_KEY] === address)
+    return
+
+  transferForm.dataset[NODE_PROCESSED_DATA_KEY] = address
+
+  let container = document.querySelector('.SuperSea__TransferInfo')
+
+  if (!container) {
+    container = document.createElement('div')
+    container.classList.add('SuperSea__TransferInfo')
+    injectElement(
+      injectionNode as HTMLElement,
+      container as HTMLElement,
+      selectors.transferInfo.node.injectionMethod,
+    )
+  }
+
+  injectReact(<TransferInfo address={address} />, container)
+}
+
+const throttledInjectTransferInfo = _.throttle(injectTransferInfo, 100)
+
 const setupInjections = async () => {
   injectBundleVerification()
   injectAssetInfo()
@@ -391,6 +453,7 @@ const setupInjections = async () => {
   injectCollectionMenu()
   injectActivity()
   injectListingNotifier()
+  injectTransferInfo()
 
   const observer = new MutationObserver(() => {
     throttledInjectBundleVerification()
@@ -399,6 +462,7 @@ const setupInjections = async () => {
     throttledInjectListingNotifier()
     throttledDestroyRemovedInjections()
     throttledInjectActivity()
+    throttledInjectTransferInfo()
   })
 
   observer.observe(document, {

@@ -19,10 +19,15 @@ export type Selectors = {
   activity: {
     button: InjectionSelector
   }
+  transferInfo: {
+    formSelector: string
+    node: InjectionSelector
+  }
   assetInfo: {
     grid: AssetInfoSelector
     list: AssetInfoSelector
     item: AssetInfoSelector
+    sell: AssetInfoSelector
   }
   bundleVerification: {
     frameSelector: string

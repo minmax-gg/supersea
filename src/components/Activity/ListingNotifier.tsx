@@ -86,7 +86,6 @@ const ListingNotifier = ({
               bg="transparent"
               size="sm"
               minWidth="28px"
-              aria-label="delete"
               onClick={() => {
                 onEdit(notifier)
               }}
@@ -97,7 +96,6 @@ const ListingNotifier = ({
               bg="transparent"
               size="sm"
               minWidth="28px"
-              aria-label="delete"
               onClick={() => {
                 onRemove(notifier)
               }}
@@ -119,6 +117,7 @@ const ListingNotifier = ({
             <Tr>
               <Th px="4">ID</Th>
               <Th>Price Range</Th>
+              <Th>Name</Th>
               <Th>Rarity</Th>
               <Th>Traits</Th>
               <Th>Quick Buy</Th>
@@ -138,6 +137,7 @@ const ListingNotifier = ({
                   {id}
                 </Circle>
               </Td>
+
               <Td>
                 {(() => {
                   if (minPrice === null && maxPrice === null) {
@@ -174,6 +174,18 @@ const ListingNotifier = ({
               </Td>
               <Td>
                 {(() => {
+                  if (!notifier.nameContains.value) return 'Any'
+                  if (notifier.nameContains.isRegExp)
+                    return (
+                      <Text fontFamily="monospace">
+                        /{notifier.nameContains.value}/i
+                      </Text>
+                    )
+                  return `"${notifier.nameContains.value}"`
+                })()}
+              </Td>
+              <Td>
+                {(() => {
                   if (lowestRarity === 'Common') {
                     if (lowestRankNumber === null) {
                       return 'Any'
@@ -193,7 +205,7 @@ const ListingNotifier = ({
                   )
                 })()}
               </Td>
-              <Td>
+              <Td minW={traits.length > 1 ? '200px' : 0}>
                 {traits.length ? (
                   <Flex flexWrap="wrap">
                     {traits.map((trait) => {

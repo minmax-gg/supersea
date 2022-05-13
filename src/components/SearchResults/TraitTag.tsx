@@ -12,8 +12,8 @@ const TraitTag = ({
   const { groupName, value: name } = JSON.parse(traitJson)
 
   return (
-    <Tag mr="2" mb="2" size="lg" fontSize="sm">
-      <Box py="6px" pr="1">
+    <Tag mr="2" mb="2" size="sm" fontSize="xs">
+      <Box py="1" pr="0.5">
         <Text
           fontSize="10px"
           fontWeight="600"

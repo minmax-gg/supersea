@@ -136,7 +136,7 @@ const SearchAsset = ({
                       '-webkit-box-orient': 'vertical',
                     }}
                   >
-                    {asset.name}
+                    {asset.name || `#${tokenId}`}
                   </Text>
                 </InternalLink>
               </Box>

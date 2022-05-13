@@ -59,6 +59,7 @@ export type AssetInfo = {
 }
 
 export type Asset = {
+  id: number
   token_id: string
   asset_contract: {
     address: string
@@ -107,7 +108,15 @@ const openSeaPublicRateLimit = RateLimit(2)
 
 export type RouteConfig = { url: string; as: string }
 export type RemoteConfig = {
+  nextSsrProps: {
+    scriptSelector: string
+    paths: {
+      profileUsername: string
+      profileImageUrl: string
+    }
+  }
   routes: {
+    profile: RouteConfig
     searchResults: RouteConfig
     asset: RouteConfig
     collectionFloor: RouteConfig
@@ -164,6 +173,18 @@ export type RemoteConfig = {
         currency: string
         timestamp: string
         eventType: string
+      }
+    }
+    AssetSelectionSetPrivacyMutation: {
+      body: string
+      staticHeaders: Record<string, string>
+      staticVariables: Record<string, any>
+      dynamicVariablePaths: {
+        assets: string
+        isPrivate: string
+      }
+      resultPaths: {
+        success: string
       }
     }
   }
@@ -356,7 +377,7 @@ const rarityLoader = new DataLoader(
 )
 
 const rarityTraitQuery = gql`
-  query RarityQuery($address: String!, $input: TokenInputType) {
+  query RarityTraitQuery($address: String!, $input: TokenInputType) {
     contract(address: $address) {
       contractAddress
       tokenCount
@@ -377,6 +398,28 @@ const rarityTraitQuery = gql`
   }
 `
 
+const rarityTraitQueryAllTokens = gql`
+  query RarityTraitQueryAllTokens($address: String!) {
+    contract(address: $address) {
+      contractAddress
+      tokenCount
+      traits {
+        count
+        trait_type
+        value
+      }
+      rankingOptions {
+        excludeTraits
+      }
+      tokens {
+        iteratorID
+        rank
+        noTraitCountRank
+      }
+    }
+  }
+`
+
 export const fetchRarities = async (address: string) => {
   return rarityLoader.load(address) as Promise<Rarities>
 }
@@ -385,14 +428,13 @@ export const fetchRaritiesWithTraits = async (
   address: string,
   traits: { key: string; value: string }[],
 ) => {
-  const res = await nonFungibleRequest(rarityTraitQuery, {
-    address,
-    input: traits.length
-      ? {
-          traits,
-        }
-      : {},
-  })
+  const res = traits.length
+    ? await nonFungibleRequest(rarityTraitQuery, {
+        address,
+        input: { traits },
+      })
+    : await nonFungibleRequest(rarityTraitQueryAllTokens, { address })
+
   return res.contract as RaritiesWithTraits
 }
 
@@ -536,6 +578,31 @@ export const fetchAllCollectionsForUser = async (
   } else {
     return updatedList
   }
+}
+
+export const fetchCollectionAssetsForUser = async (
+  {
+    walletAddress,
+    contractAddress,
+  }: {
+    walletAddress: string
+    contractAddress: string
+  },
+  list = [],
+  cursor?: string,
+): Promise<Asset[]> => {
+  await openSeaPublicRateLimit()
+  const data = await fetch(
+    `https://api.opensea.io/api/v1/assets?owner=${walletAddress}&asset_contract_address=${contractAddress}&limit=50`,
+  ).then((res) => res.json())
+  if (data.next) {
+    return fetchCollectionAssetsForUser(
+      { walletAddress, contractAddress },
+      list.concat(data.assets),
+      data.next,
+    )
+  }
+  return list.concat(data.assets)
 }
 
 export const fetchMetadataUriWithOpenSeaFallback = async (
@@ -684,6 +751,7 @@ export const fetchTokenProperties = async (
     scoreMap: Record<string, Record<string, number>>
     missingTraitScores: Record<string, { score: number }>
     implicitExcludes?: string[]
+    excludeTraits?: string[]
   }
   traits: { count: number; trait_type: string; value: string }[]
 }> => {
@@ -718,12 +786,14 @@ export const fetchOpenSeaGraphQL = async <
   query: T,
   {
     variables,
+    sessionKey,
     cacheBust = true,
   }: {
     variables: Record<
       keyof RemoteConfig['queries'][T]['dynamicVariablePaths'],
       any
     >
+    sessionKey?: string
     cacheBust?: boolean
   },
 ) => {
@@ -733,6 +803,7 @@ export const fetchOpenSeaGraphQL = async <
     headers: {
       ...remoteConfig.queryHeaders,
       ...remoteConfig.queries[query].staticHeaders,
+      ...(sessionKey ? { authorization: `JWT ${sessionKey}` } : {}),
     },
     body: JSON.stringify({
       id: query,
