@@ -176,7 +176,7 @@ const Activity = () => {
             onClick={() => {
               if (window.location.pathname.startsWith('/collection')) {
                 setActiveCollectionSlug(
-                  window.location.pathname.split('/').filter(Boolean).pop()!,
+                  window.location.pathname.split('/').filter(Boolean)[1],
                 )
               }
               modalDisclosure.onOpen()

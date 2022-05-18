@@ -222,7 +222,7 @@
       "shortenedAddressSelector": ".AccountHeader--address"
     },
     "searchResults": {
-      "menuSelector": "*[class*=\"CollectionPagereact\"] ul[class*=\"Menureact__MenuBase\"]",
+      "menuSelector": "*[class*=\"CollectionPageBasereact\"] ul[class*=\"Menureact__MenuBase\"]",
       "containerSelector": ".AssetSearchView--main, .collection--ActivityTabSection"
     },
     "listingNotifier": {

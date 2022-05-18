@@ -277,10 +277,7 @@ let previouslyRenderedSearchResults: {
 }
 
 const injectSearchResults = async () => {
-  const collectionSlug = window.location.pathname
-    .split('/')
-    .filter(Boolean)
-    .pop()!
+  const collectionSlug = window.location.pathname.split('/').filter(Boolean)[1]
 
   const { injectionSelectors: selectors } = await fetchRemoteConfig()
   const container = document.querySelector(
@@ -350,8 +347,8 @@ const injectCollectionMenu = async () => {
         onClick={() => {
           const collectionSlug = window.location.pathname
             .split('/')
-            .filter(Boolean)
-            .pop()
+            .filter(Boolean)[1]
+
           window.postMessage({
             method: 'SuperSea__Navigate',
             params: {
