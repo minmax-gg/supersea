@@ -152,7 +152,7 @@
           "hierarchy": "either"
         },
         "image": {
-          "selector": ".Image--image, .SuperSea__Image",
+          "selector": ".Image--image, .AssetMedia--img img, .SuperSea__Image",
           "hierarchy": "child"
         }
       },
@@ -170,7 +170,7 @@
           "hierarchy": "either"
         },
         "image": {
-          "selector": ".Image--image, .SuperSea__Image",
+          "selector": ".Image--image, .AssetMedia--img img, .SuperSea__Image",
           "hierarchy": "child"
         }
       },
@@ -188,7 +188,7 @@
           "hierarchy": "outside"
         },
         "image": {
-          "selector": ".Image--image",
+          "selector": ".Image--image, .AssetMedia--img img, .SuperSea__Image",
           "hierarchy": "child"
         }
       },
