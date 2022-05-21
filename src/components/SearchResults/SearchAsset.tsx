@@ -170,7 +170,7 @@ const SearchAsset = ({
                     <Text opacity="0.5">Last</Text>
                     <EthereumIcon
                       mx="0.5em"
-                      wrapped={asset.last_sale.payment_token.symbol === 'WETH'}
+                      wrapped={asset.last_sale.payment_token?.symbol === 'WETH'}
                     />
                     <Text fontWeight="600">
                       {readableEthValue(+asset.last_sale.total_price)}
