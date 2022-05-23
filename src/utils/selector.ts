@@ -39,6 +39,9 @@ export type Selectors = {
     accountEnsNameSelector: string
     shortenedAddressSelector: string
   }
+  collectionStats: {
+    node: InjectionSelector
+  }
   searchResults: {
     menuSelector: string
     containerSelector: string

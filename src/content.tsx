@@ -13,6 +13,7 @@ import { fetchGlobalCSS, fetchRemoteConfig, getUser } from './utils/api'
 import { injectElement, selectElement, Selectors } from './utils/selector'
 import SearchResults from './components/SearchResults/SearchResults'
 import CollectionMenuItem from './components/CollectionMenuItem'
+import CollectionStats from './components/CollectionStats'
 import Activity from './components/Activity/Activity'
 import TransferInfo from './components/TransferInfo'
 import { isSubscriber } from './utils/user'
@@ -443,11 +444,35 @@ const injectTransferInfo = async () => {
 
 const throttledInjectTransferInfo = _.throttle(injectTransferInfo, 100)
 
+const injectCollectionStats = async () => {
+  const { injectionSelectors: selectors } = await fetchRemoteConfig()
+
+  const injectionNode = document.querySelector(
+    selectors.collectionStats.node.selector,
+  ) as HTMLElement | null
+
+  if (!injectionNode || injectionNode.dataset[NODE_PROCESSED_DATA_KEY]) return
+  injectionNode.dataset[NODE_PROCESSED_DATA_KEY] = '1'
+
+  const container = document.createElement('div')
+  container.classList.add('SuperSea__TransferInfo')
+  injectElement(
+    injectionNode as HTMLElement,
+    container as HTMLElement,
+    selectors.collectionStats.node.injectionMethod,
+  )
+  const collectionSlug = window.location.pathname.split('/').filter(Boolean)[1]
+  injectReact(<CollectionStats collectionSlug={collectionSlug} />, container)
+}
+
+const throttledInjectCollectionStats = _.throttle(injectCollectionStats, 100)
+
 const setupInjections = async () => {
   injectBundleVerification()
   injectAssetInfo()
   injectRarityDisclaimer()
   injectCollectionMenu()
+  injectCollectionStats()
   injectActivity()
   injectListingNotifier()
   injectTransferInfo()
@@ -456,6 +481,7 @@ const setupInjections = async () => {
     throttledInjectBundleVerification()
     throttledInjectAssetInfo()
     throttledInjectCollectionMenu()
+    throttledInjectCollectionStats()
     throttledInjectListingNotifier()
     throttledDestroyRemovedInjections()
     throttledInjectActivity()

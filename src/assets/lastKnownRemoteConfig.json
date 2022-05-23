@@ -221,6 +221,12 @@
       "accountEnsNameSelector": ".AccountHeader--name",
       "shortenedAddressSelector": ".AccountHeader--address"
     },
+    "collectionStats": {
+      "node": {
+        "selector": "*[class*=\"CollectionPageBasereact\"] *[class*=\"CollectionStatsBarreact\"]",
+        "injectionMethod": "insertAfter"
+      }
+    },
     "searchResults": {
       "menuSelector": "*[class*=\"CollectionPageBasereact\"] ul[class*=\"Menureact__MenuBase\"]",
       "containerSelector": ".AssetSearchView--main, .collection--ActivityTabSection"
