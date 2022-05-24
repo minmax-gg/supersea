@@ -63,6 +63,40 @@ const GlobalStyles = () => {
             transition-property: transform;
             transform-origin: center center;
           }
+
+          @keyframes SuperSea__FadeIn {
+            from {
+              opacity: 0;
+            }
+            to {
+              opacity: 1;
+            }
+          }
+
+          @keyframes SuperSea__FadeOut {
+            from {
+              opacity: 1;
+            }
+            to {
+              opacity: 0;
+            }
+          }
+
+          @keyframes SuperSea__ActivityItemAppear {
+            0% {
+              opacity: 0;
+              transform: translateY(-5px);
+            }
+            40% {
+              opacity: 1;
+            }
+          }
+          
+          @keyframes SuperSea__Rotate {
+            to {
+              transform: rotate(360deg);
+            }
+          }
         `}
       />
       <ScopedCSSReset />

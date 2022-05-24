@@ -30,10 +30,9 @@ import {
   Switch,
   Select,
 } from '@chakra-ui/react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import ActivityEvent, { Event } from './ActivityEvent'
 import ScopedCSSPortal from '../ScopedCSSPortal'
-import { motion, AnimatePresence } from 'framer-motion'
 import WatchedCollection, { Collection } from './WatchedCollection'
 import { AddIcon, SmallAddIcon } from '@chakra-ui/icons'
 import Toast from '../Toast'
@@ -51,8 +50,8 @@ import { useUser } from '../../utils/user'
 import ListingNotifier from './ListingNotifier'
 import StateRestore from './StateRestore'
 import { StoredActivityState } from '../../utils/extensionConfig'
-
-const MotionBox = motion(Box)
+import ActivityMarker from './ActivityMarker'
+import ActivityList from './ActivityList'
 
 let sessionHideStateRestore = false
 
@@ -593,44 +592,23 @@ const ActivityModal = ({
                     <option value="NONE">Nothing</option>
                   </Select>
                 </HStack>
-                <VStack alignItems="flex-start" width="100%" spacing="2">
-                  {activityFilter === 'NONE' ? (
-                    <Box
-                      width="100%"
-                      bg={placeholderBg}
-                      p="3"
-                      borderRadius="md"
-                    >
-                      <Text opacity="0.75" maxWidth="500px">
-                        Activity disabled. Matched listings will still appear to
-                        the right, but you won't see the general collection
-                        activity here.
-                      </Text>
-                    </Box>
-                  ) : (
-                    <AnimatePresence initial={false} key={activityFilter}>
-                      {events.map((event) => {
-                        return (
-                          <MotionBox
-                            key={event.listingId}
-                            layout
-                            layoutDependency={events[0].listingId}
-                            width="100%"
-                            initial={{ y: -20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{
-                              type: 'spring',
-                              stiffness: 150,
-                              damping: 25,
-                            }}
-                          >
-                            <ActivityEvent event={event} />
-                          </MotionBox>
-                        )
-                      })}
-                    </AnimatePresence>
-                  )}
-                </VStack>
+                {activityFilter === 'NONE' ? (
+                  <Box width="100%" bg={placeholderBg} p="3" borderRadius="md">
+                    <Text opacity="0.75" maxWidth="500px">
+                      Activity disabled. Matched listings will still appear to
+                      the right, but you won't see the general collection
+                      activity here.
+                    </Text>
+                  </Box>
+                ) : (
+                  <ActivityList
+                    items={events}
+                    renderItem={(event) => <ActivityEvent event={event} />}
+                    contentKey={`${activityFilter}_${
+                      modalProps.isOpen ? 'open' : 'closed'
+                    }`}
+                  />
+                )}
               </Box>
               <Box width="100%">
                 {notifiers.length || matchedAssets.length ? (
@@ -658,47 +636,28 @@ const ActivityModal = ({
                     <Text fontSize="sm" opacity="0.65" mt="1" mb="3">
                       Listings that match the alerts above.
                     </Text>
-                    <VStack alignItems="flex-start" width="100%" spacing="2">
-                      {matchedAssets.length ? (
-                        <AnimatePresence initial={false}>
-                          {matchedAssets.map((asset) => {
-                            return (
-                              <MotionBox
-                                key={asset.listingId}
-                                layout
-                                layoutDependency={matchedAssets[0].listingId}
-                                width="100%"
-                                initial={{ y: -20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{
-                                  type: 'spring',
-                                  stiffness: 150,
-                                  damping: 25,
-                                }}
-                              >
-                                <MatchedAssetListing
-                                  key={asset.listingId}
-                                  asset={asset}
-                                />
-                              </MotionBox>
-                            )
-                          })}
-                        </AnimatePresence>
-                      ) : (
-                        <Box
-                          width="100%"
-                          bg={placeholderBg}
-                          p="3"
-                          borderRadius="md"
-                        >
-                          <Text opacity="0.75" maxWidth="500px">
-                            Looking for new listings matching your alert
-                            criteria. You can close this modal and browse around
-                            on OpenSea while you wait.
-                          </Text>
-                        </Box>
-                      )}
-                    </VStack>
+                    {matchedAssets.length ? (
+                      <ActivityList
+                        items={matchedAssets}
+                        renderItem={(asset) => (
+                          <MatchedAssetListing asset={asset} />
+                        )}
+                        contentKey={modalProps.isOpen ? 'open' : 'closed'}
+                      />
+                    ) : (
+                      <Box
+                        width="100%"
+                        bg={placeholderBg}
+                        p="3"
+                        borderRadius="md"
+                      >
+                        <Text opacity="0.75" maxWidth="500px">
+                          Looking for new listings matching your alert criteria.
+                          You can close this modal and browse around on OpenSea
+                          while you wait.
+                        </Text>
+                      </Box>
+                    )}
                   </>
                 ) : null}
               </Box>

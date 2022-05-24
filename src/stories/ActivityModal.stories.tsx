@@ -53,6 +53,7 @@ const DEFAULT_EVENTS = [
   },
 ] as Event[]
 
+let key = 1000
 const Template: Story<
   React.ComponentProps<typeof ActivityModal> & { simulateActivity: boolean }
 > = (args) => {
@@ -64,10 +65,11 @@ const Template: Story<
       setEvents((e) => {
         const newEvents = _.times(_.random(1, 5), (index) => {
           const newEvent = { ..._.sample(DEFAULT_EVENTS) } as Event
-          newEvent.listingId = `${e.length + 1 + index}`
+          newEvent.listingId = `${key++}`
           return newEvent
         })
-        return [...newEvents, ...e]
+
+        return [...newEvents, ...e].slice(0, 50)
       })
     }, 2000)
     return () => clearInterval(interval)
