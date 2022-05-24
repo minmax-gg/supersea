@@ -41,6 +41,7 @@ import Toast from '../Toast'
 import EthereumIcon from '../EthereumIcon'
 import Logo from '../Logo'
 import LooksRareSvg from '../../assets/looksrare.svg'
+import X2Y2Svg from '../../assets/x2y2.svg'
 import GemSvg from '../../assets/gemxyz.svg'
 import EtherScanSvg from '../../assets/etherscan.svg'
 import PolygonScanSvg from '../../assets/polygonscan.svg'
@@ -868,6 +869,20 @@ const AssetInfo = ({
                             onClose()
                             window.open(
                               `https://gem.xyz/collection/${collectionSlug}`,
+                              '_blank',
+                            )
+                          }}
+                        />
+                      )}{' '}
+                      {chain === 'ethereum' && (
+                        <TooltipIconButton
+                          label="x2y2"
+                          icon={<Icon as={X2Y2Svg as any} />}
+                          bg="transparent"
+                          onClick={async () => {
+                            onClose()
+                            window.open(
+                              `https://x2y2.io/eth/${address}/${tokenId}`,
                               '_blank',
                             )
                           }}
