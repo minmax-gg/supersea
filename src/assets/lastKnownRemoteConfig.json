@@ -8,27 +8,27 @@
   },
   "routes": {
     "searchResults": {
-      "url": "/collection/[slug]?slug={collectionSlug}&collectionSlug={collectionSlug}&tab=supersea",
+      "url": "/collection/{collectionSlug}?tab=supersea",
       "as": "/collection/{collectionSlug}?tab=supersea"
     },
     "asset": {
-      "url": "/item?assetContractAddress={address}&tokenId={tokenId}&chainIdentifier={chainId}",
+      "url": "/assets/{chainPath}{address}/{tokenId}",
       "as": "/assets/{chainPath}{address}/{tokenId}"
     },
     "collection": {
-      "url": "/collection/[slug]?slug={collectionSlug}&collectionSlug={collectionSlug}",
+      "url": "/collection/{collectionSlug}",
       "as": "/collection/{collectionSlug}"
     },
     "collectionFloor": {
-      "url": "/collection/[slug]?slug={collectionSlug}&collectionSlug={collectionSlug}&search[sortAscending]=true&search[sortBy]=PRICE&search[toggles][0]=BUY_NOW",
+      "url": "/collection/{collectionSlug}?search[sortAscending]=true&search[sortBy]=PRICE&search[toggles][0]=BUY_NOW",
       "as": "/collection/{collectionSlug}?search[sortAscending]=true&search[sortBy]=PRICE&search[toggles][0]=BUY_NOW"
     },
     "traitFloor": {
-      "url": "/collection/[slug]?slug={collectionSlug}&collectionSlug={collectionSlug}&search[stringTraits][0][name]={name}&search[stringTraits][0][values][0]={value}&search[sortAscending]=true&search[sortBy]=PRICE",
+      "url": "/collection/{collectionSlug}?search[stringTraits][0][name]={name}&search[stringTraits][0][values][0]={value}&search[sortAscending]=true&search[sortBy]=PRICE",
       "as": "/collection/{collectionSlug}?search[stringTraits][0][name]={name}&search[stringTraits][0][values][0]={value}&search[sortAscending]=true&search[sortBy]=PRICE"
     },
     "profile": {
-      "url": "/account?identifier={identifier}",
+      "url": "/{identifier}",
       "as": "/{identifier}"
     }
   },

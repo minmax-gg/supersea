@@ -116,7 +116,7 @@ const SearchAsset = ({
                   params={{
                     address: address!,
                     chainId: 'ethereum',
-                    chainPath: '',
+                    chainPath: 'ethereum/',
                     tokenId,
                   }}
                 >
