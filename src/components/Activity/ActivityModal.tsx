@@ -38,6 +38,7 @@ import { AddIcon, SmallAddIcon } from '@chakra-ui/icons'
 import Toast from '../Toast'
 import {
   fetchCollection,
+  fetchCollectionAddress,
   fetchIsRanked,
   fetchRaritiesWithTraits,
 } from '../../utils/api'
@@ -50,7 +51,6 @@ import { useUser } from '../../utils/user'
 import ListingNotifier from './ListingNotifier'
 import StateRestore from './StateRestore'
 import { StoredActivityState } from '../../utils/extensionConfig'
-import ActivityMarker from './ActivityMarker'
 import ActivityList from './ActivityList'
 
 let sessionHideStateRestore = false
@@ -63,8 +63,11 @@ export const prepareCollection = async ({
   isSubscriber: boolean
 }) => {
   const collection = await fetchCollection(slug)
-  const address =
-    collection.primary_asset_contracts[0]?.address || `MISSING_ADDR:${slug}`
+  let address = collection.primary_asset_contracts[0]?.address
+  if (!address) {
+    address =
+      (await fetchCollectionAddress(slug, false)) || `MISSING_ADDR:${slug}`
+  }
 
   let rarities: Collection['rarities'] = {
     tokenRank: {},

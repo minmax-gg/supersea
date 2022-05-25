@@ -696,10 +696,15 @@ const collectionLoader = new DataLoader(
   },
 )
 
-export const fetchCollectionAddress = async (slug: string) => {
-  const collection = await collectionLoader.load(slug)
-  if (collection.primary_asset_contracts[0]) {
-    return collection.primary_asset_contracts[0].address as string
+export const fetchCollectionAddress = async (
+  slug: string,
+  tryCollectionLoader = true,
+) => {
+  if (tryCollectionLoader) {
+    const collection = await collectionLoader.load(slug)
+    if (collection.primary_asset_contracts[0]) {
+      return collection.primary_asset_contracts[0].address as string
+    }
   }
   return collectionAddressLoader.load(slug) as Promise<string>
 }
