@@ -163,6 +163,9 @@ const Filters = ({
       flex="0 0 340px"
       position="sticky"
       top="72px"
+      borderBottomRightRadius="lg"
+      borderTopRightRadius="lg"
+      pt="4"
       height="calc(100vh - 72px)"
       overflow="auto"
       pb="100px"
@@ -176,11 +179,9 @@ const Filters = ({
         alignItems="flex-start"
         position="relative"
         background={useColorModeValue('#fbfdff', '#262b2f')}
-        borderColor="transparent"
+        borderColor={useColorModeValue('#e5e8eb', '#151b22')}
         borderWidth="1px"
-        borderRightColor={useColorModeValue('#e5e8eb', '#151b22')}
-        borderBottomColor={useColorModeValue('#e5e8eb', '#151b22')}
-        borderBottomRightRadius="lg"
+        borderRadius="lg"
       >
         <VStack
           spacing="3"
@@ -355,10 +356,8 @@ const Filters = ({
         alignItems="flex-start"
         background={useColorModeValue('#fbfdff', '#262b2f')}
         borderColor={useColorModeValue('#e5e8eb', '#151b22')}
-        borderLeftColor="transparent"
         borderWidth="1px"
-        borderBottomRightRadius="lg"
-        borderTopRightRadius="lg"
+        borderRadius="lg"
         opacity={isUnranked ? 0.75 : 1}
       >
         <VStack
@@ -577,10 +576,8 @@ const Filters = ({
         alignItems="flex-start"
         background={useColorModeValue('#fbfdff', '#262b2f')}
         borderColor={useColorModeValue('#e5e8eb', '#151b22')}
-        borderLeftColor="transparent"
         borderWidth="1px"
-        borderBottomRightRadius="lg"
-        borderTopRightRadius="lg"
+        borderRadius="lg"
       >
         <VStack
           spacing="3"

@@ -14,7 +14,10 @@ const CollectionMenuItem = ({
     <HStack
       height="100%"
       spacing="4"
-      px="30px"
+      fontSize="18px"
+      fontWeight="600"
+      pb="10px"
+      borderBottom="2px solid transparent"
       onClick={isSubscriber ? onClick : undefined}
       cursor={isSubscriber ? 'pointer' : 'not-allowed'}
       className={[
