@@ -39,7 +39,10 @@ const CollectionMenuItem = ({
       >
         SuperSea
       </Text>
-      {isSubscriber ? null : <LockedFeature level="subscriber" />}
+
+      {isSubscriber ? null : (
+        <LockedFeature level="subscriber" linkProps={{ display: 'flex' }} />
+      )}
     </HStack>
   )
 }

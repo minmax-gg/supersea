@@ -219,7 +219,7 @@
     },
     "profileSummary": {
       "node": {
-        "selector": "body:not([data-supersea-path^=\"/collection/\"]) ul[class*=\"PhoenixTabsreact\"]",
+        "selector": "body:not([data-supersea-path^=\"/collection/\"]):not([data-supersea-path=\"\"]) ul[class*=\"PhoenixTabsreact\"]",
         "injectionMethod": "insertBefore"
       }
     },
