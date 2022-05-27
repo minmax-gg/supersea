@@ -66,6 +66,10 @@ div[role='list']
   padding: 10px 30px;
 }
 
+.SuperSea__ProfileSummary {
+  margin-top: -30px;
+}
+
 @keyframes SuperSea__FadeIn {
   from {
     opacity: 0;

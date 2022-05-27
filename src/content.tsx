@@ -230,19 +230,16 @@ const injectBundleVerification = async () => {
 
 const injectProfileSummary = async () => {
   const { injectionSelectors: selectors } = await fetchRemoteConfig()
-  const accountTitle = document.querySelector(
-    selectors.profileSummary.accountTitleSelector,
+  const node = document.querySelector(
+    selectors.profileSummary.node.selector,
   ) as HTMLElement
-  const accountBanner = accountTitle?.parentElement
-
-  if (!accountBanner || accountBanner.dataset[NODE_PROCESSED_DATA_KEY]) return
-  accountBanner.dataset[NODE_PROCESSED_DATA_KEY] = '1'
+  if (!node || node.dataset[NODE_PROCESSED_DATA_KEY]) return
+  node.dataset[NODE_PROCESSED_DATA_KEY] = '1'
   const container = document.createElement('div')
-  accountBanner.appendChild(container)
-  const shortenedAddress = (document.querySelector(
-    selectors.profileSummary.shortenedAddressSelector,
-  ) as HTMLElement).innerText
-  injectReact(<ProfileSummary shortenedAddress={shortenedAddress} />, container)
+  container.classList.add('SuperSea__ProfileSummary')
+
+  injectElement(node, container, selectors.profileSummary.node.injectionMethod)
+  injectReact(<ProfileSummary />, container)
 }
 
 const throttledInjectAssetInfo = _.throttle(injectAssetInfo, 250)
