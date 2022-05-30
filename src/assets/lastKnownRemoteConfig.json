@@ -225,7 +225,7 @@
     },
     "collectionStats": {
       "node": {
-        "selector": "*[class*=\"CollectionPageBasereact\"] *[class*=\"CollectionStatsBarreact\"]",
+        "selector": "body[data-supersea-path^=\"/collection/\"] .sc-1y1ib3i-2 ",
         "injectionMethod": "insertAfter"
       }
     },
