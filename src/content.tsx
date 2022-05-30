@@ -231,19 +231,16 @@ const injectBundleVerification = async () => {
 
 const injectProfileSummary = async () => {
   const { injectionSelectors: selectors } = await fetchRemoteConfig()
-  const accountTitle = document.querySelector(
-    selectors.profileSummary.accountTitleSelector,
+  const node = document.querySelector(
+    selectors.profileSummary.node.selector,
   ) as HTMLElement
-  const accountBanner = accountTitle?.parentElement
-
-  if (!accountBanner || accountBanner.dataset[NODE_PROCESSED_DATA_KEY]) return
-  accountBanner.dataset[NODE_PROCESSED_DATA_KEY] = '1'
+  if (!node || node.dataset[NODE_PROCESSED_DATA_KEY]) return
+  node.dataset[NODE_PROCESSED_DATA_KEY] = '1'
   const container = document.createElement('div')
-  accountBanner.appendChild(container)
-  const shortenedAddress = (document.querySelector(
-    selectors.profileSummary.shortenedAddressSelector,
-  ) as HTMLElement).innerText
-  injectReact(<ProfileSummary shortenedAddress={shortenedAddress} />, container)
+  container.classList.add('SuperSea__ProfileSummary')
+
+  injectElement(node, container, selectors.profileSummary.node.injectionMethod)
+  injectReact(<ProfileSummary />, container)
 }
 
 const throttledInjectAssetInfo = _.throttle(injectAssetInfo, 250)
@@ -584,6 +581,20 @@ const injectListingNotifier = async () => {
 
 const throttledInjectListingNotifier = _.throttle(injectListingNotifier, 250)
 
+const setupRouteWatcher = () => {
+  document.body.dataset['superseaPath'] = window.location.pathname
+
+  const messageListener = (event: MessageEvent) => {
+    if (event.data.method === 'SuperSea__Next__routeChangeComplete') {
+      document.body.dataset['superseaPath'] = window.location.pathname
+    } else if (event.data.method === 'SuperSea__Next__routeChangeStart') {
+      document.body.dataset['superseaPath'] = ''
+    }
+  }
+
+  window.addEventListener('message', messageListener)
+}
+
 // We need to keep the background script alive for webRequest handlers
 const setupKeepAlivePing = () => {
   setInterval(() => {
@@ -597,6 +608,7 @@ const initialize = async () => {
   const config = await getExtensionConfig()
   if (config.enabled) {
     setupInjections()
+    setupRouteWatcher()
     setupKeepAlivePing()
     addGlobalStyle()
     setupAssetInfoRenderer()

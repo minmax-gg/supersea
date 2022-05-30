@@ -35,9 +35,7 @@ export type Selectors = {
     headerSelector: string
   }
   profileSummary: {
-    accountTitleSelector: string
-    accountEnsNameSelector: string
-    shortenedAddressSelector: string
+    node: InjectionSelector
   }
   collectionStats: {
     node: InjectionSelector

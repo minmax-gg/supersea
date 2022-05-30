@@ -10,6 +10,7 @@
 
 # production
 /build
+/supersea
 
 # misc
 .DS_Store

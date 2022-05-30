@@ -48,32 +48,25 @@ div[role='list']
   position: relative;
 }
 
-.SuperSea__CollectionMenuItem__Item:after {
-  transition: opacity 0.4s ease 0s;
-  background-color: rgb(32, 129, 226);
-  opacity: 0;
-  bottom: 0%;
-  content: '';
-  display: block;
-  height: 4px;
-  left: 0px;
-  position: absolute;
-  width: 100%;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-}
-
-.SuperSea--tabActive .SuperSea__CollectionMenuItem__Item,
-.SuperSea__CollectionMenuItem__Item:not(.SuperSea__CollectionMenuItem__Item--disabled):hover {
+.SuperSea--tabActive .SuperSea__CollectionMenuItem__Item {
   opacity: 1;
 }
 
-.SuperSea--tabActive .SuperSea__CollectionMenuItem__Item:after {
-  opacity: 1;
+.chakra-ui-light .SuperSea--tabActive .SuperSea__CollectionMenuItem__Item {
+  border-color: #04111d;
+}
+
+.chakra-ui-dark .SuperSea--tabActive .SuperSea__CollectionMenuItem__Item {
+  border-color: white;
 }
 
 .SuperSea__ListingNotifier {
   padding: 10px 30px;
+}
+
+.SuperSea__ProfileSummary {
+  margin-top: -30px;
+  margin-bottom: 30px;
 }
 
 @keyframes SuperSea__FadeIn {
