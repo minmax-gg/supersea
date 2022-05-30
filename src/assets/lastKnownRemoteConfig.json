@@ -217,9 +217,10 @@
       "headerSelector": ".Panel--header"
     },
     "profileSummary": {
-      "accountTitleSelector": ".AccountHeader--subtitle",
-      "accountEnsNameSelector": ".AccountHeader--name",
-      "shortenedAddressSelector": ".AccountHeader--address"
+      "node": {
+        "selector": "body:not([data-supersea-path^=\"/collection/\"]):not([data-supersea-path=\"\"]) ul.sc-151637b-0",
+        "injectionMethod": "insertBefore"
+      }
     },
     "collectionStats": {
       "node": {
@@ -228,7 +229,7 @@
       }
     },
     "searchResults": {
-      "menuSelector": "*[class*=\"CollectionPageBasereact\"] ul[class*=\"Menureact__MenuBase\"]",
+      "menuSelector": "body[data-supersea-path^=\"/collection/\"] ul.sc-151637b-0",
       "containerSelector": ".AssetSearchView--main, .collection--ActivityTabSection"
     },
     "listingNotifier": {
