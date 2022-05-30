@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import _ from 'lodash'
 import {
   Box,
   Text,
@@ -30,7 +31,11 @@ import {
 import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons'
 import Logo from './Logo'
 import { BiReceipt } from 'react-icons/bi'
-import { fetchAllCollectionsForUser, fetchFloorPrice } from '../utils/api'
+import {
+  fetchAllCollectionsForUser,
+  fetchFloorPrice,
+  fetchRemoteConfig,
+} from '../utils/api'
 import EthereumIcon from './EthereumIcon'
 import ScopedCSSPortal from './ScopedCSSPortal'
 import InternalLink from './InternalLink'
@@ -42,7 +47,7 @@ type CollectionFloor = {
   image: string
   ownedCount: number
 }
-const ProfileSummary = ({ shortenedAddress }: { shortenedAddress: string }) => {
+const ProfileSummary = () => {
   const [active, setActive] = useState(false)
   const [progress, setProgress] = useState<{
     total: number
@@ -61,14 +66,21 @@ const ProfileSummary = ({ shortenedAddress }: { shortenedAddress: string }) => {
   useEffect(() => {
     if (!active) return
     ;(async () => {
+      const remoteConfig = await fetchRemoteConfig()
       // Fetch the current (profile) page as text
       const serverRender = await fetch(
         window.location.href.split(/[?#]/)[0],
       ).then((res) => res.text())
-      // Parse out the full address based on the shortened version
-      const address = (serverRender.match(
-        new RegExp(`${shortenedAddress.replace('...', '[a-z0-9]+?')}`, 'i'),
-      ) || [])[0]
+      const html = document.createElement('html')
+      html.innerHTML = serverRender
+      const nextData = JSON.parse(
+        html.querySelector(remoteConfig.nextSsrProps.scriptSelector)
+          ?.innerHTML || '{}',
+      )
+      const address = _.get(
+        nextData,
+        remoteConfig.nextSsrProps.paths.profileAddress,
+      )
 
       if (!address) return
 
@@ -89,10 +101,10 @@ const ProfileSummary = ({ shortenedAddress }: { shortenedAddress: string }) => {
         }),
       )
     })()
-  }, [shortenedAddress, active])
+  }, [active])
 
   return (
-    <Box px={3} width="100vw" maxWidth="480px">
+    <Box width="100vw" maxWidth="480px">
       <Flex
         bg={useColorModeValue('gray.50', 'gray.700')}
         color={useColorModeValue('gray.700', 'white')}
@@ -105,7 +117,7 @@ const ProfileSummary = ({ shortenedAddress }: { shortenedAddress: string }) => {
         borderColor={useColorModeValue('gray.200', 'transparent')}
         my="4"
         py="4"
-        px="7"
+        px="4"
         pr="120px"
         position="relative"
         overflow="hidden"
@@ -117,7 +129,7 @@ const ProfileSummary = ({ shortenedAddress }: { shortenedAddress: string }) => {
           width="60px"
           height="60px"
           top="50%"
-          right="8px"
+          right="12px"
           transform="translateY(-50%)"
         />
         {active ? (

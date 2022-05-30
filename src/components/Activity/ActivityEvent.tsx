@@ -71,7 +71,7 @@ const ActivityEvent = memo(
                 params={{
                   address: event.contractAddress,
                   chainId: event.chain,
-                  chainPath: event.chain === 'polygon' ? 'matic/' : '',
+                  chainPath: event.chain === 'polygon' ? 'matic/' : 'ethereum/',
                   tokenId: event.tokenId,
                 }}
               >

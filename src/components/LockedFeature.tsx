@@ -4,15 +4,18 @@ import React from 'react'
 
 const LockedFeature = ({
   level = 'subscriber',
+  linkProps = {},
   ...tagProps
 }: {
   level?: 'subscriber' | 'founder'
+  linkProps?: React.ComponentProps<typeof Link>
 } & React.ComponentProps<typeof Tag>) => {
   return (
     <Link
       href="https://nonfungible.tools/connect"
       target="_blank"
       _hover={{ textDecoration: 'none' }}
+      {...linkProps}
     >
       <Tag
         bg={useColorModeValue(

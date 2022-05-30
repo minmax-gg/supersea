@@ -112,6 +112,7 @@ export type RemoteConfig = {
     scriptSelector: string
     paths: {
       profileUsername: string
+      profileAddress: string
       profileImageUrl: string
     }
   }

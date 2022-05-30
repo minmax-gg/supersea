@@ -78,7 +78,7 @@ const MatchedAssetListing = memo(
               params={{
                 address: asset.contractAddress,
                 chainId: asset.chain,
-                chainPath: asset.chain === 'polygon' ? 'matic/' : '',
+                chainPath: asset.chain === 'polygon' ? 'matic/' : 'ethereum/',
                 tokenId: asset.tokenId,
               }}
             >
