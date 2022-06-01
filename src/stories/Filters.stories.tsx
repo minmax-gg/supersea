@@ -22,6 +22,7 @@ Default.args = {
     priceRange: [undefined, undefined],
     includedIds: null,
     includedRanks: null,
+    rarityOrder: 'desc',
     traits: [],
   },
   showSearchProgress: false,
