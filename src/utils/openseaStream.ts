@@ -27,7 +27,7 @@ class OpenSeaStream extends EventTarget {
       tokenId,
       contractAddress,
       chain: chain as Chain,
-      name: event.payload.item.metadata.name,
+      name: event.payload.item.metadata.name || `#${tokenId}`,
       image: event.payload.item.metadata.image_url,
       price:
         event.event_type === 'item_sold'

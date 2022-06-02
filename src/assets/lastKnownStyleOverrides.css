@@ -12,8 +12,8 @@ div[role='list'] div[role='listitem'] {
   min-height: 95px;
 }
 
-*[class*='FeatureTableCell'][width='300px']:nth-child(2),
-*[class*='FeatureTableCell'][width='150px']:nth-child(2) {
+*[role='listitem'] *[width='300px']:nth-child(2),
+*[role='listitem'] *[width='150px']:nth-child(2) {
   width: 500px !important;
   flex: 0 0 500px !important;
 }
@@ -35,12 +35,10 @@ div[role='list']
   margin-top: -31px;
 }
 
-.SuperSea--tabActive li[class*='PhoenixTabsreact__TabItem'] {
+.SuperSea--tabActive li.sc-151637b-3 {
   border-bottom-color: transparent !important;
 }
-.SuperSea--tabActive
-  li[class*='PhoenixTabsreact__TabItem']
-  *[class*='PhoenixTextreact'] {
+.SuperSea--tabActive li.sc-151637b-3 .sc-151637b-5 {
   color: #8a939b !important;
 }
 

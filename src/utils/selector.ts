@@ -37,6 +37,9 @@ export type Selectors = {
   profileSummary: {
     node: InjectionSelector
   }
+  collectionStats: {
+    node: InjectionSelector
+  }
   searchResults: {
     menuSelector: string
     containerSelector: string

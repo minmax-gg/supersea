@@ -13,6 +13,7 @@ import { fetchGlobalCSS, fetchRemoteConfig, getUser } from './utils/api'
 import { injectElement, selectElement, Selectors } from './utils/selector'
 import SearchResults from './components/SearchResults/SearchResults'
 import CollectionMenuItem from './components/CollectionMenuItem'
+import CollectionStats from './components/CollectionStats'
 import Activity from './components/Activity/Activity'
 import TransferInfo from './components/TransferInfo'
 import { isSubscriber } from './utils/user'
@@ -247,19 +248,18 @@ const throttledInjectBundleVerification = _.throttle(
   injectBundleVerification,
   250,
 )
-const throttledInjectProfileSummary = _.throttle(injectProfileSummary, 250)
 const throttledDestroyRemovedInjections = _.throttle(
   destroyRemovedInjections,
   1000,
 )
 
-const injectInPageContextScript = (onComplete: () => void) => {
+const injectInPageContextScript = (onComplete?: () => void) => {
   const s = document.createElement('script')
   s.src = chrome.runtime.getURL('static/js/pageContextInject.js')
   document.head.appendChild(s)
   s.onload = function () {
     s.remove()
-    onComplete()
+    onComplete && onComplete()
   }
 }
 
@@ -440,11 +440,36 @@ const injectTransferInfo = async () => {
 
 const throttledInjectTransferInfo = _.throttle(injectTransferInfo, 100)
 
+const injectCollectionStats = async () => {
+  const { injectionSelectors: selectors } = await fetchRemoteConfig()
+
+  const injectionNode = document.querySelector(
+    selectors.collectionStats.node.selector,
+  ) as HTMLElement | null
+
+  if (!injectionNode || injectionNode.dataset[NODE_PROCESSED_DATA_KEY]) return
+  injectionNode.dataset[NODE_PROCESSED_DATA_KEY] = '1'
+
+  const container = document.createElement('div')
+  container.classList.add('SuperSea__TransferInfo')
+  injectElement(
+    injectionNode as HTMLElement,
+    container as HTMLElement,
+    selectors.collectionStats.node.injectionMethod,
+  )
+  const collectionSlug = window.location.pathname.split('/').filter(Boolean)[1]
+  injectReact(<CollectionStats collectionSlug={collectionSlug} />, container)
+}
+
+const throttledInjectCollectionStats = _.throttle(injectCollectionStats, 100)
+
 const setupInjections = async () => {
   injectBundleVerification()
   injectAssetInfo()
   injectRarityDisclaimer()
   injectCollectionMenu()
+  injectCollectionStats()
+  injectProfileSummary()
   injectActivity()
   injectListingNotifier()
   injectTransferInfo()
@@ -453,24 +478,11 @@ const setupInjections = async () => {
     throttledInjectBundleVerification()
     throttledInjectAssetInfo()
     throttledInjectCollectionMenu()
+    throttledInjectCollectionStats()
     throttledInjectListingNotifier()
     throttledDestroyRemovedInjections()
     throttledInjectActivity()
     throttledInjectTransferInfo()
-  })
-
-  observer.observe(document, {
-    attributes: true,
-    childList: true,
-    subtree: true,
-  })
-}
-
-const setupDelayedInjections = async () => {
-  injectProfileSummary()
-
-  const observer = new MutationObserver(() => {
-    throttledInjectProfileSummary()
   })
 
   observer.observe(document, {
@@ -561,6 +573,7 @@ const setupRouteWatcher = () => {
   const messageListener = (event: MessageEvent) => {
     if (event.data.method === 'SuperSea__Next__routeChangeComplete') {
       document.body.dataset['superseaPath'] = window.location.pathname
+      injectProfileSummary()
     } else if (event.data.method === 'SuperSea__Next__routeChangeStart') {
       document.body.dataset['superseaPath'] = ''
     }
@@ -587,7 +600,7 @@ const initialize = async () => {
     addGlobalStyle()
     setupAssetInfoRenderer()
     setupSearchResultsTab()
-    injectInPageContextScript(setupDelayedInjections)
+    injectInPageContextScript()
   }
 }
 

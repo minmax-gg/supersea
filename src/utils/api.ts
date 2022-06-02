@@ -85,11 +85,36 @@ export type Asset = {
   }[]
 }
 
-type Collection = {
+export type Collection = {
   name: string
   slug: string
   image_url: string
+  created_date: string
   primary_asset_contracts: { address: string }[]
+  dev_seller_fee_basis_points: number
+  stats: {
+    average_price: number
+    count: number
+    floor_price: number
+    market_cap: number
+    num_owners: number
+    num_reports: number
+    one_day_average_price: number
+    one_day_change: number
+    one_day_sales: number
+    one_day_volume: number
+    seven_day_average_price: number
+    seven_day_change: number
+    seven_day_sales: number
+    seven_day_volume: number
+    thirty_day_average_price: number
+    thirty_day_change: number
+    thirty_day_sales: number
+    thirty_day_volume: number
+    total_sales: number
+    total_supply: number
+    total_volume: number
+  }
 }
 
 export type Chain = 'ethereum' | 'polygon'
@@ -254,6 +279,7 @@ let cachedUser:
     }
   | null
   | undefined = undefined
+
 export const getUser = async (refresh = false) => {
   await userSema.acquire()
   if (!refresh) {
@@ -274,6 +300,13 @@ export const getUser = async (refresh = false) => {
   userSema.release()
 
   return cachedUser
+}
+
+const getUserRoleHeader = (
+  role: User['role'],
+  membershipType: User['membershipType'],
+) => {
+  return `${role}-${membershipType}` as const
 }
 
 const nonFungibleRequest = async (
@@ -330,13 +363,6 @@ export const floorPriceLoader = new DataLoader(
     maxBatchSize: 1,
   },
 )
-
-const getUserRoleHeader = (
-  role: User['role'],
-  membershipType: User['membershipType'],
-) => {
-  return `${role}-${membershipType}` as const
-}
 
 export const fetchFloorPrice = (collectionSlug: string) => {
   return floorPriceLoader.load(collectionSlug) as Promise<Floor>
@@ -671,10 +697,15 @@ const collectionLoader = new DataLoader(
   },
 )
 
-export const fetchCollectionAddress = async (slug: string) => {
-  const collection = await collectionLoader.load(slug)
-  if (collection.primary_asset_contracts[0]) {
-    return collection.primary_asset_contracts[0].address as string
+export const fetchCollectionAddress = async (
+  slug: string,
+  tryCollectionLoader = true,
+) => {
+  if (tryCollectionLoader) {
+    const collection = await collectionLoader.load(slug)
+    if (collection.primary_asset_contracts[0]) {
+      return collection.primary_asset_contracts[0].address as string
+    }
   }
   return collectionAddressLoader.load(slug) as Promise<string>
 }

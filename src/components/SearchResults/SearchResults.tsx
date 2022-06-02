@@ -78,6 +78,7 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
     priceRange: [undefined, undefined],
     includedIds: null,
     includedRanks: null,
+    rarityOrder: 'desc',
     traits: [],
   })
 
@@ -86,11 +87,14 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
 
   // Tokens filtered with data that we have _before_ fetching the asset
   let preFilteredTokens = ((tokens && address
-    ? [...tokens].sort((a, b) =>
-        traitCountExcluded
-          ? a.noTraitCountRank - b.noTraitCountRank
-          : a.rank - b.rank,
-      )
+    ? [...tokens].sort((a, b) => {
+        const sortDirection = filters.rarityOrder === 'asc' ? -1 : 1
+        return (
+          (traitCountExcluded
+            ? a.noTraitCountRank - b.noTraitCountRank
+            : a.rank - b.rank) * sortDirection
+        )
+      })
     : []) as any[])?.filter(({ rank, noTraitCountRank, iteratorID }) => {
     const usedRank = traitCountExcluded ? noTraitCountRank : rank
     let rankIncluded = true
@@ -329,7 +333,11 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
           unstable_batchedUpdates(() => {
             clearMassBid()
             setFilters(appliedFilters)
-            setLoadedItems(40)
+            if (appliedFilters.rarityOrder !== filters.rarityOrder) {
+              setLoadedItems(0)
+            } else {
+              setLoadedItems(40)
+            }
             if (appliedFilters.traits !== filters.traits) {
               setTokens(undefined)
             }

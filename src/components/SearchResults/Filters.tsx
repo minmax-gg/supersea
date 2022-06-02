@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import _ from 'lodash'
+import _, { filter } from 'lodash'
 import {
   Spinner,
   Box,
@@ -41,6 +41,7 @@ export type FiltersType = {
   priceRange: [number | undefined, number | undefined]
   includedRanks: Record<number, boolean> | null
   includedIds: Record<string | number, boolean> | null
+  rarityOrder: 'asc' | 'desc'
   traits: string[]
 }
 
@@ -495,6 +496,42 @@ const Filters = ({
               <TabPanel></TabPanel>
             </TabPanels>
           </Tabs>
+        </VStack>
+        <VStack
+          spacing="3"
+          divider={
+            <Divider
+              borderColor={useColorModeValue('gray.300', 'whiteAlpha.200')}
+            />
+          }
+          alignItems="flex-start"
+          width="100%"
+        >
+          <Text fontWeight="500">
+            Order{' '}
+            {isUnranked ? (
+              <Tag verticalAlign="middle" ml="0.5em" size="sm">
+                Unavailable
+              </Tag>
+            ) : null}
+          </Text>
+          <FormControl>
+            <Select
+              isDisabled={isUnranked}
+              borderColor="transparent"
+              bg={useColorModeValue('gray.100', 'whiteAlpha.200')}
+              value={filters.rarityOrder}
+              onChange={(e) => {
+                onApplyFilters({
+                  ...filters,
+                  rarityOrder: e.target.value as FiltersType['rarityOrder'],
+                })
+              }}
+            >
+              <option value="desc">Most rare to least rare</option>
+              <option value="asc">Least rare to most rare</option>
+            </Select>
+          </FormControl>
         </VStack>
         <VStack
           spacing="3"
