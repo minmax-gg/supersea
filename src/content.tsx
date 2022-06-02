@@ -248,19 +248,18 @@ const throttledInjectBundleVerification = _.throttle(
   injectBundleVerification,
   250,
 )
-const throttledInjectProfileSummary = _.throttle(injectProfileSummary, 250)
 const throttledDestroyRemovedInjections = _.throttle(
   destroyRemovedInjections,
   1000,
 )
 
-const injectInPageContextScript = (onComplete: () => void) => {
+const injectInPageContextScript = (onComplete?: () => void) => {
   const s = document.createElement('script')
   s.src = chrome.runtime.getURL('static/js/pageContextInject.js')
   document.head.appendChild(s)
   s.onload = function () {
     s.remove()
-    onComplete()
+    onComplete && onComplete()
   }
 }
 
@@ -470,6 +469,7 @@ const setupInjections = async () => {
   injectRarityDisclaimer()
   injectCollectionMenu()
   injectCollectionStats()
+  injectProfileSummary()
   injectActivity()
   injectListingNotifier()
   injectTransferInfo()
@@ -483,20 +483,6 @@ const setupInjections = async () => {
     throttledDestroyRemovedInjections()
     throttledInjectActivity()
     throttledInjectTransferInfo()
-  })
-
-  observer.observe(document, {
-    attributes: true,
-    childList: true,
-    subtree: true,
-  })
-}
-
-const setupDelayedInjections = async () => {
-  injectProfileSummary()
-
-  const observer = new MutationObserver(() => {
-    throttledInjectProfileSummary()
   })
 
   observer.observe(document, {
@@ -587,6 +573,7 @@ const setupRouteWatcher = () => {
   const messageListener = (event: MessageEvent) => {
     if (event.data.method === 'SuperSea__Next__routeChangeComplete') {
       document.body.dataset['superseaPath'] = window.location.pathname
+      injectProfileSummary()
     } else if (event.data.method === 'SuperSea__Next__routeChangeStart') {
       document.body.dataset['superseaPath'] = ''
     }
@@ -613,7 +600,7 @@ const initialize = async () => {
     addGlobalStyle()
     setupAssetInfoRenderer()
     setupSearchResultsTab()
-    injectInPageContextScript(setupDelayedInjections)
+    injectInPageContextScript()
   }
 }
 
