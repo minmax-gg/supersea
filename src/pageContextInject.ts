@@ -35,7 +35,7 @@ import { readableEthValue, weiToEth } from './utils/ethereum'
     if (event.origin !== 'https://opensea.io') return
     if (event.data.method === 'SuperSea__Buy') {
       try {
-        const order = event.data.params.listings[0]
+        const order = event.data.params.order
         const openseaSDK = new OpenSeaSDK((window as any).ethereum, {
           networkName: Network.Main,
         })
@@ -102,11 +102,12 @@ import { readableEthValue, weiToEth } from './utils/ethereum'
         }
         if (
           event.data.params.displayedPrice &&
-          Number(order.base_price) > Number(event.data.params.displayedPrice)
+          Number(order.base_price || order.current_price) >
+            Number(event.data.params.displayedPrice)
         ) {
           throw new Error(
             `Transaction cancelled due to price change, the actual price was ${readableEthValue(
-              order.base_price,
+              order.base_price || order.current_price,
             )} ETH`,
           )
         }

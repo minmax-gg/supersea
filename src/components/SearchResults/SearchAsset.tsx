@@ -17,6 +17,7 @@ import MassBidStatus, { MassBidState } from './MassBidStatus'
 import useRemoteConfig from '../../hooks/useRemoteConfig'
 import { createRouteParams } from '../../utils/route'
 import InternalLink from '../InternalLink'
+import { normalizeListing, getCheapestListing } from '../../utils/orders'
 
 const SearchAsset = ({
   address,
@@ -31,7 +32,9 @@ const SearchAsset = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const [imageLoaded, setImageLoaded] = useState(false)
-  const remoteConfig = useRemoteConfig()
+  const sellOrder = normalizeListing(
+    getCheapestListing(asset?.sell_orders, asset?.seaport_sell_orders),
+  )
 
   useEffect(() => {
     if (massBidState === 'PROCESSING' && containerRef.current) {
@@ -146,7 +149,7 @@ const SearchAsset = ({
                 alignItems="flex-end"
                 flexDirection="column"
               >
-                {asset.sell_orders?.length ? (
+                {sellOrder ? (
                   <>
                     <Text fontSize="12px" opacity="0.5">
                       Price
@@ -154,14 +157,9 @@ const SearchAsset = ({
                     <Flex fontSize="14px" fontWeight="600" alignItems="center">
                       <EthereumIcon
                         mt="-1px"
-                        wrapped={
-                          asset.sell_orders[0].payment_token_contract.symbol ===
-                          'WETH'
-                        }
+                        wrapped={sellOrder.currency === 'WETH'}
                       />
-                      <Text>
-                        {readableEthValue(+asset.sell_orders[0].current_price)}
-                      </Text>
+                      <Text>{readableEthValue(+sellOrder.price)}</Text>
                     </Flex>
                   </>
                 ) : null}
@@ -186,11 +184,7 @@ const SearchAsset = ({
       </LinkBox>
       {asset ? (
         <AssetInfo
-          displayedPrice={
-            asset.sell_orders?.length
-              ? asset.sell_orders[0].base_price
-              : undefined
-          }
+          displayedPrice={sellOrder?.price}
           address={address!}
           tokenId={tokenId}
           type="grid"

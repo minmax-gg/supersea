@@ -14,6 +14,7 @@ import {
 } from '../../utils/extensionConfig'
 import { useUser } from '../../utils/user'
 import { fetchListings, fetchOptimalGasPreset } from '../../utils/api'
+import { getCheapestListing } from '../../utils/orders'
 
 const readableError = (message: string) => {
   if (/insufficient funds/.test(message)) {
@@ -78,17 +79,8 @@ export const triggerQuickBuy = async ({
     })(),
   ])
 
-  const listings = [
-    ...wyvern_listings.map((listing: any) => ({
-      ...listing,
-      protocol: 'wyvern',
-    })),
-    ...seaport_listings.map((listing: any) => ({
-      ...listing,
-      protocol: 'seaport',
-    })),
-  ].sort((a, b) => Number(a.currentPrice) - Number(b.currentPrice))
-  if (!listings || listings.length === 0) {
+  const cheapest = getCheapestListing(wyvern_listings, seaport_listings)
+  if (!cheapest) {
     toast({
       duration: 7500,
       position: 'bottom-right',
@@ -99,10 +91,11 @@ export const triggerQuickBuy = async ({
     onComplete()
     return
   }
+
   window.postMessage({
     method: 'SuperSea__Buy',
     params: {
-      listings,
+      order: cheapest,
       tokenId,
       address,
       gasPreset,

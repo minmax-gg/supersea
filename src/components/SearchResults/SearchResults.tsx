@@ -31,6 +31,7 @@ import {
 } from '../../utils/rarity'
 import MassBidOverlay from './MassBidOverlay'
 import useMassBid from '../../hooks/useMassBid'
+import { normalizeListing, getCheapestListing } from '../../utils/orders'
 
 const LOAD_MORE_SCROLL_THRESHOLD = 600
 
@@ -263,21 +264,21 @@ const SearchResults = ({ collectionSlug }: { collectionSlug: string }) => {
     .filter(({ asset }) => {
       if (asset === null) return false
       if (!asset || 'placeholder' in asset) return true
+      const sellOrder = normalizeListing(
+        getCheapestListing(asset?.sell_orders, asset?.seaport_sell_orders),
+      )
       if (
         filters.status.includes('buyNow') &&
-        (!asset.sell_orders?.length ||
-          asset.sell_orders[0].payment_token_contract.symbol === 'WETH')
+        (!sellOrder || sellOrder.currency === 'WETH')
       ) {
         return false
       }
 
       if (filters.priceRange[0] || filters.priceRange[1]) {
         const matchesPriceRange =
-          asset.sell_orders?.length &&
-          weiToEth(+asset.sell_orders[0].current_price) >=
-            (filters.priceRange[0] || 0) &&
-          weiToEth(+asset.sell_orders[0].current_price) <=
-            (filters.priceRange[1] || Infinity)
+          sellOrder &&
+          weiToEth(+sellOrder.price) >= (filters.priceRange[0] || 0) &&
+          weiToEth(+sellOrder.price) <= (filters.priceRange[1] || Infinity)
 
         if (!matchesPriceRange) return false
       }
