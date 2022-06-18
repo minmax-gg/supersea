@@ -46,7 +46,6 @@ import { readableEthValue, weiToEth } from './utils/ethereum'
           },
         )
 
-        openseaSDK.gasIncreaseFactor = 1.3
         openseaSDKWyvern.gasIncreaseFactor = 1.3
 
         if (event.data.params.gasPreset) {
