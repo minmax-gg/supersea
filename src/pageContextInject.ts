@@ -5,6 +5,7 @@ import {
   assetFromJSON,
   deserializeOrder,
 } from 'opensea-js'
+import { OpenSeaPort as OpenSeaSDKWyvern } from 'opensea-js-wyvern'
 import { RateLimit } from 'async-sema'
 import { readableEthValue, weiToEth } from './utils/ethereum'
 ;((window: any) => {
@@ -38,21 +39,28 @@ import { readableEthValue, weiToEth } from './utils/ethereum'
         const openseaSDK = new OpenSeaSDK((window as any).ethereum, {
           networkName: Network.Main,
         })
-        window.openseaSDK = openseaSDK
+        const openseaSDKWyvern = new OpenSeaSDKWyvern(
+          (window as any).ethereum,
+          {
+            networkName: Network.Main,
+          },
+        )
 
-        console.log('order', order)
         openseaSDK.gasIncreaseFactor = 1.3
+        openseaSDKWyvern.gasIncreaseFactor = 1.3
+
         if (event.data.params.gasPreset) {
           if (order.protocol === 'wyvern') {
             //@ts-ignore
-            const wyvernProtocol = openseaSDK._getWyvernProtocolForOrder(order)
+            const wyvernProtocol = openseaSDKWyvern._getWyvernProtocolForOrder(
+              order,
+            )
             const _sendTransactionAsync =
               wyvernProtocol.wyvernExchange.atomicMatch_.sendTransactionAsync
 
             wyvernProtocol.wyvernExchange.atomicMatch_.sendTransactionAsync = (
               ...args: any
             ) => {
-              console.log('WYVERN GAS OVERRIDE', event.data.params.gasPreset)
               args[args.length - 1].maxPriorityFeePerGas = (
                 event.data.params.gasPreset.priorityFee *
                 10 ** 9
@@ -104,8 +112,8 @@ import { readableEthValue, weiToEth } from './utils/ethereum'
         }
 
         if (order.protocol === 'wyvern') {
-          await openseaSDK.fulfillOrderLegacyWyvern({
-            order: orderFromJSON(order),
+          await openseaSDKWyvern.fulfillOrder({
+            order: orderFromJSON(order) as any,
             accountAddress: await getEthAccount(),
           })
         } else {
@@ -148,7 +156,7 @@ import { readableEthValue, weiToEth } from './utils/ethereum'
 
       try {
         await bidRateLimit()
-        const seaport = new OpenSeaPort((window as any).ethereum, {
+        const seaport = new OpenSeaSDKWyvern((window as any).ethereum, {
           networkName: Network.Main,
           apiKey: '2f6f419a083c46de9d83ce3dbe7db601',
         })
@@ -163,6 +171,7 @@ import { readableEthValue, weiToEth } from './utils/ethereum'
         }
 
         const getAsset = seaport.api.getAsset.bind(seaport)
+        // @ts-ignore
         seaport.api.getAsset = async (asset) => {
           let returnedAsset = null
           if (asset.tokenId === event.data.params.tokenId) {
