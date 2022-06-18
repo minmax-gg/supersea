@@ -85,13 +85,11 @@ import { readableEthValue, weiToEth } from './utils/ethereum'
                 const _transact = action.transactionMethods.transact
                 action.transactionMethods.transact = (...args: any) => {
                   args[0] = args[0] || {}
-                  args[0].maxPriorityFeePerGas = (
-                    event.data.params.gasPreset.priorityFee *
-                    10 ** 9
+                  args[0].maxPriorityFeePerGas = Math.round(
+                    event.data.params.gasPreset.priorityFee * 10 ** 9,
                   ).toString()
-                  args[0].maxFeePerGas = (
-                    event.data.params.gasPreset.fee *
-                    10 ** 9
+                  args[0].maxFeePerGas = Math.round(
+                    event.data.params.gasPreset.fee * 10 ** 9,
                   ).toString()
                   return _transact.apply(action.transactionMethods, args)
                 }
