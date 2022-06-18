@@ -41,7 +41,10 @@ export const triggerQuickBuy = async ({
   gasOverride?: null | { fee: number; priorityFee: number }
   onComplete: () => void
 }) => {
-  const [{ listings }, gasPreset] = await Promise.all([
+  const [
+    { listings: wyvern_listings, seaport_listings },
+    gasPreset,
+  ] = await Promise.all([
     fetchListings(address, tokenId).catch((e) => {
       return {}
     }),
@@ -74,6 +77,17 @@ export const triggerQuickBuy = async ({
       return null
     })(),
   ])
+
+  const listings = [
+    ...wyvern_listings.map((listing: any) => ({
+      ...listing,
+      protocol: 'wyvern',
+    })),
+    ...seaport_listings.map((listing: any) => ({
+      ...listing,
+      protocol: 'seaport',
+    })),
+  ].sort((a, b) => Number(a.currentPrice) - Number(b.currentPrice))
   if (!listings || listings.length === 0) {
     toast({
       duration: 7500,

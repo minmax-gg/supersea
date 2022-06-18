@@ -1,4 +1,10 @@
-import { OpenSeaPort, Network, orderFromJSON, assetFromJSON } from 'opensea-js'
+import {
+  OpenSeaSDK,
+  Network,
+  orderFromJSON,
+  assetFromJSON,
+  deserializeOrder,
+} from 'opensea-js'
 import { RateLimit } from 'async-sema'
 import { readableEthValue, weiToEth } from './utils/ethereum'
 ;((window: any) => {
@@ -29,31 +35,61 @@ import { readableEthValue, weiToEth } from './utils/ethereum'
     if (event.data.method === 'SuperSea__Buy') {
       try {
         const order = event.data.params.listings[0]
-        const seaport = new OpenSeaPort((window as any).ethereum, {
+        const openseaSDK = new OpenSeaSDK((window as any).ethereum, {
           networkName: Network.Main,
         })
-        seaport.gasIncreaseFactor = 1.3
-        // @ts-ignore
-        const wyvernProtocol = seaport._getWyvernProtocolForOrder(order)
-        const _sendTransactionAsync =
-          wyvernProtocol.wyvernExchange.atomicMatch_.sendTransactionAsync
+        window.openseaSDK = openseaSDK
 
+        console.log('order', order)
+        openseaSDK.gasIncreaseFactor = 1.3
         if (event.data.params.gasPreset) {
-          wyvernProtocol.wyvernExchange.atomicMatch_.sendTransactionAsync = (
-            ...args: any
-          ) => {
-            args[args.length - 1].maxPriorityFeePerGas = (
-              event.data.params.gasPreset.priorityFee *
-              10 ** 9
-            ).toString(16)
-            args[args.length - 1].maxFeePerGas = (
-              event.data.params.gasPreset.fee *
-              10 ** 9
-            ).toString(16)
-            return _sendTransactionAsync.apply(
-              (wyvernProtocol as any).wyvernExchange.atomicMatch_,
-              args,
-            )
+          if (order.protocol === 'wyvern') {
+            //@ts-ignore
+            const wyvernProtocol = openseaSDK._getWyvernProtocolForOrder(order)
+            const _sendTransactionAsync =
+              wyvernProtocol.wyvernExchange.atomicMatch_.sendTransactionAsync
+
+            wyvernProtocol.wyvernExchange.atomicMatch_.sendTransactionAsync = (
+              ...args: any
+            ) => {
+              console.log('WYVERN GAS OVERRIDE', event.data.params.gasPreset)
+              args[args.length - 1].maxPriorityFeePerGas = (
+                event.data.params.gasPreset.priorityFee *
+                10 ** 9
+              ).toString(16)
+              args[args.length - 1].maxFeePerGas = (
+                event.data.params.gasPreset.fee *
+                10 ** 9
+              ).toString(16)
+              return _sendTransactionAsync.apply(
+                (wyvernProtocol as any).wyvernExchange.atomicMatch_,
+                args,
+              )
+            }
+          } else {
+            const _fulfillOrder = openseaSDK.seaport.fulfillOrder
+            openseaSDK.seaport.fulfillOrder = async (...args: any) => {
+              const returnValue = await _fulfillOrder.apply(
+                openseaSDK.seaport,
+                args,
+              )
+              returnValue.actions.forEach((action) => {
+                const _transact = action.transactionMethods.transact
+                action.transactionMethods.transact = (...args: any) => {
+                  args[0] = args[0] || {}
+                  args[0].maxPriorityFeePerGas = (
+                    event.data.params.gasPreset.priorityFee *
+                    10 ** 9
+                  ).toString()
+                  args[0].maxFeePerGas = (
+                    event.data.params.gasPreset.fee *
+                    10 ** 9
+                  ).toString()
+                  return _transact.apply(action.transactionMethods, args)
+                }
+              })
+              return returnValue
+            }
           }
         }
         if (
@@ -66,10 +102,18 @@ import { readableEthValue, weiToEth } from './utils/ethereum'
             )} ETH`,
           )
         }
-        await seaport.fulfillOrder({
-          order: orderFromJSON(order),
-          accountAddress: await getEthAccount(),
-        })
+
+        if (order.protocol === 'wyvern') {
+          await openseaSDK.fulfillOrderLegacyWyvern({
+            order: orderFromJSON(order),
+            accountAddress: await getEthAccount(),
+          })
+        } else {
+          await openseaSDK.fulfillOrder({
+            order: deserializeOrder(order),
+            accountAddress: await getEthAccount(),
+          })
+        }
         window.postMessage({
           method: 'SuperSea__Buy__Success',
           params: { ...event.data.params },
