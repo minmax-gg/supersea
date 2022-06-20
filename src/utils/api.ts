@@ -76,13 +76,21 @@ export type Asset = {
       symbol: 'ETH' | 'WETH'
     }
   }
-  sell_orders: {
-    current_price: string
-    base_price: string
-    payment_token_contract: {
-      symbol: 'ETH' | 'WETH'
-    }
-  }[]
+  sell_orders:
+    | {
+        current_price: string
+        base_price: string
+        payment_token_contract: {
+          symbol: 'ETH' | 'WETH'
+        }
+      }[]
+    | null
+  seaport_sell_orders:
+    | {
+        current_price: string
+        order_type: string
+      }[]
+    | null
 }
 
 export type Collection = {

@@ -1,31 +1,29 @@
 diff --git a/node_modules/opensea-js/lib/index.d.ts b/node_modules/opensea-js/lib/index.d.ts
-index 03020b7..afdfd78 100644
+index ec491b4..aa69091 100644
 --- a/node_modules/opensea-js/lib/index.d.ts
 +++ b/node_modules/opensea-js/lib/index.d.ts
-@@ -1,7 +1,7 @@
+@@ -1,7 +1,8 @@
  import { OpenSeaAPI } from "./api";
- import { OpenSeaPort } from "./seaport";
+ import { OpenSeaSDK } from "./sdk";
  import { Network, EventData, EventType } from "./types";
 -export { orderToJSON, orderFromJSON, WyvernProtocol } from "./utils/utils";
-+export { orderToJSON, orderFromJSON, WyvernProtocol, assetFromJSON } from "./utils/utils";
++export { orderToJSON, orderFromJSON, assetFromJSON, WyvernProtocol } from "./utils/utils";
++export { deserializeOrder } from "./orders/utils";
  export { encodeCall, encodeSell, encodeAtomicizedBuy, encodeAtomicizedSell, encodeDefaultCall, encodeReplacementPattern, AbiType, } from "./utils/schema";
  /**
   * Example setup:
 diff --git a/node_modules/opensea-js/lib/index.js b/node_modules/opensea-js/lib/index.js
-index 8d2be1a..e849315 100644
+index 3fb5ac2..d7d98b7 100644
 --- a/node_modules/opensea-js/lib/index.js
 +++ b/node_modules/opensea-js/lib/index.js
-@@ -1,4 +1,4 @@
--"use strict";
-+
- Object.defineProperty(exports, "__esModule", { value: true });
- exports.Network = exports.EventType = exports.OpenSeaAPI = exports.OpenSeaPort = exports.AbiType = exports.encodeReplacementPattern = exports.encodeDefaultCall = exports.encodeAtomicizedSell = exports.encodeAtomicizedBuy = exports.encodeSell = exports.encodeCall = exports.WyvernProtocol = exports.orderFromJSON = exports.orderToJSON = void 0;
- /* eslint-disable import/no-unused-modules */
-@@ -12,6 +12,7 @@ Object.defineProperty(exports, "EventType", { enumerable: true, get: function ()
+@@ -13,7 +13,10 @@ Object.defineProperty(exports, "EventType", { enumerable: true, get: function ()
  var utils_1 = require("./utils/utils");
  Object.defineProperty(exports, "orderToJSON", { enumerable: true, get: function () { return utils_1.orderToJSON; } });
  Object.defineProperty(exports, "orderFromJSON", { enumerable: true, get: function () { return utils_1.orderFromJSON; } });
 +Object.defineProperty(exports, "assetFromJSON", { enumerable: true, get: function () { return utils_1.assetFromJSON; } });
  Object.defineProperty(exports, "WyvernProtocol", { enumerable: true, get: function () { return utils_1.WyvernProtocol; } });
++var order_utils_1 = require('./orders/utils')
++Object.defineProperty(exports, "deserializeOrder", { enumerable: true, get: function () { return order_utils_1.deserializeOrder; } });
  var schema_1 = require("./utils/schema");
  Object.defineProperty(exports, "encodeCall", { enumerable: true, get: function () { return schema_1.encodeCall; } });
+ Object.defineProperty(exports, "encodeSell", { enumerable: true, get: function () { return schema_1.encodeSell; } });

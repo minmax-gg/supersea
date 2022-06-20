@@ -4,6 +4,14 @@ article.AssetSearchList--asset {
   position: relative;
 }
 
+article.AssetSearchList--asset .sc-1i5b3a5-1 {
+  margin-bottom: 85px;
+}
+
+article.AssetSearchList--asset .sc-1i5b3a5-1 button {
+  border-radius: 0;
+}
+
 .Asset--loaded {
   transform: none !important;
 }
