@@ -111,8 +111,7 @@ const CollectionStats = ({ collectionSlug }: { collectionSlug: string }) => {
                   bg="gray.800"
                   placement="top"
                   color="white"
-                  px="2"
-                  py="1"
+                  p="2"
                 >
                   <Text cursor="default">{collection.stats.one_day_sales}</Text>
                 </Tooltip>
@@ -171,8 +170,7 @@ const CollectionStats = ({ collectionSlug }: { collectionSlug: string }) => {
                   bg="gray.800"
                   placement="top"
                   color="white"
-                  px="2"
-                  py="1"
+                  p="2"
                 >
                   <Text cursor="default">
                     <EthereumIcon />
@@ -188,7 +186,37 @@ const CollectionStats = ({ collectionSlug }: { collectionSlug: string }) => {
             <StatLabel mb="1">Royalty</StatLabel>
             <StatNumber fontSize="xl">
               {collection ? (
-                `${collection.dev_seller_fee_basis_points / 100}%`
+                <Tooltip
+                  label={
+                    <Box>
+                      <Text m="0">
+                        Collected <EthereumIcon colorMode="dark" />
+                        <Text as="span" fontWeight="bold">
+                          {(
+                            (collection.dev_seller_fee_basis_points /
+                              100 /
+                              100) *
+                            collection.stats.total_volume
+                          ).toFixed(2)}{' '}
+                        </Text>{' '}
+                        in royalties
+                      </Text>
+                      <Text opacity="0.75" mt="1" mb="0" fontSize="xs">
+                        Assuming royalty has stayed constant
+                      </Text>
+                    </Box>
+                  }
+                  fontSize="sm"
+                  hasArrow
+                  bg="gray.800"
+                  placement="top"
+                  color="white"
+                  p="2"
+                >
+                  <Text cursor="default">
+                    {collection.dev_seller_fee_basis_points / 100}%
+                  </Text>
+                </Tooltip>
               ) : (
                 <Spinner size="sm" />
               )}
@@ -211,8 +239,7 @@ const CollectionStats = ({ collectionSlug }: { collectionSlug: string }) => {
                   bg="gray.800"
                   placement="top"
                   color="white"
-                  px="2"
-                  py="1"
+                  p="2"
                 >
                   <Text cursor="default">
                     <TimeAgo

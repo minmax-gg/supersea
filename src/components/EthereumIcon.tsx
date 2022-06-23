@@ -6,17 +6,23 @@ import React from 'react'
 
 const EthereumIcon = ({
   wrapped = false,
+  colorMode,
   ...rest
-}: { wrapped?: boolean } & React.ComponentProps<typeof Icon>) => {
+}: { wrapped?: boolean; colorMode?: 'light' | 'dark' } & React.ComponentProps<
+  typeof Icon
+>) => {
+  const themeColorMode = useColorModeValue('light', 'dark')
+  const icon = (() => {
+    const usedColorMode = colorMode || themeColorMode
+    if (wrapped) {
+      return WrappedEthereumSVG
+    }
+    return usedColorMode === 'light' ? EthereumLightSVG : EthereumDarkSVG
+  })()
   return (
     // @ts-ignore
     <Icon
-      as={
-        useColorModeValue(
-          wrapped ? WrappedEthereumSVG : EthereumLightSVG,
-          wrapped ? WrappedEthereumSVG : EthereumDarkSVG,
-        ) as any
-      }
+      as={icon as any}
       width="0.5em"
       mr="0.25em"
       verticalAlign="middle"
