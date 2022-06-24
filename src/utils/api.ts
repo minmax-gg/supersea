@@ -550,7 +550,10 @@ export const fetchListings = async (address: string, tokenId: string) => {
 export const fetchOffers = async (
   address: string,
   tokenId: string,
-): Promise<{ offers: { current_price: string }[] }> => {
+): Promise<{
+  offers: { current_price: string }[]
+  seaport_offers: { current_price: string }[]
+}> => {
   await openSeaPublicRateLimit()
   return fetch(
     `https://api.opensea.io/api/v1/asset/${address}/${tokenId}/offers`,

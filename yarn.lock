@@ -23,7 +23,19 @@
     uuid "^3.1.0"
     web3 "^0.20.0"
 
-"@0x/assert@^3.0.30", "@0x/assert@^3.0.34":
+"@0x/assert@3.0.31":
+  version "3.0.31"
+  resolved "https://registry.yarnpkg.com/@0x/assert/-/assert-3.0.31.tgz#2c9e7e0ff9cc7bae8cd0380022e1723ee505a82e"
+  integrity sha512-ZzlnldKNvhA78IOcH6KCH3kb65XB7fI3wyuocjL72Es3eGTmyVg1KNK7eJnmV+RHSGDTYLwhvmb5hfIvFHMArg==
+  dependencies:
+    "@0x/json-schemas" "^6.4.1"
+    "@0x/typescript-typings" "^5.2.1"
+    "@0x/utils" "^6.5.0"
+    "@types/node" "12.12.54"
+    lodash "^4.17.11"
+    valid-url "^1.0.9"
+
+"@0x/assert@^3.0.29", "@0x/assert@^3.0.34":
   version "3.0.34"
   resolved "https://registry.yarnpkg.com/@0x/assert/-/assert-3.0.34.tgz#aa43642abb969882910f271d9eab957217510807"
   integrity sha512-KDdmUs0O055PPnijmdoBOrZwztl2fmjox1peLzeKNl5OfxwpGBxuce4AhUkmcWKI3u7Mj3Az69gUByX6/NLnVg==
@@ -35,15 +47,15 @@
     lodash "^4.17.11"
     valid-url "^1.0.9"
 
-"@0x/base-contract@^6.4.4":
-  version "6.5.0"
-  resolved "https://registry.yarnpkg.com/@0x/base-contract/-/base-contract-6.5.0.tgz#95b0c3000e571cf4c2a4ee648d029d0ed744b88f"
-  integrity sha512-FbtBmF1qKLvbJL7FmFtxI3enCV0a9YKkltlwgCU/CDlGqGH/1ZP0p32cWLP48tRfqrgCcvWlfc4rRTs4aIwlow==
+"@0x/base-contract@6.4.2":
+  version "6.4.2"
+  resolved "https://registry.yarnpkg.com/@0x/base-contract/-/base-contract-6.4.2.tgz#d87cb5416613d29d2ec71c60d4a7c6cdd5c48694"
+  integrity sha512-lcmsXGJ2ImiO1tJoWefYiQ8/WRSdQ4BPA8XulYqVQ4su6PYjLa1XvU91zM779QrIPeRo8fL7FUvGE7CkyG/gwA==
   dependencies:
-    "@0x/assert" "^3.0.34"
-    "@0x/json-schemas" "^6.4.4"
-    "@0x/utils" "^6.5.3"
-    "@0x/web3-wrapper" "^7.6.5"
+    "@0x/assert" "^3.0.29"
+    "@0x/json-schemas" "^6.3.0"
+    "@0x/utils" "^6.4.4"
+    "@0x/web3-wrapper" "^7.6.0"
     "@types/node" "12.12.54"
     ethereumjs-account "^3.0.0"
     ethereumjs-blockstream "^7.0.0"
@@ -53,7 +65,17 @@
     js-sha3 "^0.7.0"
     uuid "^3.3.2"
 
-"@0x/json-schemas@^6.4.0", "@0x/json-schemas@^6.4.4":
+"@0x/json-schemas@6.4.1":
+  version "6.4.1"
+  resolved "https://registry.yarnpkg.com/@0x/json-schemas/-/json-schemas-6.4.1.tgz#2db8f6056af7a4d198ae9f56b568473447908d6e"
+  integrity sha512-4LGe7/QNKAdfxBNu5e5w24JKUqEHGg08TgKhyotStW5m0TJNBGoyGavip1FJeI3KRqNilRN22lgo9HsCBnF5Qg==
+  dependencies:
+    "@0x/typescript-typings" "^5.2.1"
+    "@types/node" "12.12.54"
+    ajv "^6.12.5"
+    lodash.values "^4.3.0"
+
+"@0x/json-schemas@^6.3.0", "@0x/json-schemas@^6.4.1", "@0x/json-schemas@^6.4.4":
   version "6.4.4"
   resolved "https://registry.yarnpkg.com/@0x/json-schemas/-/json-schemas-6.4.4.tgz#9243c18ef6c1333c3cc47bf2870912d7badb307e"
   integrity sha512-uPl/gGQo3sYHwmoiNRITEyTOdr2bQTmsxzYquVwHIA1ZM6UHSIjiFcbeAO91aSE/U5uiCc9vuz8Ux9x+8F1BWw==
@@ -72,7 +94,7 @@
     bignumber.js "~9.0.2"
     ethereum-types "^3.7.0"
 
-"@0x/typescript-typings@^5.3.1":
+"@0x/typescript-typings@^5.2.1", "@0x/typescript-typings@^5.3.1":
   version "5.3.1"
   resolved "https://registry.yarnpkg.com/@0x/typescript-typings/-/typescript-typings-5.3.1.tgz#853bcad04fbaee4af63532317d7f9ef486dfbb1a"
   integrity sha512-baxz6gTNDI+q/TBOm8xXeqCiCu/Rw6a/cpuWzjFNPPTMgO7o4nsk6fIGFGJLuSGUmDMOx+YVzUB0emV6dMtMxA==
@@ -84,7 +106,7 @@
     ethereum-types "^3.7.0"
     popper.js "1.14.3"
 
-"@0x/utils@^6.5.3":
+"@0x/utils@^6.4.4", "@0x/utils@^6.5.0", "@0x/utils@^6.5.3":
   version "6.5.3"
   resolved "https://registry.yarnpkg.com/@0x/utils/-/utils-6.5.3.tgz#b944ffb197a062e3996a4f2e6e43f7babe21e113"
   integrity sha512-C8Af9MeNvWTtSg5eEOObSZ+7gjOGSHkhqDWv8iPfrMMt7yFkAjHxpXW+xufk6ZG2VTg+hel82GDyhKaGtoQZDA==
@@ -119,7 +141,22 @@
     js-sha3 "^0.7.0"
     lodash "^4.17.11"
 
-"@0x/web3-wrapper@^7.6.1", "@0x/web3-wrapper@^7.6.5":
+"@0x/web3-wrapper@7.6.0":
+  version "7.6.0"
+  resolved "https://registry.yarnpkg.com/@0x/web3-wrapper/-/web3-wrapper-7.6.0.tgz#34ae5e32affc02ed425c7bb3402a26fd7880c999"
+  integrity sha512-yxvTT/w5PFfnbKZ9Xvt412fyhVfiNQ0ugFbJYr+X+Xye+Q9vZzzbfc2a3bJSO7w/HkZx7vND071F/jtqU1JsEg==
+  dependencies:
+    "@0x/assert" "^3.0.29"
+    "@0x/json-schemas" "^6.3.0"
+    "@0x/typescript-typings" "^5.2.1"
+    "@0x/utils" "^6.4.4"
+    "@types/node" "12.12.54"
+    ethereum-types "^3.6.0"
+    ethereumjs-util "^7.1.0"
+    ethers "~4.0.4"
+    lodash "^4.17.11"
+
+"@0x/web3-wrapper@^7.6.0":
   version "7.6.5"
   resolved "https://registry.yarnpkg.com/@0x/web3-wrapper/-/web3-wrapper-7.6.5.tgz#9e6731663b1856c043e45165ba564ab6ee7b97f6"
   integrity sha512-AyaisigXUsuwLcLqfji7DzQ+komL9NpaH1k2eTZMn7sxPfZZBSIMFbu3vgSKYvRnJdrXrkeKjE5h0BhIvTngMA==
@@ -11010,7 +11047,7 @@ ethereum-cryptography@^0.1.3:
     secp256k1 "^4.0.1"
     setimmediate "^1.0.5"
 
-ethereum-types@^3.7.0:
+ethereum-types@^3.6.0, ethereum-types@^3.7.0:
   version "3.7.0"
   resolved "https://registry.yarnpkg.com/ethereum-types/-/ethereum-types-3.7.0.tgz#2fec14cebef6e68f3b66a6efd4eaa1003f2c972b"
   integrity sha512-7gU4cUkpmKbAMgEdF3vWFCcLS1aKdsGxIFbd8WIHgBOHLwlcjfcxtkwrFGXuCc90cg6V4MDA9iOI7W0hQ7eTvQ==
@@ -16509,10 +16546,10 @@ open@^7.0.2, open@^7.0.3, open@^7.4.2:
     wyvern-js "git+https://github.com/ProjectOpenSea/wyvern-js.git#v4.0.1"
     wyvern-schemas "git+https://github.com/ProjectOpenSea/wyvern-schemas.git#v0.15.1"
 
-opensea-js@^4.0.2:
-  version "4.0.2"
-  resolved "https://registry.yarnpkg.com/opensea-js/-/opensea-js-4.0.2.tgz#49dae7c9ad1da49b43e7155554842889222219a7"
-  integrity sha512-JQ2hyu07k28EvOBfqE3qSXQrN9DhFEDU+Onqy500vBWC/vdrqbEAsJax26QO5bED5Oi9kw8QCjrtzYc5dw/j6g==
+opensea-js@^4.0.3:
+  version "4.0.3"
+  resolved "https://registry.yarnpkg.com/opensea-js/-/opensea-js-4.0.3.tgz#a93bbdeab4e3491854c5b74a10481b4d84e7fb1f"
+  integrity sha512-kLY8wwbbPOu/FGS/0AdpNiWZCSZo6Megh0ku3omJVU1KABGDT6I6ggFbhg7DNbyUubfD/0V0dtrwCDrf6YGGsw==
   dependencies:
     "@opensea/seaport-js" "^1.0.0"
     ajv "^8.11.0"
@@ -16525,8 +16562,8 @@ opensea-js@^4.0.2:
     lodash "^4.17.21"
     query-string "^6.11.1"
     web3 "1.7.0"
-    wyvern-js "git+https://github.com/ProjectOpenSea/wyvern-js.git#7823dfdf5a272ebbc6a46e66d23563a9d6cc1be2"
-    wyvern-schemas "git+https://github.com/ProjectOpenSea/wyvern-schemas.git#0a8d569931ddb6faa6e96f5a60fa2f83f0a8750e"
+    wyvern-js "git+https://github.com/ProjectOpenSea/wyvern-js.git#d283749f3d983a9c9e2e4da925441f75e170c9f0"
+    wyvern-schemas "git+https://github.com/ProjectOpenSea/wyvern-schemas.git#3290fc095649f5552b560bfcb1f0fa49acf13894"
 
 opn@^5.5.0:
   version "5.5.0"
@@ -23641,33 +23678,15 @@ ws@^7.0.0, ws@^7.4.6:
   resolved "https://registry.yarnpkg.com/ws/-/ws-7.5.5.tgz#8b4bc4af518cfabd0473ae4f99144287b33eb881"
   integrity sha512-BAkMFcAzl8as1G/hArkxOxq3G7pjUqQ3gzYbLL0/5zNkph70e+lCoxBGnm6AW1+/aiNeV4fnKqZ8m4GZewmH2w==
 
-"wyvern-js@git+https://github.com/ProjectOpenSea/wyvern-js.git#7823dfdf5a272ebbc6a46e66d23563a9d6cc1be2":
+"wyvern-js@git+https://github.com/ProjectOpenSea/wyvern-js.git#d283749f3d983a9c9e2e4da925441f75e170c9f0":
   version "3.2.0"
-  resolved "git+https://github.com/ProjectOpenSea/wyvern-js.git#7823dfdf5a272ebbc6a46e66d23563a9d6cc1be2"
+  resolved "git+https://github.com/ProjectOpenSea/wyvern-js.git#d283749f3d983a9c9e2e4da925441f75e170c9f0"
   dependencies:
-    "@0x/assert" "^3.0.30"
-    "@0x/base-contract" "^6.4.4"
-    "@0x/json-schemas" "^6.4.0"
+    "@0x/assert" "3.0.31"
+    "@0x/base-contract" "6.4.2"
+    "@0x/json-schemas" "6.4.1"
     "@0x/utils" "https://github.com/ProjectOpensea/0x-tools/raw/provider-patch/utils/0x-utils-6.5.0.tgz"
-    "@0x/web3-wrapper" "^7.6.1"
-    bn.js "^4.11.8"
-    ethereumjs-abi "https://github.com/ProjectWyvern/ethereumjs-abi.git"
-    ethereumjs-util "^5.1.3"
-    ethers "^4.0.49"
-    json-loader "^0.5.7"
-    jsonschema "^1.2.2"
-    lodash "^4.17.21"
-    web3 "^1.7.0"
-
-"wyvern-js@git+https://github.com/ProjectOpenSea/wyvern-js.git#f7704ad2571f05136f9a42735966dcd3f1485474":
-  version "3.2.0"
-  resolved "git+https://github.com/ProjectOpenSea/wyvern-js.git#f7704ad2571f05136f9a42735966dcd3f1485474"
-  dependencies:
-    "@0x/assert" "^3.0.30"
-    "@0x/base-contract" "^6.4.4"
-    "@0x/json-schemas" "^6.4.0"
-    "@0x/utils" "https://github.com/ProjectOpensea/0x-tools/raw/provider-patch/utils/0x-utils-6.5.0.tgz"
-    "@0x/web3-wrapper" "^7.6.1"
+    "@0x/web3-wrapper" "7.6.0"
     bn.js "^4.11.8"
     ethereumjs-abi "https://github.com/ProjectWyvern/ethereumjs-abi.git"
     ethereumjs-util "^5.1.3"
@@ -23694,13 +23713,12 @@ ws@^7.0.0, ws@^7.4.6:
     lodash "^4.17.4"
     web3 "^0.20.4"
 
-"wyvern-schemas@git+https://github.com/ProjectOpenSea/wyvern-schemas.git#0a8d569931ddb6faa6e96f5a60fa2f83f0a8750e":
+"wyvern-schemas@git+https://github.com/ProjectOpenSea/wyvern-schemas.git#3290fc095649f5552b560bfcb1f0fa49acf13894":
   version "0.14.1"
-  resolved "git+https://github.com/ProjectOpenSea/wyvern-schemas.git#0a8d569931ddb6faa6e96f5a60fa2f83f0a8750e"
+  resolved "git+https://github.com/ProjectOpenSea/wyvern-schemas.git#3290fc095649f5552b560bfcb1f0fa49acf13894"
   dependencies:
-    "@0x/utils" "https://github.com/ProjectOpensea/0x-tools/raw/provider-patch/utils/0x-utils-6.5.0.tgz"
     axios "^0.17.1"
-    wyvern-js "git+https://github.com/ProjectOpenSea/wyvern-js.git#f7704ad2571f05136f9a42735966dcd3f1485474"
+    bignumber.js "9.0.2"
 
 "wyvern-schemas@git+https://github.com/ProjectOpenSea/wyvern-schemas.git#v0.15.1":
   version "0.14.1"
