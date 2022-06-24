@@ -73,30 +73,35 @@ import { readableEthValue, weiToEth } from './utils/ethereum'
                 args,
               )
             }
-          } else {
-            const _fulfillOrder = openseaSDK.seaport.fulfillOrder
-            openseaSDK.seaport.fulfillOrder = async (...args: any) => {
-              const returnValue = await _fulfillOrder.apply(
-                openseaSDK.seaport,
-                args,
-              )
-              returnValue.actions.forEach((action) => {
-                const _transact = action.transactionMethods.transact
-                action.transactionMethods.transact = (...args: any) => {
-                  args[0] = args[0] || {}
-                  args[0].maxPriorityFeePerGas = Math.round(
-                    event.data.params.gasPreset.priorityFee * 10 ** 9,
-                  ).toString()
-                  args[0].maxFeePerGas = Math.round(
-                    event.data.params.gasPreset.fee * 10 ** 9,
-                  ).toString()
-                  return _transact.apply(action.transactionMethods, args)
-                }
-              })
-              return returnValue
-            }
           }
         }
+        const _fulfillOrder = openseaSDK.seaport.fulfillOrder
+        openseaSDK.seaport.fulfillOrder = async (...args: any) => {
+          const returnValue = await _fulfillOrder.apply(
+            openseaSDK.seaport,
+            args,
+          )
+          returnValue.actions.forEach((action) => {
+            const _transact = action.transactionMethods.transact
+            action.transactionMethods.transact = (...args: any) => {
+              args[0] = args[0] || {}
+              if (event.data.params.gasPreset) {
+                args[0].maxPriorityFeePerGas = Math.round(
+                  event.data.params.gasPreset.priorityFee * 10 ** 9,
+                ).toString()
+                args[0].maxFeePerGas = Math.round(
+                  event.data.params.gasPreset.fee * 10 ** 9,
+                ).toString()
+              }
+              // Set custom gas limit to work around ethers.js estimation issues
+              // TODO: May need tweaking
+              args[0].gasLimit = 350000
+              return _transact.apply(action.transactionMethods, args)
+            }
+          })
+          return returnValue
+        }
+
         if (
           event.data.params.displayedPrice &&
           Number(order.base_price || order.current_price) >
