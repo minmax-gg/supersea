@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import Toast from '../components/Toast'
 import { Asset, fetchOffers } from '../utils/api'
 import { MassBidState } from '../components/SearchResults/MassBidStatus'
+import { weiToEth } from '../utils/ethereum'
 
 const DEFAULT_MASS_BID_PROCESS: {
   processNumber: number
@@ -62,7 +63,11 @@ const useMassBid = ({
       }
 
       if (event.data.method === 'SuperSea__Bid__Error') {
-        if (/declined to authorize/i.test(event.data.params.error.message)) {
+        if (
+          /(declined to authorize|user denied message)/i.test(
+            event.data.params.error.message,
+          )
+        ) {
           state = 'SKIPPED'
           initializeNext = true
         } else if (
@@ -172,7 +177,7 @@ const useMassBid = ({
     }
 
     ;(async () => {
-      let offers: any[] = []
+      let highestOffer = 0
 
       if (massBid.skipOnHigherOffer) {
         try {
@@ -180,7 +185,12 @@ const useMassBid = ({
             asset!.asset_contract.address,
             asset!.token_id,
           )
-          offers = res.offers
+          highestOffer = [...res.offers, ...res.seaport_offers].reduce(
+            (acc: number, { current_price }) => {
+              return Math.max(acc, weiToEth(Number(current_price)))
+            },
+            0,
+          )
         } catch (e) {}
       }
 
@@ -189,7 +199,7 @@ const useMassBid = ({
         method: 'SuperSea__Bid',
         params: {
           asset,
-          offers,
+          highestOffer,
           tokenId: asset?.token_id,
           address: asset?.asset_contract.address,
           price: massBid.price,

@@ -318,10 +318,12 @@ const AssetInfo = ({
     type: traitCountExcluded ? rarity.noTraitCountType : rarity.type,
   }
 
-  const { floor, loading: floorLoading, loadedAt: floorLoadedAt } = useFloor(
-    collectionSlug,
-    chain,
-  )
+  const {
+    floor,
+    loading: floorLoading,
+    loadedAt: floorLoadedAt,
+    forceReload: forceReloadFloor,
+  } = useFloor(collectionSlug, chain)
 
   const replaceImage = useCallback(async () => {
     await replaceImageRateLimit()
@@ -989,12 +991,17 @@ const AssetInfo = ({
                 {floor?.currency === 'ETH' ? <EthereumIcon /> : null}
                 <Tooltip
                   label={
-                    <Text as="span" py="0" my="0">
-                      Floor updated{' '}
-                      {floorTooltipOpen ? (
-                        <TimeAgo date={floorLoadedAt} live={false} />
-                      ) : null}
-                    </Text>
+                    <Box>
+                      <Text m="0">
+                        Floor updated{' '}
+                        {floorTooltipOpen ? (
+                          <TimeAgo date={floorLoadedAt} live={false} />
+                        ) : null}
+                      </Text>
+                      <Text opacity="0.75" mt="1" mb="0" fontSize="xs">
+                        Click to force update
+                      </Text>
+                    </Box>
                   }
                   size="md"
                   hasArrow
@@ -1006,18 +1013,13 @@ const AssetInfo = ({
                   px="3"
                   py="2"
                 >
-                  <InternalLink
-                    route="collectionFloor"
-                    params={{ collectionSlug: collectionSlug! }}
-                    fontWeight="500"
-                    verticalAlign="middle"
-                  >
+                  <Text cursor="pointer" onClick={forceReloadFloor}>
                     {floor === null
                       ? 'Unavailable'
                       : `${floor.price} ${
                           floor.currency !== 'ETH' ? ` ${floor.currency}` : ''
                         }`}
-                  </InternalLink>
+                  </Text>
                 </Tooltip>
               </>
             ) : null}

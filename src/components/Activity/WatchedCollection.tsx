@@ -39,9 +39,12 @@ const WatchedCollection = ({
   collection: Collection
   onRemove: () => void
 }) => {
-  const { floor, loading: floorLoading, loadedAt: floorLoadedAt } = useFloor(
-    collection.slug,
-  )
+  const {
+    floor,
+    loading: floorLoading,
+    loadedAt: floorLoadedAt,
+    forceReload: forceReloadFloor,
+  } = useFloor(collection.slug)
   const [floorTooltipOpen, setFloorTooltipOpen] = useState(false)
 
   return (
@@ -88,12 +91,17 @@ const WatchedCollection = ({
                   {floor?.currency === 'ETH' ? <EthereumIcon /> : null}
                   <Tooltip
                     label={
-                      <Text as="span" py="0" my="0">
-                        Floor updated{' '}
-                        {floorTooltipOpen ? (
-                          <TimeAgo date={floorLoadedAt} live={false} />
-                        ) : null}
-                      </Text>
+                      <Box>
+                        <Text m="0">
+                          Floor updated{' '}
+                          {floorTooltipOpen ? (
+                            <TimeAgo date={floorLoadedAt} live={false} />
+                          ) : null}
+                        </Text>
+                        <Text opacity="0.75" mt="1" mb="0" fontSize="xs">
+                          Click to force update
+                        </Text>
+                      </Box>
                     }
                     size="md"
                     hasArrow
@@ -105,7 +113,12 @@ const WatchedCollection = ({
                     px="3"
                     py="2"
                   >
-                    <Text fontWeight="500" verticalAlign="middle">
+                    <Text
+                      fontWeight="500"
+                      verticalAlign="middle"
+                      cursor="pointer"
+                      onClick={forceReloadFloor}
+                    >
                       {floor === null
                         ? 'Unavailable'
                         : `${floor.price} ${

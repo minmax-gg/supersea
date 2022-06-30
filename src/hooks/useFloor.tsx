@@ -6,25 +6,34 @@ const FLOOR_REFRESH_INTERVAL = 1000 * 60 * 3
 
 const floorReloadCallbacks: Record<string, (() => void)[]> = {}
 const floorsLoadedAt: Record<string, number> = {}
-const loadFloor = (slug: string, onReload: () => void) => {
+const loadFloor = async (slug: string, onReload: () => void) => {
+  let timeout: any = null
+  const reload = () => {
+    floorPriceLoader.clear(slug)
+    const callbacks = floorReloadCallbacks[slug]
+    delete floorReloadCallbacks[slug]
+    delete floorsLoadedAt[slug]
+    callbacks.forEach((callback) => callback())
+    if (timeout) clearTimeout(timeout)
+  }
+
   if (!floorReloadCallbacks[slug]) {
     floorReloadCallbacks[slug] = []
-    setTimeout(() => {
-      floorPriceLoader.clear(slug)
-      const callbacks = floorReloadCallbacks[slug]
-      delete floorReloadCallbacks[slug]
-      delete floorsLoadedAt[slug]
-      callbacks.forEach((callback) => callback())
-    }, FLOOR_REFRESH_INTERVAL)
+    timeout = setTimeout(reload, FLOOR_REFRESH_INTERVAL)
   }
 
   floorReloadCallbacks[slug].push(onReload)
 
-  return fetchFloorPrice(slug).finally(() => {
+  const floor = await fetchFloorPrice(slug).finally(() => {
     if (!floorsLoadedAt[slug]) {
       floorsLoadedAt[slug] = Date.now()
     }
   })
+
+  return {
+    floor,
+    forceReload: reload,
+  }
 }
 
 const useFloor = (collectionSlug?: string, chain: Chain = 'ethereum') => {
@@ -34,12 +43,15 @@ const useFloor = (collectionSlug?: string, chain: Chain = 'ethereum') => {
   )
   const [loadedAt, setLoadedAt] = useState(0)
   const [floorRefreshCount, setFloorRefreshCount] = useState(0)
+  const [forceReload, setForceReload] = useState(() => {
+    return () => {}
+  })
 
   useEffect(() => {
     ;(async () => {
       if (!collectionSlug) return
       try {
-        const floor = await loadFloor(collectionSlug, () => {
+        const { floor, forceReload } = await loadFloor(collectionSlug, () => {
           unstable_batchedUpdates(() => {
             setLoading(true)
             setFloorRefreshCount((c) => c + 1)
@@ -49,6 +61,7 @@ const useFloor = (collectionSlug?: string, chain: Chain = 'ethereum') => {
           setLoading(false)
           setFloor(floor)
           setLoadedAt(floorsLoadedAt[collectionSlug])
+          setForceReload(() => forceReload)
         })
       } catch (err) {
         unstable_batchedUpdates(() => {
@@ -60,7 +73,7 @@ const useFloor = (collectionSlug?: string, chain: Chain = 'ethereum') => {
     })()
   }, [collectionSlug, floorRefreshCount])
 
-  return { floor, loading, loadedAt }
+  return { floor, forceReload, loading, loadedAt }
 }
 
 export default useFloor

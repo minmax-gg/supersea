@@ -73,30 +73,35 @@ import { readableEthValue, weiToEth } from './utils/ethereum'
                 args,
               )
             }
-          } else {
-            const _fulfillOrder = openseaSDK.seaport.fulfillOrder
-            openseaSDK.seaport.fulfillOrder = async (...args: any) => {
-              const returnValue = await _fulfillOrder.apply(
-                openseaSDK.seaport,
-                args,
-              )
-              returnValue.actions.forEach((action) => {
-                const _transact = action.transactionMethods.transact
-                action.transactionMethods.transact = (...args: any) => {
-                  args[0] = args[0] || {}
-                  args[0].maxPriorityFeePerGas = Math.round(
-                    event.data.params.gasPreset.priorityFee * 10 ** 9,
-                  ).toString()
-                  args[0].maxFeePerGas = Math.round(
-                    event.data.params.gasPreset.fee * 10 ** 9,
-                  ).toString()
-                  return _transact.apply(action.transactionMethods, args)
-                }
-              })
-              return returnValue
-            }
           }
         }
+        const _fulfillOrder = openseaSDK.seaport.fulfillOrder
+        openseaSDK.seaport.fulfillOrder = async (...args: any) => {
+          const returnValue = await _fulfillOrder.apply(
+            openseaSDK.seaport,
+            args,
+          )
+          returnValue.actions.forEach((action) => {
+            const _transact = action.transactionMethods.transact
+            action.transactionMethods.transact = (...args: any) => {
+              args[0] = args[0] || {}
+              if (event.data.params.gasPreset) {
+                args[0].maxPriorityFeePerGas = Math.round(
+                  event.data.params.gasPreset.priorityFee * 10 ** 9,
+                ).toString()
+                args[0].maxFeePerGas = Math.round(
+                  event.data.params.gasPreset.fee * 10 ** 9,
+                ).toString()
+              }
+              // Set custom gas limit to work around ethers.js estimation issues
+              // TODO: May need tweaking
+              args[0].gasLimit = 350000
+              return _transact.apply(action.transactionMethods, args)
+            }
+          })
+          return returnValue
+        }
+
         if (
           event.data.params.displayedPrice &&
           Number(order.base_price || order.current_price) >
@@ -132,19 +137,7 @@ import { readableEthValue, weiToEth } from './utils/ethereum'
         })
       }
     } else if (event.data.method === 'SuperSea__Bid') {
-      const highestOffer = event.data.params.offers
-        .filter(
-          ({
-            payment_token_contract,
-          }: {
-            payment_token_contract: { symbol: string }
-          }) => payment_token_contract.symbol === 'WETH',
-        )
-        .reduce((acc: number, { current_price }: { current_price: string }) => {
-          return Math.max(acc, weiToEth(Number(current_price)))
-        }, 0)
-
-      if (highestOffer >= event.data.params.price) {
+      if (event.data.params.highestOffer > event.data.params.price) {
         window.postMessage({
           method: 'SuperSea__Bid__Skipped',
           params: { ...event.data.params, reason: 'outbid' },
@@ -154,23 +147,23 @@ import { readableEthValue, weiToEth } from './utils/ethereum'
 
       try {
         await bidRateLimit()
-        const seaport = new OpenSeaSDKWyvern((window as any).ethereum, {
+        const openseaSDK = new OpenSeaSDK((window as any).ethereum, {
           networkName: Network.Main,
           apiKey: '2f6f419a083c46de9d83ce3dbe7db601',
         })
 
-        const validateAndPostOrder = seaport.validateAndPostOrder.bind(seaport)
-        seaport.validateAndPostOrder = async (orderWithSignature) => {
+        const postOrder = openseaSDK.api.postOrder
+        openseaSDK.api.postOrder = async (...args) => {
           window.postMessage({
             method: 'SuperSea__Bid__Signed',
             params: { ...event.data.params },
           })
-          return validateAndPostOrder(orderWithSignature)
+          return postOrder.apply(openseaSDK.api, args)
         }
 
-        const getAsset = seaport.api.getAsset.bind(seaport)
+        const getAsset = openseaSDK.api.getAsset.bind(openseaSDK)
         // @ts-ignore
-        seaport.api.getAsset = async (asset) => {
+        openseaSDK.api.getAsset = async (asset) => {
           let returnedAsset = null
           if (asset.tokenId === event.data.params.tokenId) {
             returnedAsset = assetFromJSON(event.data.params.asset)
@@ -182,7 +175,7 @@ import { readableEthValue, weiToEth } from './utils/ethereum'
           returnedAsset.schemaName = returnedAsset.assetContract.schemaName
           return returnedAsset
         }
-        await seaport.createBuyOrder({
+        await openseaSDK.createBuyOrder({
           asset: {
             tokenId: event.data.params.tokenId,
             tokenAddress: event.data.params.address,
