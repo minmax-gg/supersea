@@ -243,6 +243,7 @@ const injectProfileSummary = async () => {
   injectReact(<ProfileSummary />, container)
 }
 
+const throttledInjectProfileSummary = _.throttle(injectProfileSummary, 250)
 const throttledInjectAssetInfo = _.throttle(injectAssetInfo, 250)
 const throttledInjectBundleVerification = _.throttle(
   injectBundleVerification,
@@ -483,6 +484,7 @@ const setupInjections = async () => {
     throttledDestroyRemovedInjections()
     throttledInjectActivity()
     throttledInjectTransferInfo()
+    throttledInjectProfileSummary()
   })
 
   observer.observe(document, {
@@ -573,7 +575,6 @@ const setupRouteWatcher = () => {
   const messageListener = (event: MessageEvent) => {
     if (event.data.method === 'SuperSea__Next__routeChangeComplete') {
       document.body.dataset['superseaPath'] = window.location.pathname
-      injectProfileSummary()
     } else if (event.data.method === 'SuperSea__Next__routeChangeStart') {
       document.body.dataset['superseaPath'] = ''
     }
