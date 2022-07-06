@@ -569,20 +569,6 @@ const injectListingNotifier = async () => {
 
 const throttledInjectListingNotifier = _.throttle(injectListingNotifier, 250)
 
-const setupRouteWatcher = () => {
-  document.body.dataset['superseaPath'] = window.location.pathname
-
-  const messageListener = (event: MessageEvent) => {
-    if (event.data.method === 'SuperSea__Next__routeChangeComplete') {
-      document.body.dataset['superseaPath'] = window.location.pathname
-    } else if (event.data.method === 'SuperSea__Next__routeChangeStart') {
-      document.body.dataset['superseaPath'] = ''
-    }
-  }
-
-  window.addEventListener('message', messageListener)
-}
-
 // We need to keep the background script alive for webRequest handlers
 const setupKeepAlivePing = () => {
   setInterval(() => {
@@ -595,8 +581,9 @@ const setupKeepAlivePing = () => {
 const initialize = async () => {
   const config = await getExtensionConfig()
   if (config.enabled) {
+    document.body.dataset['superseaPath'] = window.location.pathname
+
     setupInjections()
-    setupRouteWatcher()
     setupKeepAlivePing()
     addGlobalStyle()
     setupAssetInfoRenderer()
