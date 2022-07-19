@@ -23,6 +23,10 @@ const OPENSEA_SHARED_CONTRACT_ADDRESSES = [
 // Not exactly right but good enough to split tokenIds into their unique collections
 const OPENSEA_SHARED_CONTRACT_COLLECTION_ID_LENGTH = 60
 
+const ART_BLOCKS_ADDRESS = '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270'
+
+const ART_BLOCKS_TOKEN_ID_LENGTH = 6
+
 export type Rarities = {
   tokenCount: number
   totalSupply: number | null
@@ -742,11 +746,14 @@ const collectionSlugLoader = new DataLoader(
   {
     maxBatchSize: 1,
     cacheKeyFn: ({ address, tokenId }) => {
-      if (OPENSEA_SHARED_CONTRACT_ADDRESSES.includes(address))
+      if (OPENSEA_SHARED_CONTRACT_ADDRESSES.includes(address)) {
         return `${address}/${tokenId.slice(
           0,
           OPENSEA_SHARED_CONTRACT_COLLECTION_ID_LENGTH,
         )}`
+      } else if (ART_BLOCKS_ADDRESS === address) {
+        return `${address}/${tokenId.slice(0, -ART_BLOCKS_TOKEN_ID_LENGTH)}`
+      }
       return address
     },
   },

@@ -172,9 +172,20 @@ const CollectionStats = ({ collectionSlug }: { collectionSlug: string }) => {
                   color="white"
                   p="2"
                 >
-                  <Text cursor="default">
-                    <EthereumIcon />
+                  <Text cursor="default" whiteSpace="nowrap">
+                    <EthereumIcon mt="-3px" />
                     {Math.round(collection.stats.seven_day_volume * 100) / 100}
+                    {collection.stats.seven_day_change !== 0 && (
+                      <StatArrow
+                        type={
+                          collection.stats.seven_day_change >= 0
+                            ? 'increase'
+                            : 'decrease'
+                        }
+                        ml="1"
+                        mt="-3px"
+                      />
+                    )}
                   </Text>
                 </Tooltip>
               ) : (
